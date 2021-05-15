@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 # Glass
-Easily convert any Widget into a glass / frosted glass version of itself, followin the glassmorphism / glassmorphic  design trend.
+Easily convert any Widget into a glass / frosted glass version of itself, following the glassmorphism / glassmorphic  design trend.
 
 ![Sample screenshot](example/screenshots/1.PNG)
 
