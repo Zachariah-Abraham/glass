@@ -2,7 +2,7 @@ name: glass
 description: Allows conversion of any widget to a "glass" or "frosted glass" version of itself
 version: 0.0.1
 author: Arapurayil Zachariah Abraham<zac@computer.org>
-homepage: 
+homepage: https://github.com/Zachariah-Abraham/glass
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
