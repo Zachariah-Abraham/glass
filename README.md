@@ -4,7 +4,7 @@
 # Glass
 Easily convert any Widget into a glass / frosted glass version of itself, following the glassmorphism / glassmorphic  design trend.
 
-![Sample screenshot](example/screenshots/1.PNG)
+![Sample screenshot](https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/example/screenshots/1.PNG)
 
 ## Installation
 
