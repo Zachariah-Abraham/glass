@@ -14,7 +14,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-    glass: ^0.0.1
+    glass: ^0.0.3
 ```
 
 
