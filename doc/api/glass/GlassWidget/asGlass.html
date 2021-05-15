@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the asGlass method from the GlassWidget extension, for the Dart programming language.">
+  <title>asGlass method - GlassWidget extension - glass library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../static-assets/github.css">
+  <link rel="stylesheet" href="../../static-assets/styles.css">
+  <link rel="icon" href="../../static-assets/favicon.png">
+
+  
+</head>
+
+
+<body data-base-href="../../"
+      data-using-base-href="false">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <button id="sidenav-left-toggle" type="button">&nbsp;</button>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">glass</a></li>
+    <li><a href="../../glass/glass-library.html">glass</a></li>
+    <li><a href="../../glass/GlassWidget.html">GlassWidget</a></li>
+    <li class="self-crumb">asGlass method</li>
+  </ol>
+  <div class="self-name">asGlass</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<main>
+
+
+  <div id="dartdoc-main-content" class="main-content">
+      <div>
+<h1><span class="kind-method">asGlass</span> method 
+    <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+
+<span class="returntype"><a href="https://api.flutter.dev/flutter/widgets/ClipRRect-class.html">ClipRRect</a></span>
+<span class="name ">asGlass</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="asGlass-param-clipBorderRadius">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/painting/BorderRadius-class.html">BorderRadius</a>?</span> <span class="parameter-name">clipBorderRadius</span> = <span class="default-value">BorderRadius.zero</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-blurX"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurX</span> = <span class="default-value">4.0</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-blurY"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurY</span> = <span class="default-value">4.0</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-tileMode"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/TileMode-class.html">TileMode</a></span> <span class="parameter-name">tileMode</span> = <span class="default-value">TileMode.clamp</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-clipper"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/rendering/CustomClipper-class.html">CustomClipper</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-ui/RRect-class.html">RRect</a></span>&gt;</span>?</span> <span class="parameter-name">clipper</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-clipBehaviour"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/Clip-class.html">Clip</a></span> <span class="parameter-name">clipBehaviour</span> = <span class="default-value">Clip.antiAlias</span>}</span></li>
+</ol>)
+
+      
+
+    </section>
+    
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">ClipRRect asGlass({
+  &#47;&#47;&#47; The border radius of the rounded corners.
+  &#47;&#47;&#47;
+  &#47;&#47;&#47; Values are clamped so that horizontal and vertical radii sums do not exceed width&#47;height.
+  &#47;&#47;&#47; This value is ignored if [clipper] is non-null.
+  BorderRadius? clipBorderRadius = BorderRadius.zero,
+
+  &#47;&#47;&#47; Amount of blur in the direction of the X axis.
+  double blurX = 4.0,
+
+  &#47;&#47;&#47; Amount of blur in the direction of the Y axis.
+  double blurY = 4.0,
+
+  &#47;&#47;&#47; Defines what happens at the edge of a gradient or the sampling of a source image in an [ImageFilter].
+  &#47;&#47;&#47;
+  &#47;&#47;&#47; A gradient is defined along a finite inner area. In the case of a linear gradient, it&#39;s between the parallel lines that are orthogonal to the line drawn between two points. In the case of radial gradients, it&#39;s the disc that covers the circle centered on a particular point up to a given radius.
+  &#47;&#47;&#47; An image filter reads source samples from a source image and performs operations on those samples to produce a result image. An image defines color samples only for pixels within the bounds of the image but some filter operations, such as a blur filter, read samples over a wide area to compute the output for a given pixel. Such a filter would need to combine samples from inside the image with hypothetical color values from outside the image.
+  &#47;&#47;&#47; This enum is used to define how the gradient or image filter should treat the regions outside that defined inner area.
+  &#47;&#47;&#47; See also:
+  &#47;&#47;&#47; [painting.Gradient], the superclass for [LinearGradient] and [RadialGradient], as used by [BoxDecoration] et al, which works in relative coordinates and can create a [Shader] representing the gradient for a particular [Rect] on demand.
+  &#47;&#47;&#47; [dart:ui.Gradient], the low-level class used when dealing with the [Paint.shader] property directly, with its [Gradient.linear] and [Gradient.radial] constructors.
+  &#47;&#47;&#47; [dart:ui.ImageFilter.blur], an ImageFilter that may sometimes need to read samples from outside an image to combine with the pixels near the edge of the image.
+  TileMode tileMode = TileMode.clamp,
+
+  &#47;&#47;&#47; If non-null, determines which clip to use.
+  CustomClipper&lt;RRect&gt;? clipper,
+
+  &#47;&#47;&#47; Defaults to [Clip.antiAlias].
+  Clip clipBehaviour = Clip.antiAlias,
+}) {
+  return ClipRRect(
+    clipper: clipper,
+    clipBehavior: clipBehaviour,
+    borderRadius: clipBorderRadius,
+    child: BackdropFilter(
+      filter: new ImageFilter.blur(
+        sigmaX: blurX,
+        sigmaY: blurY,
+        tileMode: tileMode,
+      ),
+      child: this,
+    ),
+  );
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+  <li><a href="../../index.html">glass</a></li>
+  <li><a href="../../glass/glass-library.html">glass</a></li>
+  <li><a href="../../glass/GlassWidget.html">GlassWidget</a></li>
+  <li class="self-crumb">asGlass method</li>
+</ol>
+
+
+    <h5>GlassWidget extension</h5>
+    <ol>
+
+
+
+
+
+    <li class="section-title"><a href="../../glass/GlassWidget.html#instance-methods">Methods</a></li>
+    <li><a href="../../glass/GlassWidget/asGlass.html">asGlass</a></li>
+
+
+
+
+</ol>
+
+  </div><!--/.sidebar-offcanvas-->
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    glass
+      0.0.1
+  </span>
+
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js"></script>
+<script src="../../static-assets/script.js"></script>
+
+
+
+</body>
+
+</html>
+
