@@ -1,0 +1,1 @@
+Easily convert any Widget into a glass / frosted glass version of itself, followin the glassmorphism / glassmorphic  design trend.
