@@ -52,52 +52,44 @@
       
 
 <span class="returntype"><a href="https://api.flutter.dev/flutter/widgets/ClipRRect-class.html">ClipRRect</a></span>
-<span class="name ">asGlass</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="asGlass-param-clipBorderRadius">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/painting/BorderRadius-class.html">BorderRadius</a>?</span> <span class="parameter-name">clipBorderRadius</span> = <span class="default-value">BorderRadius.zero</span>, </span></li>
-<li><span class="parameter" id="asGlass-param-blurX"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurX</span> = <span class="default-value">4.0</span>, </span></li>
+<span class="name ">asGlass</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="asGlass-param-blurX">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurX</span> = <span class="default-value">4.0</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-blurY"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurY</span> = <span class="default-value">4.0</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-clipBorderRadius"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/painting/BorderRadius-class.html">BorderRadius</a>?</span> <span class="parameter-name">clipBorderRadius</span> = <span class="default-value">BorderRadius.zero</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-clipBehaviour"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/Clip-class.html">Clip</a></span> <span class="parameter-name">clipBehaviour</span> = <span class="default-value">Clip.antiAlias</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-tileMode"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/TileMode-class.html">TileMode</a></span> <span class="parameter-name">tileMode</span> = <span class="default-value">TileMode.clamp</span>, </span></li>
-<li><span class="parameter" id="asGlass-param-clipper"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/rendering/CustomClipper-class.html">CustomClipper</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-ui/RRect-class.html">RRect</a></span>&gt;</span>?</span> <span class="parameter-name">clipper</span>, </span></li>
-<li><span class="parameter" id="asGlass-param-clipBehaviour"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/Clip-class.html">Clip</a></span> <span class="parameter-name">clipBehaviour</span> = <span class="default-value">Clip.antiAlias</span>}</span></li>
+<li><span class="parameter" id="asGlass-param-clipper"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/rendering/CustomClipper-class.html">CustomClipper</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-ui/RRect-class.html">RRect</a></span>&gt;</span>?</span> <span class="parameter-name">clipper</span>}</span></li>
 </ol>)
 
       
 
     </section>
     
+<section class="desc markdown">
+  <p>.asGlass(): Converts the calling widget into a glass widget.</p>
+<p>Parameters:</p>
+<ul>
+<li><code>blurX</code>: Amount of blur in the direction of the X axis.</li>
+<li><code>blurY</code>: Amount of blur in the direction of the Y axis.</li>
+<li><code>clipBorderRadius</code>: The border radius of the rounded corners.
+Values are clamped so that horizontal and vertical radii sums do not exceed width/height.
+This value is ignored if <code>clipper</code> is non-null.</li>
+<li><code>clipBehaviour</code>: Defaults to <code>Clip.antiAlias</code>.</li>
+<li><code>tileMode</code>: Defines what happens at the edge of a gradient or the sampling of a source image in an <code>ImageFilter</code>.</li>
+<li><code>clipper</code>: If non-null, determines which clip to use.</li>
+</ul>
+</section>
 
 
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">ClipRRect asGlass({
-  &#47;&#47;&#47; The border radius of the rounded corners.
-  &#47;&#47;&#47;
-  &#47;&#47;&#47; Values are clamped so that horizontal and vertical radii sums do not exceed width&#47;height.
-  &#47;&#47;&#47; This value is ignored if [clipper] is non-null.
-  BorderRadius? clipBorderRadius = BorderRadius.zero,
-
-  &#47;&#47;&#47; Amount of blur in the direction of the X axis.
   double blurX = 4.0,
-
-  &#47;&#47;&#47; Amount of blur in the direction of the Y axis.
   double blurY = 4.0,
-
-  &#47;&#47;&#47; Defines what happens at the edge of a gradient or the sampling of a source image in an [ImageFilter].
-  &#47;&#47;&#47;
-  &#47;&#47;&#47; A gradient is defined along a finite inner area. In the case of a linear gradient, it&#39;s between the parallel lines that are orthogonal to the line drawn between two points. In the case of radial gradients, it&#39;s the disc that covers the circle centered on a particular point up to a given radius.
-  &#47;&#47;&#47; An image filter reads source samples from a source image and performs operations on those samples to produce a result image. An image defines color samples only for pixels within the bounds of the image but some filter operations, such as a blur filter, read samples over a wide area to compute the output for a given pixel. Such a filter would need to combine samples from inside the image with hypothetical color values from outside the image.
-  &#47;&#47;&#47; This enum is used to define how the gradient or image filter should treat the regions outside that defined inner area.
-  &#47;&#47;&#47; See also:
-  &#47;&#47;&#47; [painting.Gradient], the superclass for [LinearGradient] and [RadialGradient], as used by [BoxDecoration] et al, which works in relative coordinates and can create a [Shader] representing the gradient for a particular [Rect] on demand.
-  &#47;&#47;&#47; [dart:ui.Gradient], the low-level class used when dealing with the [Paint.shader] property directly, with its [Gradient.linear] and [Gradient.radial] constructors.
-  &#47;&#47;&#47; [dart:ui.ImageFilter.blur], an ImageFilter that may sometimes need to read samples from outside an image to combine with the pixels near the edge of the image.
-  TileMode tileMode = TileMode.clamp,
-
-  &#47;&#47;&#47; If non-null, determines which clip to use.
-  CustomClipper&lt;RRect&gt;? clipper,
-
-  &#47;&#47;&#47; Defaults to [Clip.antiAlias].
+  BorderRadius? clipBorderRadius = BorderRadius.zero,
   Clip clipBehaviour = Clip.antiAlias,
+  TileMode tileMode = TileMode.clamp,
+  CustomClipper&lt;RRect&gt;? clipper,
 }) {
   return ClipRRect(
     clipper: clipper,
@@ -158,7 +150,7 @@
 <footer>
   <span class="no-break">
     glass
-      0.0.1
+      0.0.7
   </span>
 
   

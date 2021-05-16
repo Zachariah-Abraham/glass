@@ -29,7 +29,7 @@
 <header id="title">
   <button id="sidenav-left-toggle" type="button">&nbsp;</button>
   <ol class="breadcrumbs gt-separated dark hidden-xs">
-    <li class="self-crumb">glass package</li>
+    <li><a href="https://github.com/Zachariah-Abraham/glass">glass package</a></li>
   </ol>
   <div class="self-name">glass</div>
   <form class="search navbar-right" role="search">
@@ -43,16 +43,37 @@
   <div id="dartdoc-main-content" class="main-content">
       
 <section class="desc markdown">
-  <h1 id="glass">glass</h1>
-<p>A new Flutter package project.</p>
-<h2 id="getting-started">Getting Started</h2>
-<p>This project is a starting point for a Dart
-<a href="https://flutter.dev/developing-packages/">package</a>,
-a library module containing code that can be shared easily across
-multiple Flutter or Dart projects.</p>
-<p>For help getting started with Flutter, view our 
-<a href="https://flutter.dev/docs">online documentation</a>, which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.</p>
+  <p><a href="https://pub.dev/packages/glass"><img src="https://img.shields.io/pub/v/glass.svg?style=flat-square" alt="Pub Version"></a>
+<a href="https://opensource.org/licenses/BSD-3-Clause"><img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg" alt="License"></a></p>
+<h1 id="glass">Glass</h1>
+<p>Easily convert any Widget into a glass / frosted glass version of itself, following the glassmorphism / glassmorphic  design trend.</p>
+<p><img src="https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/example/screenshots/2.PNG" alt="Sample screenshot"></p>
+<h2 id="installation">Installation</h2>
+<h3 id="1-depend-on-it">1. Depend on it</h3>
+<p>Add this to your package's <code>pubspec.yaml</code> file:</p>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+    glass:
+</code></pre>
+<h3 id="2-install-it">2. Install it</h3>
+<p>You can install packages from the command line:</p>
+<pre class="language-bash"><code class="language-bash">$ pub get
+..
+</code></pre>
+<p>Alternatively, your editor might support pub. Check the docs for your editor to learn more.</p>
+<h3 id="3-import-it">3. Import it</h3>
+<p>Now in your Flutter code, you can use:</p>
+<pre class="language-Dart"><code class="language-Dart">import 'package:glass/glass.dart';
+</code></pre>
+<h2 id="usage">Usage</h2>
+<p>Simply call .asGlass() <with parameters="" if="" needed=""> on the widget you want to convert to glass.</with></p>
+<p>For example:</p>
+<pre class="language-Dart"><code class="language-Dart">Container(
+    child: someChild,
+).asGlass()
+</code></pre>
+<p>A full example can be found in the example directory</p>
+<h2 id="about-me">About me</h2>
+<p>Visit my LinkedIn at <a href="https://www.linkedin.com/in/zaca">https://www.linkedin.com/in/zaca</a></p>
 </section>
 
 
@@ -63,7 +84,7 @@ samples, guidance on mobile development, and a full API reference.</p>
   <span class="name"><a href="glass/glass-library.html">glass</a></span> 
 
 </dt>
-<dd> 
+<dd>Create glass widgets 
 </dd>
 
         </dl>
@@ -79,7 +100,7 @@ samples, guidance on mobile development, and a full API reference.</p>
 </header>
 
 <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
-  <li class="self-crumb">glass package</li>
+  <li><a href="https://github.com/Zachariah-Abraham/glass">glass package</a></li>
 </ol>
 
 
@@ -99,7 +120,7 @@ samples, guidance on mobile development, and a full API reference.</p>
 <footer>
   <span class="no-break">
     glass
-      0.0.1
+      0.0.7
   </span>
 
   
