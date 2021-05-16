@@ -4,7 +4,7 @@
 # Glass
 Easily convert any Widget into a glass / frosted glass version of itself, following the glassmorphism / glassmorphic  design trend.
 
-![Sample screenshot](https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/example/screenshots/1.PNG)
+![Sample screenshot](https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/example/screenshots/2.PNG)
 
 ## Installation
 
@@ -14,7 +14,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-    glass: ^0.0.5
+    glass: ^0.0.6
 ```
 
 
