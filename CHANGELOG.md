@@ -1,4 +1,9 @@
-## [0.0.8] - 2021-05-16
+## [0.0.9] - 2021-05-20
+
+* Minor bugfixes
+
+
+## [0.0.8] - 2021-05-20
 
 * Added parameters `frosted` and `tintColor` to `.asGlass()`
 
