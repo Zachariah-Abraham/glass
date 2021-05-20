@@ -1,6 +1,6 @@
 name: glass
 description: Allows conversion of any widget to a "glass" or "frosted glass" version of itself
-version: 0.0.7
+version: 0.0.8
 author: Arapurayil Zachariah Abraham<zac@computer.org>
 homepage: https://github.com/Zachariah-Abraham/glass
 
@@ -23,9 +23,9 @@ dev_dependencies:
 flutter:
 
   # To add assets to your package, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - images/noise.png
+
   #
   # For details regarding assets in packages, see
   # https://flutter.dev/assets-and-images/#from-packages

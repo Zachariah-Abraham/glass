@@ -13,20 +13,27 @@ class MyApp extends StatelessWidget {
         body: Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              fit: BoxFit.cover,
               image: AssetImage('images/demo.png'),
             ),
           ),
           child: Center(
-            child: Container(
-              child: Padding(
-                padding: EdgeInsets.all(30.0),
-                child: Text(
-                  "Hello",
-                  style: TextStyle(color: Colors.white),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  child: Padding(
+                    padding: EdgeInsets.all(200.0),
+                    child: Text(
+                      "Night sky",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ).asGlass(
+                  clipBorderRadius: BorderRadius.circular(15.0),
                 ),
-              ),
-            ).asGlass(),
+              ],
+            ),
           ),
         ),
       ),

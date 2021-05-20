@@ -54,6 +54,8 @@
 <span class="returntype"><a href="https://api.flutter.dev/flutter/widgets/ClipRRect-class.html">ClipRRect</a></span>
 <span class="name ">asGlass</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="asGlass-param-blurX">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurX</span> = <span class="default-value">4.0</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-blurY"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurY</span> = <span class="default-value">4.0</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-tintColor"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/Color-class.html">Color</a></span> <span class="parameter-name">tintColor</span> = <span class="default-value">Colors.white</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-frosted"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">frosted</span> = <span class="default-value">true</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-clipBorderRadius"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/painting/BorderRadius-class.html">BorderRadius</a>?</span> <span class="parameter-name">clipBorderRadius</span> = <span class="default-value">BorderRadius.zero</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-clipBehaviour"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/Clip-class.html">Clip</a></span> <span class="parameter-name">clipBehaviour</span> = <span class="default-value">Clip.antiAlias</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-tileMode"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/TileMode-class.html">TileMode</a></span> <span class="parameter-name">tileMode</span> = <span class="default-value">TileMode.clamp</span>, </span></li>
@@ -70,6 +72,8 @@
 <ul>
 <li><code>blurX</code>: Amount of blur in the direction of the X axis.</li>
 <li><code>blurY</code>: Amount of blur in the direction of the Y axis.</li>
+<li><code>tintColor</code>: Tint color for the glass (defaults to Colors.white)</li>
+<li><code>frosted</code>: Whether this glass should be frosted or not (defaults to true)</li>
 <li><code>clipBorderRadius</code>: The border radius of the rounded corners.
 Values are clamped so that horizontal and vertical radii sums do not exceed width/height.
 This value is ignored if <code>clipper</code> is non-null.</li>
@@ -86,6 +90,8 @@ This value is ignored if <code>clipper</code> is non-null.</li>
   <pre class="language-dart"><code class="language-dart">ClipRRect asGlass({
   double blurX = 4.0,
   double blurY = 4.0,
+  Color tintColor = Colors.white,
+  bool frosted = true,
   BorderRadius? clipBorderRadius = BorderRadius.zero,
   Clip clipBehaviour = Clip.antiAlias,
   TileMode tileMode = TileMode.clamp,
@@ -101,7 +107,27 @@ This value is ignored if <code>clipper</code> is non-null.</li>
         sigmaY: blurY,
         tileMode: tileMode,
       ),
-      child: this,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: (tintColor != Colors.transparent)
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    tintColor.withOpacity(0.1),
+                    tintColor.withOpacity(0.08),
+                  ],
+                )
+              : null,
+          image: frosted
+              ? DecorationImage(
+                  image: AssetImage(&#39;images&#47;noise.png&#39;, package: &#39;glass&#39;),
+                  fit: BoxFit.cover,
+                )
+              : null,
+        ),
+        child: this,
+      ),
     ),
   );
 }</code></pre>

@@ -7,6 +7,8 @@ extension GlassWidget on Widget {
   /// Parameters:
   /// * [blurX]: Amount of blur in the direction of the X axis.
   /// * [blurY]: Amount of blur in the direction of the Y axis.
+  /// * [tintColor]: Tint color for the glass (defaults to Colors.white)
+  /// * [frosted]: Whether this glass should be frosted or not (defaults to true)
   /// * [clipBorderRadius]: The border radius of the rounded corners.
   ///   Values are clamped so that horizontal and vertical radii sums do not exceed width/height.
   ///   This value is ignored if [clipper] is non-null.
@@ -16,6 +18,8 @@ extension GlassWidget on Widget {
   ClipRRect asGlass({
     double blurX = 4.0,
     double blurY = 4.0,
+    Color tintColor = Colors.white,
+    bool frosted = true,
     BorderRadius? clipBorderRadius = BorderRadius.zero,
     Clip clipBehaviour = Clip.antiAlias,
     TileMode tileMode = TileMode.clamp,
@@ -31,7 +35,27 @@ extension GlassWidget on Widget {
           sigmaY: blurY,
           tileMode: tileMode,
         ),
-        child: this,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: (tintColor != Colors.transparent)
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      tintColor.withOpacity(0.1),
+                      tintColor.withOpacity(0.08),
+                    ],
+                  )
+                : null,
+            image: frosted
+                ? DecorationImage(
+                    image: AssetImage('images/noise.png', package: 'glass'),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          child: this,
+        ),
       ),
     );
   }
