@@ -1,3 +1,8 @@
+## [0.1.0] - 2021-05-20
+
+* Changed default values for blurX and blurY for better blurring
+
+
 ## [0.0.9] - 2021-05-20
 
 * Minor bugfixes

@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
                     ),
                   ),
                 ).asGlass(
+                  tintColor: Colors.transparent,
                   clipBorderRadius: BorderRadius.circular(15.0),
                 ),
               ],
