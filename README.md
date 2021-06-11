@@ -1,5 +1,7 @@
 [![Pub Version](https://img.shields.io/pub/v/glass.svg?style=flat-square)](https://pub.dev/packages/glass)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Codemagic build status](https://api.codemagic.io/apps/60c3d4476d84ba5624b3a1dd/60c3d4476d84ba5624b3a1dc/status_badge.svg)](https://codemagic.io/apps/60c3d4476d84ba5624b3a1dd/60c3d4476d84ba5624b3a1dc/latest_build)
+
 
 # Glass
 Easily convert any Widget into a glass / frosted glass version of itself, following the glassmorphism / glassmorphic  design trend.
