@@ -1,5 +1,10 @@
 ## [0.1.0] - 2021-05-20
 
+* First major release
+
+
+## [0.1.0] - 2021-05-20
+
 * Changed default values for blurX and blurY for better blurring
 
 
