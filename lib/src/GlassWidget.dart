@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
-extension GlassWidget on Widget {
+extension GlassWidget<T extends Widget> on T {
   /// .asGlass(): Converts the calling widget into a glass widget.
   ///
   /// Parameters:
