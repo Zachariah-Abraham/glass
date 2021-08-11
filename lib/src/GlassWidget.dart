@@ -11,7 +11,7 @@ extension GlassWidget<T extends Widget> on T {
   /// * [frosted]: Whether this glass should be frosted or not (defaults to true).
   /// * [clipBorderRadius]: The border radius of the rounded corners.
   ///   Values are clamped so that horizontal and vertical radii sums do not exceed width/height.
-  ///   This value is ignored if [clipper] is non-null.
+  ///   This value is ignored if clipper is non-null.
   /// * [clipBehaviour]: Defaults to [Clip.antiAlias].
   /// * [tileMode]: Defines what happens at the edge of a gradient or the sampling of a source image in an [ImageFilter].
   /// * [clipper]: If non-null, determines which clip to use.

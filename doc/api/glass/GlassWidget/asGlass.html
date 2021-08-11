@@ -12,9 +12,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="../../static-assets/github.css">
-  <link rel="stylesheet" href="../../static-assets/styles.css">
-  <link rel="icon" href="../../static-assets/favicon.png">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
 
   
 </head>
@@ -30,7 +31,7 @@
   <ol class="breadcrumbs gt-separated dark hidden-xs">
     <li><a href="../../index.html">glass</a></li>
     <li><a href="../../glass/glass-library.html">glass</a></li>
-    <li><a href="../../glass/GlassWidget.html">GlassWidget</a></li>
+    <li><a href="../../glass/GlassWidget.html">GlassWidget<span class="signature">&lt;<wbr><span class="type-parameter">T extends Widget</span>&gt;</span></a></li>
     <li class="self-crumb">asGlass method</li>
   </ol>
   <div class="self-name">asGlass</div>
@@ -52,8 +53,8 @@
       
 
 <span class="returntype"><a href="https://api.flutter.dev/flutter/widgets/ClipRRect-class.html">ClipRRect</a></span>
-<span class="name ">asGlass</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="asGlass-param-blurX">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurX</span> = <span class="default-value">4.0</span>, </span></li>
-<li><span class="parameter" id="asGlass-param-blurY"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurY</span> = <span class="default-value">4.0</span>, </span></li>
+<span class="name ">asGlass</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="asGlass-param-blurX">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurX</span> = <span class="default-value">10.0</span>, </span></li>
+<li><span class="parameter" id="asGlass-param-blurY"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/double-class.html">double</a></span> <span class="parameter-name">blurY</span> = <span class="default-value">10.0</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-tintColor"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-ui/Color-class.html">Color</a></span> <span class="parameter-name">tintColor</span> = <span class="default-value">Colors.white</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-frosted"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">frosted</span> = <span class="default-value">true</span>, </span></li>
 <li><span class="parameter" id="asGlass-param-clipBorderRadius"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/painting/BorderRadius-class.html">BorderRadius</a>?</span> <span class="parameter-name">clipBorderRadius</span> = <span class="default-value">BorderRadius.zero</span>, </span></li>
@@ -70,13 +71,13 @@
   <p>.asGlass(): Converts the calling widget into a glass widget.</p>
 <p>Parameters:</p>
 <ul>
-<li><code>blurX</code>: Amount of blur in the direction of the X axis.</li>
-<li><code>blurY</code>: Amount of blur in the direction of the Y axis.</li>
-<li><code>tintColor</code>: Tint color for the glass (defaults to Colors.white)</li>
-<li><code>frosted</code>: Whether this glass should be frosted or not (defaults to true)</li>
+<li><code>blurX</code>: Amount of blur in the direction of the X axis, defaults to 10.0.</li>
+<li><code>blurY</code>: Amount of blur in the direction of the Y axis, defaults to 10.0.</li>
+<li><code>tintColor</code>: Tint color for the glass (defaults to Colors.white).</li>
+<li><code>frosted</code>: Whether this glass should be frosted or not (defaults to true).</li>
 <li><code>clipBorderRadius</code>: The border radius of the rounded corners.
 Values are clamped so that horizontal and vertical radii sums do not exceed width/height.
-This value is ignored if <code>clipper</code> is non-null.</li>
+This value is ignored if clipper is non-null.</li>
 <li><code>clipBehaviour</code>: Defaults to <code>Clip.antiAlias</code>.</li>
 <li><code>tileMode</code>: Defines what happens at the edge of a gradient or the sampling of a source image in an <code>ImageFilter</code>.</li>
 <li><code>clipper</code>: If non-null, determines which clip to use.</li>
@@ -88,8 +89,8 @@ This value is ignored if <code>clipper</code> is non-null.</li>
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">ClipRRect asGlass({
-  double blurX = 4.0,
-  double blurY = 4.0,
+  double blurX = 10.0,
+  double blurY = 10.0,
   Color tintColor = Colors.white,
   bool frosted = true,
   BorderRadius? clipBorderRadius = BorderRadius.zero,
@@ -146,7 +147,7 @@ This value is ignored if <code>clipper</code> is non-null.</li>
 <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
   <li><a href="../../index.html">glass</a></li>
   <li><a href="../../glass/glass-library.html">glass</a></li>
-  <li><a href="../../glass/GlassWidget.html">GlassWidget</a></li>
+  <li><a href="../../glass/GlassWidget.html">GlassWidget<span class="signature">&lt;<wbr><span class="type-parameter">T extends Widget</span>&gt;</span></a></li>
   <li class="self-crumb">asGlass method</li>
 </ol>
 
@@ -176,15 +177,16 @@ This value is ignored if <code>clipper</code> is non-null.</li>
 <footer>
   <span class="no-break">
     glass
-      0.0.7
+      1.0.1+1
   </span>
 
   
 </footer>
 
 
-<script src="../../static-assets/highlight.pack.js"></script>
-<script src="../../static-assets/script.js"></script>
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/script.js?v1"></script>
 
 
 
