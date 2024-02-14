@@ -1,12 +1,8 @@
-## [2.0.1] - 2024-02-14
-
-* Relax SDK constraints
-
-
 ## [2.0.0] - 2024-02-14
 
 * BREAKING CHANGE: `asGlass` returns `Widget` instead of `ClipRRect` now.
 * Added `enabled` parameter to enable or disable all effects.
+* Relaxed SDK constraints
 
 
 ## [1.0.2] - 2023-10-21
