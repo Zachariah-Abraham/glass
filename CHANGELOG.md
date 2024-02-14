@@ -1,5 +1,11 @@
 ## [1.0.2] - 2023-10-21
 
+* BREAKING CHANGE: `asGlass` returns `Widget` instead of `ClipRRect` now.
+* Added `enabled` parameter to enable or disable all effects.
+
+
+## [1.0.2] - 2023-10-21
+
 * Flutter version upgrade
 
 

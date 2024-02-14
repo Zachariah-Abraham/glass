@@ -5,7 +5,14 @@ void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool effectEnabled = true;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,17 +28,21 @@ class MyApp extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  child: Padding(
-                    padding: EdgeInsets.all(200.0),
+                GestureDetector(
+                  child: TextButton(
+                    onPressed: () => setState(() => effectEnabled = !effectEnabled),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.all(200),
+                    ),
                     child: Text(
                       "Night sky",
                       style: TextStyle(color: Colors.white),
                     ),
+                  ).asGlass(
+                    enabled: effectEnabled,
+                    tintColor: Colors.transparent,
+                    clipBorderRadius: BorderRadius.circular(15.0),
                   ),
-                ).asGlass(
-                  tintColor: Colors.transparent,
-                  clipBorderRadius: BorderRadius.circular(15.0),
                 ),
               ],
             ),
