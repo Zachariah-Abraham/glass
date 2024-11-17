@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:glass/glass.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -18,7 +20,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         body: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage('images/demo.png'),
             ),
@@ -32,9 +34,9 @@ class _MyAppState extends State<MyApp> {
                   child: TextButton(
                     onPressed: () => setState(() => effectEnabled = !effectEnabled),
                     style: TextButton.styleFrom(
-                      padding: EdgeInsets.all(200),
+                      padding: const EdgeInsets.all(200),
                     ),
-                    child: Text(
+                    child: const Text(
                       "Night sky",
                       style: TextStyle(color: Colors.white),
                     ),

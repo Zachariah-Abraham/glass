@@ -1,3 +1,7 @@
+## [2.0.0+2] - 2024-11-17
+
+* Address lints
+
 ## [2.0.0] - 2024-02-14
 
 * BREAKING CHANGE: `asGlass` returns `Widget` instead of `ClipRRect` now.
