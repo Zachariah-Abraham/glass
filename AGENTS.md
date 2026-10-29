@@ -64,7 +64,7 @@ documentation, and the changelog matter more than they would in an app.
 | `images/noise.png` | Noise texture for the "frosted" look. Declared as a package asset in `pubspec.yaml` and loaded with `AssetImage('images/noise.png', package: 'glass')`. |
 | `example/` | Demo app (`example/lib/main.dart`) that depends on the package through `path: ../`. Shown on pub.dev. |
 | `example/screenshots/` | Screenshots referenced by URL from `README.md`. Don't rename them. |
-| `doc/api/` | **Generated** dartdoc output that is checked in. Don't hand-edit it. Regenerate it with `dart doc` or remove it (see `tasks.md`). |
+| `doc/api/` | **Generated** dartdoc output (`dart doc`) that was checked in. Never hand-edit it. pub.dev builds and hosts API docs itself, so it should be deleted and gitignored (see `tasks.md`). |
 | `CHANGELOG.md` | Displayed on pub.dev. Update it for every user-visible change. |
 
 ### How `asGlass` works
@@ -131,7 +131,7 @@ those incidental changes as part of unrelated work. Either revert them
   (Flutter 3.27+), raise the lower bounds to match. Raising the lower bound is a compatibility
   decision, so mention it in the changelog.
 - Before release, aim for a high pub.dev score: `$F pub publish --dry-run` with no warnings, an
-  example present, documented API, and up-to-date dependencies.
+  example present, documented API, and up-to-date dependencies. See §6 for the full process.
 
 ### Dart style
 - Follow [Effective Dart](https://dart.dev/effective-dart). Format with `dart format` (default
@@ -186,3 +186,80 @@ those incidental changes as part of unrelated work. Either revert them
 4. Public API changes have dartdoc, a `CHANGELOG.md` entry, and a `pubspec.yaml` version bump.
 5. `README.md` is updated if usage changed.
 6. `tasks.md` (and `AGENTS.md` if applicable) is updated and **everything is committed**.
+
+---
+
+## 6. Publishing to pub.dev
+
+**Agents never publish.** Publishing is permanent: pub.dev generally doesn't allow unpublishing,
+so only the human runs the real `pub publish` (or pushes the release tag). Agents prepare the
+release and run `--dry-run`.
+
+### Release checklist
+1. All of §5 passes. Working tree is clean and committed.
+2. Decide the version ([semver](https://dart.dev/tools/pub/versioning)): breaking API change →
+   major; new backward-compatible feature → minor; fix → patch. The existing `+N` build suffix
+   (for example `2.0.0+2`) is optional; prefer plain `x.y.z`.
+3. Set `version:` in `pubspec.yaml` and add a `## [x.y.z] - YYYY-MM-DD` entry at the top of
+   `CHANGELOG.md`. The two must agree.
+4. Confirm `LICENSE`, `README.md` (main pub.dev page), `CHANGELOG.md` (Changelog tab) and
+   `pubspec.yaml` (`description`, `homepage`/`repository`) are accurate. Description should be
+   60-180 characters. Also consider `issue_tracker` and `topics`.
+5. Run `$F pub publish --dry-run`. It validates the pubspec and layout, lists every file that
+   would be uploaded, and reports warnings. Read the file list, and fix all warnings. It also
+   complains about uncommitted git changes.
+6. Hand off to the human, noting the exact version and anything notable, to run
+   `flutter pub publish` (or tag the release, see below). Record this in `tasks.md`.
+7. After publishing, tag the commit (`git tag vX.Y.Z`) and push the tag, if the human wants it.
+
+### What gets uploaded
+- Everything under the package root except hidden files/dirs (names starting with `.`) and
+  anything matched by `.gitignore` or `.pubignore`. A `.pubignore` in a directory overrides that
+  directory's `.gitignore` for publishing only.
+- Keep the package small (limit is ~100 MB gzipped / 256 MB uncompressed). Large demo assets and
+  generated output should be excluded. `example/screenshots/` and `example/images/` are
+  referenced from README by GitHub URL, so consider `.pubignore`-ing them if the size matters.
+- Only hosted pub.dev dependencies and SDK dependencies (`sdk: flutter`) are allowed. `path:`
+  and `git:` dependencies are not (the `example/` app is fine because it isn't published).
+
+### Docs
+- pub.dev **generates and hosts API docs itself** from `///` comments. The checked-in
+  `doc/api/` (output of `dart doc`) is not needed and goes stale, so don't commit generated docs.
+  Preview locally with `dart doc` if you want, but keep the output untracked.
+- The package page is built from `README.md`, `CHANGELOG.md`, `pubspec.yaml`, and `example/`.
+  README images need absolute URLs (as now).
+
+### SDK constraints and old versions
+- pub's solver picks, for each user, the newest version whose SDK constraint admits the user's
+  SDK. So raising the minimum Flutter/Dart version in a new release doesn't break users on older
+  SDKs: they simply keep resolving to the older release. Users can also pin an exact old version
+  (`glass: 2.0.0+2`). Published versions stay on pub.dev.
+- Still mention the new minimum SDK in the changelog.
+
+### Mistakes after publishing
+- Versions can't be deleted. Prefer publishing a fixed patch version with a changelog note.
+- **Retract** (pub.dev package Admin tab) only within 7 days of publishing, and when a version is
+  truly broken (for example wrong dependency constraints). Retraction is reversible within
+  7 days.
+- Use **discontinued** for packages that are no longer maintained.
+
+### Optional: automated publishing
+After the first manual publish, releases can be automated from GitHub Actions with OIDC (no
+stored secrets): enable it at `pub.dev/packages/glass/admin` (repo `Zachariah-Abraham/glass`,
+tag pattern like `v{{version}}`), and add `.github/workflows/publish.yml` that triggers on
+`push: tags: ['v[0-9]+.[0-9]+.[0-9]+']` with `permissions: id-token: write` and calls
+`dart-lang/setup-dart/.github/workflows/publish.yml@v1`. The tag must match `version:` in
+`pubspec.yaml`. Consider tag protection rules and a required `pub.dev` environment. Not set up
+yet. Ask the human first.
+
+### Links
+- Publishing: https://dart.dev/tools/pub/publishing
+- Versioning: https://dart.dev/tools/pub/versioning
+- Pubspec reference: https://dart.dev/tools/pub/pubspec
+- Package layout: https://dart.dev/tools/pub/package-layout
+- Automated publishing: https://dart.dev/tools/pub/automated-publishing
+- Writing package pages: https://dart.dev/tools/pub/writing-package-pages
+- Verified publishers: https://dart.dev/tools/pub/verified-publishers
+- Package scoring (pub points): https://pub.dev/help/scoring
+- Effective Dart: https://dart.dev/effective-dart
+- Developing packages (Flutter): https://docs.flutter.dev/packages-and-plugins/developing-packages

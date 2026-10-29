@@ -21,25 +21,29 @@ _Last updated: 2026-10-29_
 - [ ] Add root `analysis_options.yaml` (`include: package:flutter_lints/flutter.yaml`) and add
       `flutter_lints` to the root dev_dependencies. Then fix the new lints (for example the
       `new ImageFilter.blur` keyword).
-- [ ] Replace `tintColor.withOpacity(x)` with `withValues(alpha: x)`. This needs Flutter >= 3.27,
-      so raise the `environment` constraints in `pubspec.yaml` and note it in `CHANGELOG.md`.
-      Decide whether that's a minor or a major bump.
+- [ ] Replace `tintColor.withOpacity(x)` with `withValues(alpha: x)`. This needs Flutter >= 3.27
+      (human approved raising the minimum). Raise the `environment` constraints in `pubspec.yaml`,
+      note it in `CHANGELOG.md`; this is not an API change, so a minor bump (2.1.0) fits.
 - [ ] Add root `test/glass_widget_test.dart` with widget tests for each parameter
       (see AGENTS.md §4 Testing).
 - [ ] Replace `example/test/widget_test.dart` with a real smoke test (renders "Night sky", and
       tapping toggles `enabled`, which removes or adds the `BackdropFilter`).
 - [ ] Clean up the example: remove the no-op `GestureDetector` around `TextButton`, give the
       pubspec a real description, and use single quotes or consistent style.
-- [ ] Decide what to do with the checked-in `doc/api/`: either delete it and gitignore it
-      (pub.dev generates docs), or regenerate it. It's likely stale.
+- [ ] `git rm -r doc/api` and add `doc/api/` to `.gitignore`: it's `dart doc` output and pub.dev
+      generates docs itself (human agreed to review; see AGENTS.md §6).
 - [ ] Update `README.md`: replace `pub get` with `flutter pub add glass`, and document every
       `asGlass` parameter.
 - [ ] Run `flutter pub publish --dry-run` and fix any warnings.
 
 ## Done
+- 2026-10-29: Added publishing guide (AGENTS.md §6).
 - 2026-10-29: Added `AGENTS.md`, `CLAUDE.md`, and `tasks.md` (agent onboarding and hand-off docs).
 
+## Decisions made
+- 2026-10-29: Raising the minimum Flutter version for `withValues` is OK.
+- 2026-10-29: `doc/api/` is generated; plan is to remove it (pending human confirmation).
+
 ## Open questions for the human
-- Is raising the minimum Flutter version (for `withValues`) acceptable, and as a minor or a
-  major release?
-- Keep or remove the committed `doc/api/`?
+- Confirm removing `doc/api/`.
+- Set up automated publishing via GitHub Actions? (AGENTS.md §6)
