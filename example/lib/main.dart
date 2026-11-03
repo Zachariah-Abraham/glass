@@ -30,21 +30,20 @@ class _MyAppState extends State<MyApp> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                GestureDetector(
-                  child: TextButton(
-                    onPressed: () => setState(() => effectEnabled = !effectEnabled),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.all(200),
-                    ),
-                    child: const Text(
-                      "Night sky",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ).asGlass(
-                    enabled: effectEnabled,
-                    tintColor: Colors.transparent,
-                    clipBorderRadius: BorderRadius.circular(15.0),
+                TextButton(
+                  onPressed: () =>
+                      setState(() => effectEnabled = !effectEnabled),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.all(200),
                   ),
+                  child: const Text(
+                    'Night sky',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ).asGlass(
+                  enabled: effectEnabled,
+                  tintColor: Colors.transparent,
+                  clipBorderRadius: BorderRadius.circular(15.0),
                 ),
               ],
             ),

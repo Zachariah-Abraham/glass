@@ -1,5 +1,5 @@
 name: example
-description: A new Flutter project.
+description: Example app for the glass package, showing .asGlass() over a background image.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0"
+  sdk: ">=3.6.0"
 
 dependencies:
   flutter:
