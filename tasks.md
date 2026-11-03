@@ -30,8 +30,7 @@ _Last updated: 2026-10-29_
       tapping toggles `enabled`, which removes or adds the `BackdropFilter`).
 - [ ] Clean up the example: remove the no-op `GestureDetector` around `TextButton`, give the
       pubspec a real description, and use single quotes or consistent style.
-- [ ] `git rm -r doc/api` and add `doc/api/` to `.gitignore`: it's `dart doc` output and pub.dev
-      generates docs itself (human agreed to review; see AGENTS.md §6).
+- [ ] Regenerate `doc/api/` with `dart doc` before the next release (kept on purpose, see Decisions).
 - [ ] Update `README.md`: replace `pub get` with `flutter pub add glass`, and document every
       `asGlass` parameter.
 - [ ] Run `flutter pub publish --dry-run` and fix any warnings.
@@ -42,8 +41,7 @@ _Last updated: 2026-10-29_
 
 ## Decisions made
 - 2026-10-29: Raising the minimum Flutter version for `withValues` is OK.
-- 2026-10-29: `doc/api/` is generated; plan is to remove it (pending human confirmation).
+- 2026-11-03: Keep the checked-in `doc/api/` (human decision). Regenerate rather than delete.
 
 ## Open questions for the human
-- Confirm removing `doc/api/`.
 - Set up automated publishing via GitHub Actions? (AGENTS.md §6)

@@ -64,7 +64,7 @@ documentation, and the changelog matter more than they would in an app.
 | `images/noise.png` | Noise texture for the "frosted" look. Declared as a package asset in `pubspec.yaml` and loaded with `AssetImage('images/noise.png', package: 'glass')`. |
 | `example/` | Demo app (`example/lib/main.dart`) that depends on the package through `path: ../`. Shown on pub.dev. |
 | `example/screenshots/` | Screenshots referenced by URL from `README.md`. Don't rename them. |
-| `doc/api/` | **Generated** dartdoc output (`dart doc`) that was checked in. Never hand-edit it. pub.dev builds and hosts API docs itself, so it should be deleted and gitignored (see `tasks.md`). |
+| `doc/api/` | **Generated** dartdoc output (`dart doc`), deliberately kept checked in (human decision, 2026-11-03). Never hand-edit it. Regenerate it with `dart doc` when the public API or its doc comments change. Not used by tooling; pub.dev builds its own docs. |
 | `CHANGELOG.md` | Displayed on pub.dev. Update it for every user-visible change. |
 
 ### How `asGlass` works
@@ -223,9 +223,10 @@ release and run `--dry-run`.
   and `git:` dependencies are not (the `example/` app is fine because it isn't published).
 
 ### Docs
-- pub.dev **generates and hosts API docs itself** from `///` comments. The checked-in
-  `doc/api/` (output of `dart doc`) is not needed and goes stale, so don't commit generated docs.
-  Preview locally with `dart doc` if you want, but keep the output untracked.
+- pub.dev **generates and hosts API docs itself** from `///` comments, and IDEs read the `///`
+  comments directly from source. The checked-in `doc/api/` (output of `dart doc`) isn't used by
+  either. The human chose to keep it, so don't delete it. It goes stale, so regenerate it with
+  `dart doc` as part of a release if the API docs changed.
 - The package page is built from `README.md`, `CHANGELOG.md`, `pubspec.yaml`, and `example/`.
   README images need absolute URLs (as now).
 
