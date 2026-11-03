@@ -2,6 +2,13 @@
 
 * Address lints
 
+## [2.1.0](https://github.com/Zachariah-Abraham/glass/compare/v2.0.0...v2.1.0) (2026-11-03)
+
+
+### Features
+
+* replace deprecated withOpacity with withValues ([04f8eeb](https://github.com/Zachariah-Abraham/glass/commit/04f8eebec2f48f78e8ceb3cd4f1fbb26ce6f363b))
+
 ## [2.0.0] - 2024-02-14
 
 * BREAKING CHANGE: `asGlass` returns `Widget` instead of `ClipRRect` now.
