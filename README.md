@@ -9,28 +9,15 @@ Easily convert any Widget into a glass / frosted glass version of itself, follow
 
 ## Installation
 
-### 1. Depend on it
-
-Add this to your package's `pubspec.yaml` file:
-
-```yaml 
-dependencies:
-    glass:
-```
-
-
-### 2. Install it
-
-You can install packages from the command line:
+### 1. Add it
 
 ```bash
-$ pub get
-..
+flutter pub add glass
 ```
 
-Alternatively, your editor might support pub. Check the docs for your editor to learn more.
+Requires Flutter 3.27 or newer (Dart 3.6+). Older Flutter versions automatically resolve to glass 2.0.0.
 
-### 3. Import it
+### 2. Import it
 
 Now in your Flutter code, you can use:
 
@@ -50,7 +37,23 @@ Container(
 ).asGlass()
 ```
 
-A full example can be found in the example directory
+Glass blurs what is *behind* the widget, so it only shows up when there is content underneath
+(for example inside a `Stack` or over a background image).
+
+### Parameters
+
+| Parameter | Default | Description |
+|---|---|---|
+| `enabled` | `true` | Enable or disable all effects. |
+| `blurX` / `blurY` | `10.0` | Blur amount along each axis. |
+| `tintColor` | `Colors.white` | Tint of the glass. Use `Colors.transparent` for no tint. |
+| `frosted` | `true` | Adds a noise texture for a frosted look. |
+| `clipBorderRadius` | `BorderRadius.zero` | Rounded corners. Ignored if `clipper` is set. |
+| `clipBehaviour` | `Clip.antiAlias` | How the glass is clipped. |
+| `tileMode` | `TileMode.clamp` | How the blur samples at the edges. |
+| `clipper` | `null` | Custom `CustomClipper<RRect>`. |
+
+A full example can be found in the example directory.
 
 ## About me
 
