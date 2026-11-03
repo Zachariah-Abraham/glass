@@ -1,4 +1,4 @@
 /// Create glass widgets
-library glass;
+library;
 
 export 'src/glass_widget.dart';
