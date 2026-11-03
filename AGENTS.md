@@ -213,7 +213,13 @@ version in `.release-please-manifest.json`):
    - §5 passes on `main`. `$F pub publish --dry-run` shows no warnings. Read its file list.
    - `LICENSE`, `README.md` (main pub.dev page) and `pubspec.yaml` (`description` 60-180 chars,
      `homepage`/`repository`, optionally `issue_tracker` and `topics`) are accurate.
-   - Raised SDK minimums are mentioned in a commit body (so they reach the changelog).
+   - Anything users must know (for example a raised minimum SDK) appears in the changelog. Only
+     commit **subjects** reach `CHANGELOG.md`; bodies do not. Put the note in a `feat:`/`fix:`
+     subject (for example `feat: require Flutter 3.27 or newer`) or add a `BREAKING CHANGE:`
+     footer, which release-please prints. Hand-edits to the release PR's changelog are overwritten
+     the next time it regenerates.
+   - Raising the minimum SDK is **not** a breaking change (pub resolves users on older SDKs to the
+     older release), so it is a `feat`/`fix`, not a major bump.
 - The release PR needs the repo secret `RELEASE_PLEASE_TOKEN` (a PAT or GitHub App token).
   `GITHUB_TOKEN` can't be used because tags it creates don't trigger `publish.yml`.
 - Fallback (manual): bump `version:`, edit `CHANGELOG.md`, then `git tag vX.Y.Z && git push
