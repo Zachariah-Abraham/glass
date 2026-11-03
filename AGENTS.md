@@ -12,8 +12,10 @@ Guide for AI coding agents (and humans) working on this repository. Read this fi
   uncommitted diff at the end of a session.
 - Each commit should leave the repo in a working state: `flutter analyze` is clean and tests
   pass. If you have to commit something broken, say so in the commit message and in `tasks.md`.
-- Use short, imperative commit messages. Conventional prefixes are welcome (`feat:`, `fix:`,
-  `chore:`, `docs:`, `test:`, `refactor:`). Example: `fix: replace deprecated withOpacity`.
+- Use [Conventional Commits](https://www.conventionalcommits.org) (**required**: release automation
+  derives version bumps and the changelog from them, see §6). Types: `feat:` (minor), `fix:`
+  (patch), `feat!:` or a `BREAKING CHANGE:` footer (major), and `docs:`, `chore:`, `ci:`, `test:`,
+  `refactor:`, `perf:` (no release). Example: `fix: replace deprecated withOpacity`.
 - Work on `main` only if the human asks you to. Otherwise use a feature branch. Never force-push,
   rewrite published history, or run `dart pub publish` without explicit human approval.
 
@@ -196,21 +198,26 @@ so only the human runs the real `pub publish` (or pushes the release tag). Agent
 release and run `--dry-run`.
 
 ### Release checklist
-1. All of §5 passes. Working tree is clean and committed.
-2. Decide the version ([semver](https://dart.dev/tools/pub/versioning)): breaking API change →
-   major; new backward-compatible feature → minor; fix → patch. The existing `+N` build suffix
-   (for example `2.0.0+2`) is optional; prefer plain `x.y.z`.
-3. Set `version:` in `pubspec.yaml` and add a `## [x.y.z] - YYYY-MM-DD` entry at the top of
-   `CHANGELOG.md`. The two must agree.
-4. Confirm `LICENSE`, `README.md` (main pub.dev page), `CHANGELOG.md` (Changelog tab) and
-   `pubspec.yaml` (`description`, `homepage`/`repository`) are accurate. Description should be
-   60-180 characters. Also consider `issue_tracker` and `topics`.
-5. Run `$F pub publish --dry-run`. It validates the pubspec and layout, lists every file that
-   would be uploaded, and reports warnings. Read the file list, and fix all warnings. It also
-   complains about uncommitted git changes.
-6. Hand off to the human, noting the exact version and anything notable, to run
-   `flutter pub publish` (or tag the release, see below). Record this in `tasks.md`.
-7. After publishing, tag the commit (`git tag vX.Y.Z`) and push the tag, if the human wants it.
+Releases are automated with [release-please](https://github.com/googleapis/release-please-action)
+(`.github/workflows/release-please.yml`, config in `release-please-config.json`, last released
+version in `.release-please-manifest.json`):
+1. Merge changes to `main` using Conventional Commits (§1). `feat` → minor, `fix` → patch,
+   `!`/`BREAKING CHANGE` → major.
+2. release-please keeps a "release PR" open that bumps `version:` in `pubspec.yaml` and prepends
+   to `CHANGELOG.md`. **Don't hand-edit `version:` or add changelog entries for releases**, and
+   don't edit the manifest. Merging the release PR is the human's decision.
+3. Merging the release PR creates the `vX.Y.Z` tag, which triggers `publish.yml`, which publishes
+   to pub.dev.
+4. Before the human merges the release PR, make sure of the following (agents can check these
+   and report in `tasks.md`):
+   - §5 passes on `main`. `$F pub publish --dry-run` shows no warnings. Read its file list.
+   - `LICENSE`, `README.md` (main pub.dev page) and `pubspec.yaml` (`description` 60-180 chars,
+     `homepage`/`repository`, optionally `issue_tracker` and `topics`) are accurate.
+   - Raised SDK minimums are mentioned in a commit body (so they reach the changelog).
+- The release PR needs the repo secret `RELEASE_PLEASE_TOKEN` (a PAT or GitHub App token).
+  `GITHUB_TOKEN` can't be used because tags it creates don't trigger `publish.yml`.
+- Fallback (manual): bump `version:`, edit `CHANGELOG.md`, then `git tag vX.Y.Z && git push
+  origin vX.Y.Z`. Agents don't push release tags.
 
 ### What gets uploaded
 - Everything under the package root except hidden files/dirs (names starting with `.`) and
@@ -244,19 +251,13 @@ release and run `--dry-run`.
   7 days.
 - Use **discontinued** for packages that are no longer maintained.
 
-### Automated publishing (workflow added, pub.dev side pending)
+### Automated publishing (enabled on pub.dev)
 `.github/workflows/publish.yml` publishes to pub.dev from GitHub Actions using OIDC (no stored
-secrets) when a tag matching `v[0-9]+.[0-9]+.[0-9]+` is pushed. It calls
-`dart-lang/setup-dart/.github/workflows/publish.yml@v1`. Requirements:
-- The human must enable it once at https://pub.dev/packages/glass/admin → *Automated publishing*
-  → *Enable publishing from GitHub Actions*: repository `Zachariah-Abraham/glass`, tag pattern
-  `v{{version}}`. Until then the workflow will fail.
-- The tag must equal `v` + `version:` in `pubspec.yaml`, so use plain `x.y.z` versions (no `+N`
-  build suffix, which the workflow's tag filter doesn't match).
-- Release flow: finish §6 checklist, merge to `main`, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
-  **Agents don't push release tags.** Hand that step to the human.
-- Optional hardening: GitHub tag protection rules, and a required `pub.dev` environment (enable on
-  pub.dev, create the same environment on GitHub, uncomment the `with: environment` lines).
+secrets) when a tag matching `v[0-9]+.[0-9]+.[0-9]+` is pushed (normally by release-please).
+pub.dev is configured for repo `Zachariah-Abraham/glass` with tag pattern `v{{version}}`. The tag
+must equal `v` + `version:` in `pubspec.yaml`, so use plain `x.y.z` (no `+N` build suffix).
+Optional hardening: GitHub tag protection rules, and a required `pub.dev` environment (enable on
+pub.dev, create the same environment on GitHub, uncomment the `with: environment` lines).
 
 ### Links
 - Publishing: https://dart.dev/tools/pub/publishing

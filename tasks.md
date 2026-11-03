@@ -18,7 +18,7 @@ _Last updated: 2026-10-29_
 - _(none)_
 
 ## Backlog (suggested, not yet approved by the human)
-- [ ] **Human:** enable automated publishing at pub.dev/packages/glass/admin (repo `Zachariah-Abraham/glass`, tag pattern `v{{version}}`), then push `main`. Test with the next release tag (2.1.0).
+- [ ] **Human:** create a PAT (or GitHub App) and add it as repo secret `RELEASE_PLEASE_TOKEN`, enable Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests", then merge branch `ci/release-please` into `main`. The first `feat:`/`fix:` commit after that opens the release PR.
 - [ ] Add root `analysis_options.yaml` (`include: package:flutter_lints/flutter.yaml`) and add
       `flutter_lints` to the root dev_dependencies. Then fix the new lints (for example the
       `new ImageFilter.blur` keyword).
@@ -37,6 +37,7 @@ _Last updated: 2026-10-29_
 - [ ] Run `flutter pub publish --dry-run` and fix any warnings.
 
 ## Done
+- 2026-11-03: Pushed `main`; pub.dev automated publishing enabled by the human. Added release-please (branch `ci/release-please`, not merged: needs `RELEASE_PLEASE_TOKEN`).
 - 2026-11-03: Merged `docs/agent-guidelines` into local `main`; added `.github/workflows/publish.yml` (tag-triggered pub.dev publish).
 - 2026-10-29: Added publishing guide (AGENTS.md §6).
 - 2026-10-29: Added `AGENTS.md`, `CLAUDE.md`, and `tasks.md` (agent onboarding and hand-off docs).
