@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Analyze and test (Flutter ${{ matrix.flutter-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Oldest supported Flutter (see `environment` in pubspec.yaml) and latest stable.
+        flutter-version: ['3.27.0', 'stable']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ matrix.flutter-version != 'stable' && matrix.flutter-version || '' }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        if: matrix.flutter-version == 'stable'
+        run: dart format --output=none --set-exit-if-changed lib test example/lib example/test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Analyze example
+        working-directory: example
+        run: |
+          flutter pub get
+          flutter analyze
+
+      - name: Test example
+        working-directory: example
+        run: flutter test
+
+      - name: Validate package for publishing
+        if: matrix.flutter-version == 'stable'
+        run: flutter pub publish --dry-run
