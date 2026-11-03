@@ -3,35 +3,51 @@
 Living status of work on this repo. **Update it whenever you make progress** (see AGENTS.md §1).
 Newest information goes first in each section. Use absolute dates.
 
-_Last updated: 2026-10-29_
+_Last updated: 2026-11-03_
 
 ## Current state
-- Package version `2.0.0+2` (`pubspec.yaml`). Last code change: "chore: Address lints".
-- (Before the 2026-11-03 branch above; now clean.) With Flutter 3.47.7 / Dart 3.13.5 (FVM `stable`):
-  - Root `flutter analyze`: **2 infos**, both `withOpacity` deprecations at
-    `lib/src/glass_widget.dart:49-50`.
-  - `example/` analyze: clean.
-  - `example/` test: **fails**. `example/test/widget_test.dart` is the stock counter template.
-  - The root package has **no tests** and **no `analysis_options.yaml`**.
+- **glass 2.1.0 is published on pub.dev** (2026-11-03). `main` is at or ahead of the `v2.1.0` tag.
+- Release flow is fully automated (AGENTS.md §6): Conventional Commits on `main` → release-please
+  opens a release PR → the human merges it → `vX.Y.Z` tag → `publish.yml` publishes to pub.dev.
+  - Requires the `RELEASE_PLEASE_TOKEN` Actions secret (set) and pub.dev automated publishing for
+    `Zachariah-Abraham/glass` with tag pattern `v{{version}}` (enabled).
+- With Flutter 3.47.7 / Dart 3.13.5 (FVM `stable`): root and `example/` `flutter analyze` are
+  clean, and `flutter test` passes in both (10 widget tests in `test/glass_widget_test.dart`, one
+  toggle test in `example/test/widget_test.dart`).
+- `pubspec.yaml` `version:` is managed by release-please. Don't edit it by hand, and keep it as
+  plain `x.y.z` (no `+N`).
 
 ## In progress
 - _(none)_
 
 ## Backlog (suggested, not yet approved by the human)
-- [ ] Regenerate `doc/api/` with `dart doc` before the next release (kept on purpose, see Decisions).
-- [ ] Run `flutter pub publish --dry-run` and fix any warnings.
+- [ ] Regenerate `doc/api/` with `dart doc`. It's stale (kept on purpose, see Decisions). Use a
+      `docs:` commit so it doesn't cut a release.
+- [ ] Optional: exclude big example assets from the published archive via `.pubignore`
+      (`example/screenshots/`, `example/images/`; archive is ~3 MB). README images use GitHub
+      URLs, so they don't need to ship.
+- [ ] Optional hardening of automated publishing: GitHub tag protection rules for `v*`, and a
+      required `pub.dev` environment (AGENTS.md §6).
+- [ ] Optional: add `topics`, `issue_tracker` and `repository` to `pubspec.yaml` for pub.dev.
+- [ ] Optional: CI workflow running `flutter analyze` and `flutter test` on PRs and pushes to
+      `main` (none exists yet; release PRs aren't checked either).
 
 ## Done
-- 2026-11-03: On branch `feat/with-values-and-tests`: added root lints (`flutter_lints`), `withValues` + SDK floor Flutter 3.27 / Dart 3.6 (`feat:`, will cut 2.1.0), 10 widget tests, real example test, example cleanup, README params table. Root and example: analyze clean, tests pass.
-- 2026-11-03: `RELEASE_PLEASE_TOKEN` Actions secret added; `ci/release-please` merged and pushed to `main`. Release automation is live: the next `feat:`/`fix:` commit on `main` opens a release PR.
-- 2026-11-03: Pushed `main`; pub.dev automated publishing enabled by the human. Added release-please (branch `ci/release-please`, not merged: needs `RELEASE_PLEASE_TOKEN`).
-- 2026-11-03: Merged `docs/agent-guidelines` into local `main`; added `.github/workflows/publish.yml` (tag-triggered pub.dev publish).
-- 2026-10-29: Added publishing guide (AGENTS.md §6).
-- 2026-10-29: Added `AGENTS.md`, `CLAUDE.md`, and `tasks.md` (agent onboarding and hand-off docs).
+- 2026-11-03: Released 2.1.0 (`withValues`, minimum Flutter 3.27 / Dart 3.6). First end-to-end
+  automated release: release PR #9 merged, tag `v2.1.0` published to pub.dev.
+- 2026-11-03: Added root `flutter_lints` config, 10 widget tests, a real example test, example
+  cleanup, and the README parameters table. Analyze and tests clean.
+- 2026-11-03: Added release-please (`release-please.yml`, config and manifest) and the
+  tag-triggered `publish.yml`. Dropped the `+N` build suffix from `version:` so tags match
+  pub.dev's `v{{version}}`.
+- 2026-10-29: Added `AGENTS.md` (incl. the publishing guide in §6), `CLAUDE.md` and `tasks.md`.
 
 ## Decisions made
-- 2026-10-29: Raising the minimum Flutter version for `withValues` is OK.
+- 2026-11-03: Raising the minimum SDK isn't a breaking change (pub resolves users on older SDKs
+  to the older release), so it ships as a minor release. Note it in a commit **subject** so it
+  reaches the changelog.
 - 2026-11-03: Keep the checked-in `doc/api/` (human decision). Regenerate rather than delete.
+- 2026-10-29: Raising the minimum Flutter version for `withValues` is OK.
 
 ## Open questions for the human
-- Enable automated publishing on pub.dev (see Backlog / AGENTS.md §6) and push `main`.
+- Which of the optional backlog items, if any, do you want done?
