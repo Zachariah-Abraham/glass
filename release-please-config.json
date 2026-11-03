@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "20889402abf626aba99e9945529d36f6b2bd819d",
+  "packages": {
+    ".": {
+      "release-type": "dart",
+      "package-name": "glass",
+      "include-component-in-tag": false,
+      "include-v-in-tag": true
+    }
+  }
+}

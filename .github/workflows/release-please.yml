@@ -1,0 +1,27 @@
+# Opens/updates a release PR from Conventional Commits on main. Merging that PR bumps `version:` in
+# pubspec.yaml, updates CHANGELOG.md, and creates the `vX.Y.Z` tag, which triggers publish.yml.
+#
+# Requires a repo secret RELEASE_PLEASE_TOKEN (a PAT, or GitHub App token, with contents,
+# pull-requests and issues write). The default GITHUB_TOKEN can't be used: tags it creates do not
+# trigger other workflows, so publish.yml would never run.
+name: release-please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
