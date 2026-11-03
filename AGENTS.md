@@ -244,14 +244,19 @@ release and run `--dry-run`.
   7 days.
 - Use **discontinued** for packages that are no longer maintained.
 
-### Optional: automated publishing
-After the first manual publish, releases can be automated from GitHub Actions with OIDC (no
-stored secrets): enable it at `pub.dev/packages/glass/admin` (repo `Zachariah-Abraham/glass`,
-tag pattern like `v{{version}}`), and add `.github/workflows/publish.yml` that triggers on
-`push: tags: ['v[0-9]+.[0-9]+.[0-9]+']` with `permissions: id-token: write` and calls
-`dart-lang/setup-dart/.github/workflows/publish.yml@v1`. The tag must match `version:` in
-`pubspec.yaml`. Consider tag protection rules and a required `pub.dev` environment. Not set up
-yet. Ask the human first.
+### Automated publishing (workflow added, pub.dev side pending)
+`.github/workflows/publish.yml` publishes to pub.dev from GitHub Actions using OIDC (no stored
+secrets) when a tag matching `v[0-9]+.[0-9]+.[0-9]+` is pushed. It calls
+`dart-lang/setup-dart/.github/workflows/publish.yml@v1`. Requirements:
+- The human must enable it once at https://pub.dev/packages/glass/admin → *Automated publishing*
+  → *Enable publishing from GitHub Actions*: repository `Zachariah-Abraham/glass`, tag pattern
+  `v{{version}}`. Until then the workflow will fail.
+- The tag must equal `v` + `version:` in `pubspec.yaml`, so use plain `x.y.z` versions (no `+N`
+  build suffix, which the workflow's tag filter doesn't match).
+- Release flow: finish §6 checklist, merge to `main`, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
+  **Agents don't push release tags.** Hand that step to the human.
+- Optional hardening: GitHub tag protection rules, and a required `pub.dev` environment (enable on
+  pub.dev, create the same environment on GitHub, uncomment the `with: environment` lines).
 
 ### Links
 - Publishing: https://dart.dev/tools/pub/publishing

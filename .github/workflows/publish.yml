@@ -1,0 +1,17 @@
+# Publishes to pub.dev when a version tag is pushed (e.g. `git tag v2.1.0 && git push origin v2.1.0`).
+# The tag must match `version:` in pubspec.yaml and the tag pattern configured at
+# https://pub.dev/packages/glass/admin (`v{{version}}`).
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  publish:
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    # with:
+    #   environment: pub.dev # Uncomment if "Require GitHub Actions environment" is enabled on pub.dev
