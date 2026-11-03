@@ -182,6 +182,11 @@ those incidental changes as part of unrelated work. Either revert them
 ---
 
 ## 5. Definition of done (per change)
+CI (`.github/workflows/ci.yml`) runs on pushes to `main` and on PRs: analyze and tests for the root
+and `example/` on Flutter 3.27.0 (the minimum) and latest stable, plus a format check and
+`flutter pub publish --dry-run` on stable. Dev dependencies must resolve on the minimum SDK, which
+is why `flutter_lints` is `^5` (v6 needs Dart 3.8).
+
 1. `$F analyze` is clean in the root and in `example/`.
 2. `$F test` passes in the root and in `example/`.
 3. `dart format` is applied.
@@ -230,8 +235,10 @@ version in `.release-please-manifest.json`):
   anything matched by `.gitignore` or `.pubignore`. A `.pubignore` in a directory overrides that
   directory's `.gitignore` for publishing only.
 - Keep the package small (limit is ~100 MB gzipped / 256 MB uncompressed). Large demo assets and
-  generated output should be excluded. `example/screenshots/` and `example/images/` are
-  referenced from README by GitHub URL, so consider `.pubignore`-ing them if the size matters.
+  generated output should be excluded. A root `.pubignore` exists, and pub then **ignores
+  `.gitignore`** for publishing, so `.pubignore` is a copy of `.gitignore` plus
+  `example/screenshots/` (archive ~3 MB → ~750 KB). **Keep the two files in sync** when adding
+  ignore rules.
 - Only hosted pub.dev dependencies and SDK dependencies (`sdk: flutter`) are allowed. `path:`
   and `git:` dependencies are not (the `example/` app is fine because it isn't published).
 

@@ -23,16 +23,13 @@ _Last updated: 2026-11-03_
 ## Backlog (suggested, not yet approved by the human)
 - [ ] Regenerate `doc/api/` with `dart doc`. It's stale (kept on purpose, see Decisions). Use a
       `docs:` commit so it doesn't cut a release.
-- [ ] Optional: exclude big example assets from the published archive via `.pubignore`
-      (`example/screenshots/`, `example/images/`; archive is ~3 MB). README images use GitHub
-      URLs, so they don't need to ship.
 - [ ] Optional hardening of automated publishing: GitHub tag protection rules for `v*`, and a
       required `pub.dev` environment (AGENTS.md §6).
-- [ ] Optional: add `topics`, `issue_tracker` and `repository` to `pubspec.yaml` for pub.dev.
-- [ ] Optional: CI workflow running `flutter analyze` and `flutter test` on PRs and pushes to
-      `main` (none exists yet; release PRs aren't checked either).
 
 ## Done
+- 2026-11-03: Merged PR #10: CI (`ci.yml`), `.pubignore` (archive ~3 MB → ~750 KB), pub.dev
+  metadata (`repository`, `issue_tracker`, `topics`; shows after the next release) and
+  `flutter_lints` ^5. Deleted the unused Codemagic webhook (no config, no checks).
 - 2026-11-03: Released 2.1.0 (`withValues`, minimum Flutter 3.27 / Dart 3.6). First end-to-end
   automated release: release PR #9 merged, tag `v2.1.0` published to pub.dev.
 - 2026-11-03: Added root `flutter_lints` config, 10 widget tests, a real example test, example
@@ -43,6 +40,7 @@ _Last updated: 2026-11-03_
 - 2026-10-29: Added `AGENTS.md` (incl. the publishing guide in §6), `CLAUDE.md` and `tasks.md`.
 
 ## Decisions made
+- 2026-11-03: `flutter_lints` is `^5` because `^6` needs Dart 3.8 and the minimum SDK is Dart 3.6.
 - 2026-11-03: Raising the minimum SDK isn't a breaking change (pub resolves users on older SDKs
   to the older release), so it ships as a minor release. Note it in a commit **subject** so it
   reaches the changelog.
@@ -50,4 +48,4 @@ _Last updated: 2026-11-03_
 - 2026-10-29: Raising the minimum Flutter version for `withValues` is OK.
 
 ## Open questions for the human
-- Which of the optional backlog items, if any, do you want done?
+- Do you want the remaining backlog items done? Hardening is deferred by the human.
