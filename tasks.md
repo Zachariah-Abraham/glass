@@ -21,12 +21,11 @@ _Last updated: 2026-11-03_
 - _(none)_
 
 ## Backlog (suggested, not yet approved by the human)
-- [ ] Regenerate `doc/api/` with `dart doc`. It's stale (kept on purpose, see Decisions). Use a
-      `docs:` commit so it doesn't cut a release.
 - [ ] Optional hardening of automated publishing: GitHub tag protection rules for `v*`, and a
       required `pub.dev` environment (AGENTS.md §6).
 
 ## Done
+- 2026-11-03: Deleted `doc/api/` from git and added it to `.gitignore` and `.pubignore`.
 - 2026-11-03: Merged PR #10: CI (`ci.yml`), `.pubignore` (archive ~3 MB → ~750 KB), pub.dev
   metadata (`repository`, `issue_tracker`, `topics`; shows after the next release) and
   `flutter_lints` ^5. Deleted the unused Codemagic webhook (no config, no checks).
@@ -44,7 +43,7 @@ _Last updated: 2026-11-03_
 - 2026-11-03: Raising the minimum SDK isn't a breaking change (pub resolves users on older SDKs
   to the older release), so it ships as a minor release. Note it in a commit **subject** so it
   reaches the changelog.
-- 2026-11-03: Keep the checked-in `doc/api/` (human decision). Regenerate rather than delete.
+- 2026-11-03: Removed the checked-in `doc/api/` (human decision, reversing an earlier keep): it's unused by pub.dev and IDEs, went stale, and shipped in the archive. Now gitignored and in `.pubignore`.
 - 2026-10-29: Raising the minimum Flutter version for `withValues` is OK.
 
 ## Open questions for the human
