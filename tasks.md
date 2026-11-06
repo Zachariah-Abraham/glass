@@ -18,17 +18,30 @@ _Last updated: 2026-11-06_
   plain `x.y.z` (no `+N`).
 
 ## In progress
-- Scoping Apple "liquid glass" support (started 2026-11-06, proposal given to the human,
-  awaiting decisions). Findings so far:
-  - Refraction needs a fragment shader run on the backdrop: `BackdropFilter(filter: ImageFilter.shader(...))`.
-    It throws `UnsupportedError` without Impeller; check `ImageFilter.isShaderFilterSupported` and fall
-    back to the existing blur (web, Skia, and probably `flutter test` goldens).
-  - `ImageFilter.shader` is in Flutter 3.29.0 (maybe earlier; not checked on 3.27). The minimum is
-    3.27, so a CI run on 3.27.0 decides whether the minimum has to rise.
-  - Packages ship shaders via `flutter: shaders:` in `pubspec.yaml` and load them asynchronously with
-    `FragmentProgram.fromAsset('packages/glass/shaders/<name>.frag')`.
-  - Prior art: `liquid_glass_renderer` (whynotmake-it, 1.0.0-dev, needs Flutter 3.47 + Flutter GPU,
-    blends shapes). Flutter's own Cupertino Liquid Glass work is tracked in flutter/flutter#170310.
+- Apple "liquid glass" support, **spike on branch `spike/liquid-glass`** (not for merging as is).
+  Human decisions 2026-11-06: extend `asGlass` itself (an optional config, not a new method; a
+  breaking release is acceptable if that turns out to be necessary); try to keep the 3.27 minimum and
+  raise it only if needed; shape merging ("blobs" like SwiftUI's `GlassEffectContainer`) is wanted,
+  but must be our own implementation: don't read or copy `liquid_glass_renderer`'s source.
+  - Done in the spike: `LiquidGlass` settings class (`thickness`, `refraction`, `highlight`) and an
+    `asGlass(liquid:)` parameter, default null = unchanged rendering. `shaders/liquid_glass.frag`
+    (rounded-rect SDF, edge refraction, rim highlight, slight dispersion; blur is composed in Dart
+    via `ImageFilter.compose(outer: ImageFilter.shader(..), inner: blur)`). A private render object
+    pushes a `BackdropFilterLayer` and passes the glass rect in global physical pixels.
+  - Verified on the iOS simulator (iPhone 17 Pro, Impeller/Metal) with a scratchpad demo app: edges
+    visibly bend the backdrop and the rim highlight shows. So `FlutterFragCoord()` in a backdrop
+    shader is global physical pixels there. Not yet checked on Android (Vulkan/GLES: y may flip).
+  - Known gaps: the glass rect goes stale when an ancestor moves the glass without repainting it (for
+    example while scrolling); `clipper` and non-uniform radii are ignored by the shader; no tests for
+    the shader path yet (`flutter test --enable-impeller` makes `isShaderFilterSupported` true, so
+    widget tests can cover it); merging not started.
+  - `ImageFilter.shader` is probably NOT in Flutter 3.27.0 (engine PR #53490 merged 2024-11-08, after
+    the 3.27 branch point; moderate confidence). The 3.27 CI job will confirm; if so, raise the minimum
+    to 3.29 (allowed by the human).
+  - Prior art: `liquid_glass_renderer` (needs Flutter 3.47 + Flutter GPU). Flutter's own Cupertino work:
+    flutter/flutter#170310.
+  - Next: human reviews spike screenshots; then fix the stale-position problem, Android check, tests,
+    and design merging.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
   2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
   `@Deprecated` alias, ships as a minor (2.2.0). Step 2 (later, next major 3.0.0): delete
