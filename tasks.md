@@ -62,6 +62,15 @@ _Last updated: 2026-11-07_
     (b) DONE 2026-11-07: restructure the liquid path so the shader samples an inflated backdrop (shader-only backdrop
     layer over the glass rect + margin, passing through outside the shape, then a blur clipped to the
     glass, then the rim drawn on top), tested on macOS desktop. Then tune (b) to (a)'s model.
+    2026-11-07 native measurements (hue-encoded coordinate backgrounds decoded per pixel; data in the
+    session scratchpad `edge/`): native samples INWARD only, along the inward SDF normal (radial at
+    corners, no tangential part). Content outside the glass is never pulled in. Content from deeper
+    inside is compressed into the rim, so straight lines wrap into loops at the edge. Model:
+    `source = p + d(t)*n_in`, `W = min(20 pt, 0.69*min(w,h)/2)`, `A = 3W`,
+    `d(t) = A*(1 - sqrt(1 - (1 - t/W)^2))` for t < W. Measured for a 260x80 pill: d = 42/34.7/29/20.3/
+    12.5/5.3/1.5/0 at t = 1/2/3/5/8/12/16/20 pt. It is the same for cards, for regular vs clear, and at or past screen
+    edges and corners (no fade, clamping or rim change). So the outward sampling below was a wrong
+    assumption; being replaced by the inward model (in progress).
     Structure now (`_GlassBackdrop` / `_LiquidGlassLayers` in `lib/src/glass_widget.dart`): pass 1 is a
     `ClipRectLayer` (glass rect + margin `0.7*edge*refraction + 3 px`) holding a shader-only
     `BackdropFilterLayer` (`shaders/liquid_glass.frag`, passes through outside the shape, samples
