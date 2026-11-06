@@ -58,7 +58,13 @@ _Last updated: 2026-11-07_
     lines of text) instead of pulling in content from outside it, as native does (squashed circles,
     text slivers). Fixing it needs a backdrop larger than the glass. Also `copyWith` can't reset
     `edgeWidth` to null.
-  - Next: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
+  - 2026-11-07, in progress: human decision: the mirrored rim is NOT acceptable; match native exactly,
+    including at screen edges and corners. Two parallel tasks: (a) measure native pull-in distance,
+    bend profile, corner direction and screen-edge behaviour with a test-pattern scene (iOS simulator);
+    (b) restructure the liquid path so the shader samples an inflated backdrop (shader-only backdrop
+    layer over the glass rect + margin, passing through outside the shape, then a blur clipped to the
+    glass, then the rim drawn on top), tested on macOS desktop. Then tune (b) to (a)'s model.
+  - Earlier next steps: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
     problem, Android check, shader-path tests, and design merging.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
   2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
