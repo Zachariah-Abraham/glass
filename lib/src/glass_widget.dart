@@ -137,53 +137,63 @@ extension GlassWidget<T extends Widget> on T {
     );
     return !enabled
         ? this
-        : ClipRRect(
+        : _GlassBackdrop(
+            blur: blur,
+            liquid: liquid,
             clipper: clipper,
             clipBehavior: clipBehavior ?? clipBehaviour ?? Clip.antiAlias,
             borderRadius: clipBorderRadius,
-            child: _GlassBackdrop(
-              blur: blur,
-              liquid: liquid,
-              borderRadius: clipBorderRadius,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: (tint != Colors.transparent)
-                      ? LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            tint.withValues(alpha: tintStart),
-                            tint.withValues(alpha: tintEnd),
-                          ],
-                        )
-                      : null,
-                  image: (frosted ?? liquid == null)
-                      ? DecorationImage(
-                          image:
-                              AssetImage('images/noise.png', package: 'glass'),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: this,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: (tint != Colors.transparent)
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          tint.withValues(alpha: tintStart),
+                          tint.withValues(alpha: tintEnd),
+                        ],
+                      )
+                    : null,
+                image: (frosted ?? liquid == null)
+                    ? DecorationImage(
+                        image: AssetImage('images/noise.png', package: 'glass'),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
+              child: this,
             ),
           );
   }
 }
 
-/// Blurs the backdrop, and bends it with the liquid glass shader when
-/// [liquid] is set and shaders are available.
+/// Clips to the glass shape and blurs the backdrop. When [liquid] is set and
+/// shaders are available, it also bends the backdrop with the liquid glass
+/// shader and draws the rim.
+///
+/// Liquid glass needs two passes, so it is built from the outside in:
+///
+/// 1. A refraction pass, clipped to the glass rect plus a margin (so it may
+///    paint outside the glass box). It runs only the shader, which passes the
+///    backdrop through unchanged outside the glass shape and bends it inside,
+///    sampling from the margin around the glass.
+/// 2. The usual clip, blur and tint, which blur the already bent backdrop.
+/// 3. The rim, painted last so the blur does not soften it.
 class _GlassBackdrop extends StatefulWidget {
   const _GlassBackdrop({
     required this.blur,
     required this.liquid,
+    required this.clipper,
+    required this.clipBehavior,
     required this.borderRadius,
     required this.child,
   });
 
   final ImageFilter blur;
   final LiquidGlass? liquid;
+  final CustomClipper<RRect>? clipper;
+  final Clip clipBehavior;
   final BorderRadius borderRadius;
   final Widget child;
 
@@ -192,123 +202,179 @@ class _GlassBackdrop extends StatefulWidget {
 }
 
 class _GlassBackdropState extends State<_GlassBackdrop> {
-  static Future<FragmentProgram>? _program;
-  FragmentShader? _shader;
+  static Future<List<FragmentProgram>>? _programs;
+  FragmentShader? _refraction;
+  FragmentShader? _rim;
 
   @override
   void initState() {
     super.initState();
-    _maybeLoadShader();
+    _maybeLoadShaders();
   }
 
   @override
   void didUpdateWidget(_GlassBackdrop oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _maybeLoadShader();
+    _maybeLoadShaders();
   }
 
-  void _maybeLoadShader() {
+  void _maybeLoadShaders() {
     if (widget.liquid == null ||
-        _shader != null ||
+        _refraction != null ||
         !ImageFilter.isShaderFilterSupported) {
       return;
     }
-    _program ??= FragmentProgram.fromAsset(
-      'packages/glass/shaders/liquid_glass.frag',
-    );
-    _program!.then((program) {
-      if (mounted) setState(() => _shader = program.fragmentShader());
+    _programs ??= Future.wait([
+      FragmentProgram.fromAsset('packages/glass/shaders/liquid_glass.frag'),
+      FragmentProgram.fromAsset('packages/glass/shaders/liquid_rim.frag'),
+    ]);
+    _programs!.then((programs) {
+      if (!mounted) return;
+      setState(() {
+        _refraction = programs[0].fragmentShader();
+        _rim = programs[1].fragmentShader();
+      });
     }, onError: (Object _) {}); // Keep the plain blur if loading fails.
   }
 
   @override
   void dispose() {
-    _shader?.dispose();
+    _refraction?.dispose();
+    _rim?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // The plain glass: clip to the shape, blur what is behind, then the tint.
+    final glass = ClipRRect(
+      clipper: widget.clipper,
+      clipBehavior: widget.clipBehavior,
+      borderRadius: widget.borderRadius,
+      child: BackdropFilter(filter: widget.blur, child: widget.child),
+    );
     final liquid = widget.liquid;
-    final shader = _shader;
-    if (liquid == null || shader == null) {
-      return BackdropFilter(filter: widget.blur, child: widget.child);
-    }
-    return _LiquidBackdrop(
-      shader: shader,
-      blur: widget.blur,
+    final refraction = _refraction;
+    final rim = _rim;
+    if (liquid == null || refraction == null || rim == null) return glass;
+    return _LiquidGlassLayers(
+      refraction: refraction,
+      rim: rim,
       liquid: liquid,
       radius: widget.borderRadius.topLeft.x,
       devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-      child: widget.child,
+      child: glass,
     );
   }
 }
 
-class _LiquidBackdrop extends SingleChildRenderObjectWidget {
-  const _LiquidBackdrop({
-    required this.shader,
-    required this.blur,
+class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
+  const _LiquidGlassLayers({
+    required this.refraction,
+    required this.rim,
     required this.liquid,
     required this.radius,
     required this.devicePixelRatio,
     super.child,
   });
 
-  final FragmentShader shader;
-  final ImageFilter blur;
+  final FragmentShader refraction;
+  final FragmentShader rim;
   final LiquidGlass liquid;
   final double radius;
   final double devicePixelRatio;
 
   @override
-  _RenderLiquidBackdrop createRenderObject(BuildContext context) =>
-      _RenderLiquidBackdrop(this);
+  _RenderLiquidGlassLayers createRenderObject(BuildContext context) =>
+      _RenderLiquidGlassLayers(this);
 
   @override
   void updateRenderObject(
     BuildContext context,
-    _RenderLiquidBackdrop renderObject,
+    _RenderLiquidGlassLayers renderObject,
   ) {
     renderObject.config = this;
   }
 }
 
-class _RenderLiquidBackdrop extends RenderProxyBox {
-  _RenderLiquidBackdrop(this._config);
+/// Lays out like its child. Paints the refraction pass before the child (in a
+/// clip larger than the box) and the rim after it. Hit testing is unchanged.
+class _RenderLiquidGlassLayers extends RenderProxyBox {
+  _RenderLiquidGlassLayers(this._config);
 
-  _LiquidBackdrop _config;
-  set config(_LiquidBackdrop value) {
+  _LiquidGlassLayers _config;
+  set config(_LiquidGlassLayers value) {
     _config = value;
     markNeedsPaint();
   }
+
+  final LayerHandle<ClipRectLayer> _clipLayer = LayerHandle<ClipRectLayer>();
+  final LayerHandle<BackdropFilterLayer> _refractLayer =
+      LayerHandle<BackdropFilterLayer>();
 
   @override
   bool get alwaysNeedsCompositing => true;
 
   @override
+  void dispose() {
+    _clipLayer.layer = null;
+    _refractLayer.layer = null;
+    super.dispose();
+  }
+
+  @override
   void paint(PaintingContext context, Offset offset) {
     final c = _config;
     final dpr = c.devicePixelRatio;
-    // Spike: assumes the shader sees the whole screen in physical pixels.
-    // The position goes stale if an ancestor moves this box without
+    final edge = (c.liquid.edgeWidth ?? size.shortestSide / 2) * dpr;
+    // The farthest the shader reads from outside the glass shape, plus a
+    // little slack for the antialiased edge.
+    final reach = 0.7 * edge * c.liquid.refraction + 3 * dpr;
+    final margin = reach / dpr;
+
+    // Spike: the position goes stale if an ancestor moves this box without
     // repainting it (for example while scrolling).
     final origin = localToGlobal(Offset.zero) * dpr;
-    c.shader
+    c.refraction
       ..setFloat(2, origin.dx)
       ..setFloat(3, origin.dy)
       ..setFloat(4, size.width * dpr)
       ..setFloat(5, size.height * dpr)
       ..setFloat(6, c.radius * dpr)
-      ..setFloat(7, (c.liquid.edgeWidth ?? size.shortestSide / 2) * dpr)
-      ..setFloat(8, c.liquid.refraction)
-      ..setFloat(9, c.liquid.highlight);
-    final layer = (this.layer as BackdropFilterLayer?) ?? BackdropFilterLayer();
-    layer.filter = ImageFilter.compose(
-      outer: ImageFilter.shader(c.shader),
-      inner: c.blur,
+      ..setFloat(7, edge)
+      ..setFloat(8, c.liquid.refraction);
+
+    // Pass 1: bend the backdrop, in a clip that includes the margin.
+    _clipLayer.layer = context.pushClipRect(
+      true,
+      offset,
+      (Offset.zero & size).inflate(margin),
+      (clipContext, clipOffset) {
+        final layer = _refractLayer.layer ?? BackdropFilterLayer();
+        layer.filter = ImageFilter.shader(c.refraction);
+        _refractLayer.layer = layer;
+        clipContext.pushLayer(layer, (_, __) {}, clipOffset);
+      },
+      oldLayer: _clipLayer.layer,
     );
-    this.layer = layer;
-    context.pushLayer(layer, super.paint, offset);
+
+    // Pass 2: clip, blur and tint (the child).
+    super.paint(context, offset);
+
+    // Pass 3: the rim, crisp on top of everything.
+    // A paint shader works in canvas (logical) coordinates, unlike the
+    // backdrop shader above, which works in physical pixels of the target.
+    c.rim
+      ..setFloat(0, offset.dx)
+      ..setFloat(1, offset.dy)
+      ..setFloat(2, size.width)
+      ..setFloat(3, size.height)
+      ..setFloat(4, c.radius)
+      ..setFloat(5, c.liquid.highlight)
+      ..setFloat(6, dpr);
+    context.canvas.drawRect(
+      offset & size,
+      Paint()..shader = c.rim,
+    );
   }
 }

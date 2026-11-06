@@ -35,6 +35,7 @@ flutter:
     - images/noise.png
   shaders:
     - shaders/liquid_glass.frag
+    - shaders/liquid_rim.frag
 
   #
   # For details regarding assets in packages, see

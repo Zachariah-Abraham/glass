@@ -1,13 +1,23 @@
 #version 460 core
 #include <flutter/runtime_effect.glsl>
 
+// Refraction pass of liquid glass, used as a backdrop filter ALONE (the blur is
+// a separate, later pass). It runs in a clip that is larger than the glass, so
+// it can read the backdrop outside the glass shape: content just outside the
+// rim is pulled in and squashed. Outside the shape it returns the backdrop
+// unchanged, so the larger clip is invisible.
+//
+// Measured on macOS (Impeller/Metal): FlutterFragCoord() is in physical pixels
+// of the whole render target (not relative to the clip), and uSize is the size
+// of the whole render target. Both are used consistently with uRect, which the
+// caller gives in the same global physical pixels.
+
 uniform vec2 uSize;         // floats 0-1: input texture size (set by the engine)
 uniform vec4 uRect;         // floats 2-5: glass rect left, top, width, height (physical px)
 uniform float uRadius;      // float 6: corner radius in px
 uniform float uThickness;   // float 7: width in px of the curved edge band
 uniform float uRefraction;  // float 8: refraction strength, ~1 = default
-uniform float uHighlight;   // float 9: rim highlight intensity 0..1
-uniform sampler2D uTexture; // the (already blurred) backdrop
+uniform sampler2D uTexture; // the backdrop
 
 out vec4 fragColor;
 
@@ -29,9 +39,8 @@ float shapeSdf(vec2 p, out vec2 grad) {
   return d;
 }
 
-vec3 sampleBackdrop(vec2 fragCoord, vec2 offset) {
-  vec2 uv = clamp((fragCoord + offset) / uSize, vec2(0.0), vec2(1.0));
-  return texture(uTexture, uv).rgb;
+vec3 sampleBackdrop(vec2 p) {
+  return texture(uTexture, clamp(p / uSize, vec2(0.0), vec2(1.0))).rgb;
 }
 
 void main() {
@@ -41,7 +50,7 @@ void main() {
   vec2 grad;
   float d = shapeSdf(fragCoord, grad);
 
-  // ~1px antialiased coverage of the shape.
+  // ~1px antialiased coverage of the shape. Outside it the pixel is untouched.
   float cover = 1.0 - smoothstep(-0.5, 0.5, d);
   if (cover <= 0.0) {
     fragColor = base;
@@ -55,21 +64,11 @@ void main() {
 
   // Dome profile: a quarter circle, flat in the centre and infinitely steep at
   // the rim. The sample point moves toward the outside, so content near the rim
-  // is squeezed into the edge band (minified), as in a thick convex slab. The
-  // backdrop texture only covers the glass rect, so a sample that would land
-  // outside is mirrored back inside.
+  // (and, at the rim itself, content from up to `off` px beyond it) is
+  // squeezed into the edge band, as in a thick convex slab.
   float prof = 1.0 - sqrt(max(1.0 - u * u, 0.0));
   float off = 0.7 * thick * uRefraction * prof;
-  float sd = abs(depth - off);  // depth of the sampled point
-  vec3 col = sampleBackdrop(fragCoord, -grad * (sd - depth));
+  vec3 col = sampleBackdrop(fragCoord + grad * off);
 
-  // Light from the top-left. Crisp ~2px hairline at the rim, a little
-  // brighter on the sides facing the light.
-  vec2 lightDir = normalize(vec2(-1.0, -1.0));
-  float facing = dot(grad, lightDir);  // +1 top-left, -1 bottom-right
-  float line = 1.0 - smoothstep(1.0, 3.0, depth);
-  float spec = 0.55 + 0.45 * max(facing, 0.0) + 0.1 * max(-facing, 0.0);
-  col = mix(col, vec3(0.88, 0.95, 1.0), clamp(line * spec * 1.0 * uHighlight, 0.0, 1.0));
-
-  fragColor = vec4(mix(base.rgb, clamp(col, 0.0, 1.0), cover), 1.0);
+  fragColor = vec4(mix(base.rgb, col, cover), 1.0);
 }
