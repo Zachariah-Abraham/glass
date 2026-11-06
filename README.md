@@ -56,6 +56,29 @@ Glass blurs what is *behind* the widget, so it only shows up when there is conte
 
 A full example can be found in the example directory.
 
+## Using glass with scrolling
+
+Glass blurs what is behind it, so a glass panel that should stay in place while content scrolls
+should **wrap** the scroll view rather than sit inside it:
+
+```Dart
+SingleChildScrollView(
+  child: Column(children: [...]),
+).asGlass()
+```
+
+If the glass is *inside* the scroll view, Android's Material 3 stretch overscroll renders the
+scrollable in its own layer, and the blur disappears while you drag past the top or bottom edge.
+If you do need glass items inside a scrollable (for example glass cards in a list), turn the stretch
+off for that scroll view:
+
+```Dart
+ScrollConfiguration(
+  behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
+  child: ListView(children: [...]),
+)
+```
+
 ## About me
 
 Visit my LinkedIn at https://www.linkedin.com/in/zaca
