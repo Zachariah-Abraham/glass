@@ -31,6 +31,14 @@ _Last updated: 2026-11-06_
   - Verified on the iOS simulator (iPhone 17 Pro, Impeller/Metal) with a scratchpad demo app: edges
     visibly bend the backdrop and the rim highlight shows. So `FlutterFragCoord()` in a backdrop
     shader is global physical pixels there. Not yet checked on Android (Vulkan/GLES: y may flip).
+  - 2026-11-07: compared with native SwiftUI `.glassEffect` on the same simulator (same scene, same
+    rects; reference app and screenshots in the session scratchpad, not in the repo). Ours is closest
+    to `Glass.clear`. Differences: native refraction is stronger and spans most of a capsule's height
+    (content near the edge is squeezed into thin slivers), ours bends only a 20 pt band; native rim is
+    a crisp ~1 px light hairline, ours is a soft glow plus a darkened edge; `Glass.regular` is a heavy
+    milky frost (strong blur, light tint) that we can't match with the fixed 10% tint. Native merge
+    (`GlassEffectContainer(spacing: 40)`, 10 pt gap) gives one peanut shape with a smooth concave
+    waist; at a 70 pt gap the shapes stay separate.
   - Known gaps: the glass rect goes stale when an ancestor moves the glass without repainting it (for
     example while scrolling); `clipper` and non-uniform radii are ignored by the shader; no tests for
     the shader path yet (`flutter test --enable-impeller` makes `isShaderFilterSupported` true, so
