@@ -1,0 +1,4 @@
+tags:
+  # Pixel comparisons. They depend on the Flutter version, so CI runs them in one
+  # job pinned to a specific version (see AGENTS.md, "Golden tests").
+  golden:

@@ -18,6 +18,11 @@ _Last updated: 2026-11-03_
   plain `x.y.z` (no `+N`).
 
 ## In progress
+- Test automation (PR #13, branch `test/goldens-and-example-build`): 7 built-in golden scenes
+  (references rendered on Linux CI, reviewed by the human 2026-11-06), a pinned-Flutter `golden`
+  job and an example web-build job. Still to do: a web/Linux `integration_test` smoke test, and a
+  manually triggered Android emulator test for issue #7 (slow and flaky tests stay local or
+  `workflow_dispatch`, not on every PR).
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
   2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
   `@Deprecated` alias, ships as a minor (2.2.0). Step 2 (later, next major 3.0.0): delete
@@ -47,6 +52,8 @@ _Last updated: 2026-11-03_
 - 2026-10-29: Added `AGENTS.md` (incl. the publishing guide in §6), `CLAUDE.md` and `tasks.md`.
 
 ## Decisions made
+- 2026-11-06: Use Flutter's built-in goldens, not Alchemist. The scenes have no text, so Alchemist's
+  font normalization isn't needed. Goldens run on one pinned Flutter version only.
 - 2026-11-03: `flutter_lints` is `^5` because `^6` needs Dart 3.8 and the minimum SDK is Dart 3.6.
 - 2026-11-03: Raising the minimum SDK isn't a breaking change (pub resolves users on older SDKs
   to the older release), so it ships as a minor release. Note it in a commit **subject** so it
