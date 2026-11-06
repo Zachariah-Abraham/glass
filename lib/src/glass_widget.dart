@@ -3,34 +3,90 @@ import 'package:flutter/rendering.dart';
 import 'dart:ui';
 
 /// Settings for the liquid glass look: the backdrop bends near the edges of
-/// the glass, with a light rim highlight.
+/// the glass, which has a thin light rim.
 ///
-/// Pass it to [GlassWidget.asGlass] as `liquid`. Needs the Impeller renderer;
-/// elsewhere (for example on web) the glass falls back to the plain blur.
+/// Pass it to [GlassWidget.asGlass] as `liquid`, usually one of the presets
+/// [LiquidGlass.regular] or [LiquidGlass.clear], optionally adjusted with
+/// [copyWith] (for example `LiquidGlass.regular.copyWith(tintColor: Colors.blue)`).
 ///
-/// Spike: only uniform corner radii are supported.
+/// The preset supplies the blur, tint and frost. Values passed to `asGlass`
+/// directly (`blurX`, `blurY`, `tintColor`, `frosted`) take precedence.
+///
+/// The bending needs the Impeller renderer. Elsewhere (for example on web) the
+/// glass keeps its blur and tint but doesn't bend the backdrop.
+///
+/// Only uniform corner radii are supported: the shape is a rounded rectangle
+/// with the top-left radius of `clipBorderRadius`, and `clipper` is ignored by
+/// the bending.
 class LiquidGlass {
   /// Creates liquid glass settings.
   ///
-  /// * [thickness]: Width of the curved edge band where light bends, in
-  ///   logical pixels, defaults to 20.0.
-  /// * [refraction]: How strongly the edge bends the backdrop, 0 for none,
+  /// * [blur]: Blur sigma along both axes, defaults to 2.0.
+  /// * [tintColor]: Tint color of the glass, defaults to [Colors.black].
+  /// * [tintStrength]: Opacity of the tint from 0 to 1, defaults to 0.15.
+  /// * [refraction]: How strongly the edges bend the backdrop, 0 for none,
   ///   defaults to 1.0.
-  /// * [highlight]: Intensity of the rim highlight from 0 to 1, defaults to 0.6.
+  /// * [edgeWidth]: Width of the curved edge in logical pixels. Defaults to
+  ///   null, which uses half the shorter side, so the whole shape is curved.
+  /// * [highlight]: Intensity of the rim from 0 to 1, defaults to 0.6.
   const LiquidGlass({
-    this.thickness = 20.0,
+    this.blur = 2.0,
+    this.tintColor = Colors.black,
+    this.tintStrength = 0.15,
     this.refraction = 1.0,
+    this.edgeWidth,
     this.highlight = 0.6,
   });
 
-  /// Width of the curved edge band in logical pixels.
-  final double thickness;
+  /// Frosted, mostly opaque glass with a light tint, like Apple's
+  /// `Glass.regular`. Use it where legibility of content on the glass matters.
+  static const regular = LiquidGlass(
+    blur: 8.0,
+    tintColor: Colors.white,
+    tintStrength: 0.45,
+  );
+
+  /// Highly transparent glass with a slight dark tint, like Apple's
+  /// `Glass.clear`. Use it over rich media.
+  static const clear = LiquidGlass();
+
+  /// Blur sigma along both axes.
+  final double blur;
+
+  /// Tint color of the glass.
+  final Color tintColor;
+
+  /// Opacity of the tint from 0 to 1.
+  final double tintStrength;
 
   /// Strength of the edge refraction.
   final double refraction;
 
-  /// Intensity of the rim highlight.
+  /// Width of the curved edge in logical pixels, or null for half the
+  /// shorter side.
+  final double? edgeWidth;
+
+  /// Intensity of the rim.
   final double highlight;
+
+  /// Returns a copy with the given fields replaced.
+  LiquidGlass copyWith({
+    double? blur,
+    Color? tintColor,
+    double? tintStrength,
+    double? refraction,
+    double? edgeWidth,
+    double? highlight,
+  }) {
+    return LiquidGlass(
+      blur: blur ?? this.blur,
+      tintColor: tintColor ?? this.tintColor,
+      tintStrength: tintStrength ?? this.tintStrength,
+      refraction: refraction ?? this.refraction,
+      edgeWidth: edgeWidth ?? this.edgeWidth,
+      highlight: highlight ?? this.highlight,
+    );
+  }
 }
 
 extension GlassWidget<T extends Widget> on T {
@@ -38,10 +94,14 @@ extension GlassWidget<T extends Widget> on T {
   ///
   /// Parameters:
   /// * [enabled]: Enable or disable all effects, defaults to true.
-  /// * [blurX]: Amount of blur in the direction of the X axis, defaults to 10.0.
-  /// * [blurY]: Amount of blur in the direction of the Y axis, defaults to 10.0.
-  /// * [tintColor]: Tint color for the glass (defaults to Colors.white).
-  /// * [frosted]: Whether this glass should be frosted or not, defaults to true.
+  /// * [blurX]: Amount of blur in the direction of the X axis, defaults to 10.0
+  ///   (or the [liquid] preset's blur).
+  /// * [blurY]: Amount of blur in the direction of the Y axis, defaults to 10.0
+  ///   (or the [liquid] preset's blur).
+  /// * [tintColor]: Tint color for the glass, defaults to Colors.white (or the
+  ///   [liquid] preset's tint).
+  /// * [frosted]: Whether this glass should be frosted or not, defaults to true
+  ///   (false with [liquid]).
   /// * [clipBorderRadius]: The border radius of the rounded corners.
   ///   Values are clamped so that horizontal and vertical radii sums do not exceed width/height.
   ///   This value is ignored if clipper is non-null.
@@ -49,14 +109,14 @@ extension GlassWidget<T extends Widget> on T {
   /// * [clipBehaviour]: Deprecated misspelling of [clipBehavior]. Ignored if [clipBehavior] is set.
   /// * [tileMode]: Defines what happens at the edge of a gradient or the sampling of a source image in an [ImageFilter].
   /// * [clipper]: If non-null, determines which clip to use.
-  /// * [liquid]: If non-null, adds the liquid glass look (see [LiquidGlass]).
-  ///   Defaults to null, which renders plain glass.
+  /// * [liquid]: If non-null, renders liquid glass with these settings, for
+  ///   example [LiquidGlass.regular]. Defaults to null, which renders plain glass.
   Widget asGlass({
     bool enabled = true,
-    double blurX = 10.0,
-    double blurY = 10.0,
-    Color tintColor = Colors.white,
-    bool frosted = true,
+    double? blurX,
+    double? blurY,
+    Color? tintColor,
+    bool? frosted,
     BorderRadius clipBorderRadius = BorderRadius.zero,
     Clip? clipBehavior,
     @Deprecated('Use clipBehavior instead. Will be removed in 3.0.0.')
@@ -65,9 +125,13 @@ extension GlassWidget<T extends Widget> on T {
     CustomClipper<RRect>? clipper,
     LiquidGlass? liquid,
   }) {
+    final tint = tintColor ?? liquid?.tintColor ?? Colors.white;
+    // Plain glass keeps its exact 10% → 8% gradient.
+    final tintStart = liquid?.tintStrength ?? 0.1;
+    final tintEnd = liquid == null ? 0.08 : liquid.tintStrength * 0.8;
     final blur = ImageFilter.blur(
-      sigmaX: blurX,
-      sigmaY: blurY,
+      sigmaX: blurX ?? liquid?.blur ?? 10.0,
+      sigmaY: blurY ?? liquid?.blur ?? 10.0,
       tileMode: tileMode,
     );
     return !enabled
@@ -82,17 +146,17 @@ extension GlassWidget<T extends Widget> on T {
               borderRadius: clipBorderRadius,
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: (tintColor != Colors.transparent)
+                  gradient: (tint != Colors.transparent)
                       ? LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            tintColor.withValues(alpha: 0.1),
-                            tintColor.withValues(alpha: 0.08),
+                            tint.withValues(alpha: tintStart),
+                            tint.withValues(alpha: tintEnd),
                           ],
                         )
                       : null,
-                  image: frosted
+                  image: (frosted ?? liquid == null)
                       ? DecorationImage(
                           image:
                               AssetImage('images/noise.png', package: 'glass'),
@@ -235,7 +299,7 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
       ..setFloat(4, size.width * dpr)
       ..setFloat(5, size.height * dpr)
       ..setFloat(6, c.radius * dpr)
-      ..setFloat(7, c.liquid.thickness * dpr)
+      ..setFloat(7, (c.liquid.edgeWidth ?? size.shortestSide / 2) * dpr)
       ..setFloat(8, c.liquid.refraction)
       ..setFloat(9, c.liquid.highlight);
     final layer = (this.layer as BackdropFilterLayer?) ?? BackdropFilterLayer();
