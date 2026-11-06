@@ -163,6 +163,147 @@ void main() {
       expect(_decoration(tester).image, isNull);
     });
   });
+
+  group('liquid', () {
+    // Compares colors with a tolerance, since alpha goes through doubles.
+    void expectColorClose(Color actual, Color expected) {
+      expect(actual.r, closeTo(expected.r, 1e-6));
+      expect(actual.g, closeTo(expected.g, 1e-6));
+      expect(actual.b, closeTo(expected.b, 1e-6));
+      expect(actual.a, closeTo(expected.a, 1e-6));
+    }
+
+    testWidgets('takes the blur from the preset', (tester) async {
+      for (final preset in [LiquidGlass.regular, LiquidGlass.clear]) {
+        await _pump(tester, _child.asGlass(liquid: preset));
+
+        final filter =
+            tester.widget<BackdropFilter>(find.byType(BackdropFilter));
+        expect(
+          filter.filter,
+          ImageFilter.blur(
+            sigmaX: preset.blur,
+            sigmaY: preset.blur,
+            tileMode: TileMode.clamp,
+          ),
+        );
+      }
+    });
+
+    testWidgets('takes the tint gradient from the preset', (tester) async {
+      for (final preset in [LiquidGlass.regular, LiquidGlass.clear]) {
+        await _pump(tester, _child.asGlass(liquid: preset));
+
+        final gradient = _decoration(tester).gradient! as LinearGradient;
+        expect(gradient.colors, hasLength(2));
+        expectColorClose(
+          gradient.colors[0],
+          preset.tintColor.withValues(alpha: preset.tintStrength),
+        );
+        expectColorClose(
+          gradient.colors[1],
+          preset.tintColor.withValues(alpha: preset.tintStrength * 0.8),
+        );
+      }
+    });
+
+    testWidgets('explicit blur and tint override the preset', (tester) async {
+      const preset = LiquidGlass.regular;
+      final sigmaX = preset.blur + 1;
+      final sigmaY = preset.blur + 2;
+      final tint =
+          preset.tintColor == Colors.blue ? Colors.orange : Colors.blue;
+      await _pump(
+        tester,
+        _child.asGlass(
+          liquid: preset,
+          blurX: sigmaX,
+          blurY: sigmaY,
+          tintColor: tint,
+        ),
+      );
+
+      final filter = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
+      expect(
+        filter.filter,
+        ImageFilter.blur(
+            sigmaX: sigmaX, sigmaY: sigmaY, tileMode: TileMode.clamp),
+      );
+
+      // The tint color is overridden, but the preset's strength still applies.
+      final gradient = _decoration(tester).gradient! as LinearGradient;
+      expectColorClose(
+        gradient.colors[0],
+        tint.withValues(alpha: preset.tintStrength),
+      );
+      expectColorClose(
+        gradient.colors[1],
+        tint.withValues(alpha: preset.tintStrength * 0.8),
+      );
+    });
+
+    testWidgets('has no noise image by default', (tester) async {
+      await _pump(tester, _child.asGlass(liquid: LiquidGlass.regular));
+
+      expect(_decoration(tester).image, isNull);
+    });
+
+    testWidgets('frosted: true adds the noise image back', (tester) async {
+      await _pump(
+        tester,
+        _child.asGlass(liquid: LiquidGlass.regular, frosted: true),
+      );
+
+      final image = _decoration(tester).image!;
+      expect(
+        image.image,
+        const AssetImage('images/noise.png', package: 'glass'),
+      );
+    });
+
+    test('copyWith replaces only the given fields', () {
+      const base = LiquidGlass.regular;
+      final copy = base.copyWith(
+        blur: base.blur + 1,
+        tintStrength: base.tintStrength / 2,
+        edgeWidth: 4.0,
+      );
+
+      expect(copy.blur, base.blur + 1);
+      expect(copy.tintStrength, base.tintStrength / 2);
+      expect(copy.edgeWidth, 4.0);
+      expect(copy.tintColor, base.tintColor);
+      expect(copy.refraction, base.refraction);
+      expect(copy.highlight, base.highlight);
+    });
+
+    test('copyWith with no arguments keeps every field', () {
+      const base = LiquidGlass.clear;
+      final copy = base.copyWith();
+
+      expect(copy.blur, base.blur);
+      expect(copy.tintColor, base.tintColor);
+      expect(copy.tintStrength, base.tintStrength);
+      expect(copy.refraction, base.refraction);
+      expect(copy.edgeWidth, base.edgeWidth);
+      expect(copy.highlight, base.highlight);
+    });
+
+    testWidgets('keeps the old defaults when liquid is null', (tester) async {
+      await _pump(tester, _child.asGlass());
+
+      final filter = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
+      expect(
+        filter.filter,
+        ImageFilter.blur(sigmaX: 10, sigmaY: 10, tileMode: TileMode.clamp),
+      );
+      final gradient = _decoration(tester).gradient! as LinearGradient;
+      expect(gradient.colors, [
+        Colors.white.withValues(alpha: 0.1),
+        Colors.white.withValues(alpha: 0.08),
+      ]);
+    });
+  });
 }
 
 class _CustomWidget extends StatelessWidget {
