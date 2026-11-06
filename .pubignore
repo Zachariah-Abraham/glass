@@ -89,3 +89,9 @@ example/screenshots/
 
 # Generated dartdoc output (pub.dev builds its own)
 doc/api/
+
+# Golden test reference images (test-only)
+test/goldens/
+
+# Failure diffs written by flutter test when a golden doesn't match
+test/failures/
