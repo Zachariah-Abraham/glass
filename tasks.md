@@ -59,7 +59,7 @@ _Last updated: 2026-11-07_
   - 2026-11-07, in progress: human decision: the mirrored rim is NOT acceptable; match native exactly,
     including at screen edges and corners. Two parallel tasks: (a) measure native pull-in distance,
     bend profile, corner direction and screen-edge behaviour with a test-pattern scene (iOS simulator);
-    (b) DONE 2026-11-07: restructure the liquid path so the shader samples an inflated backdrop (shader-only backdrop
+    (b) 2026-11-07, superseded: restructured the liquid path to sample an inflated backdrop (shader-only backdrop
     layer over the glass rect + margin, passing through outside the shape, then a blur clipped to the
     glass, then the rim drawn on top), tested on macOS desktop. Then tune (b) to (a)'s model.
     2026-11-07 native measurements (hue-encoded coordinate backgrounds decoded per pixel; data in the
@@ -69,16 +69,14 @@ _Last updated: 2026-11-07_
     `source = p + d(t)*n_in`, `W = min(20 pt, 0.69*min(w,h)/2)`, `A = 3W`,
     `d(t) = A*(1 - sqrt(1 - (1 - t/W)^2))` for t < W. Measured for a 260x80 pill: d = 42/34.7/29/20.3/
     12.5/5.3/1.5/0 at t = 1/2/3/5/8/12/16/20 pt. It is the same for cards, for regular vs clear, and at or past screen
-    edges and corners (no fade, clamping or rim change). So the outward sampling below was a wrong
-    assumption; being replaced by the inward model (in progress).
-    Structure now (`_GlassBackdrop` / `_LiquidGlassLayers` in `lib/src/glass_widget.dart`): pass 1 is a
-    `ClipRectLayer` (glass rect + margin `0.7*edge*refraction + 3 px`) holding a shader-only
-    `BackdropFilterLayer` (`shaders/liquid_glass.frag`, passes through outside the shape, samples
-    `fragCoord + grad*off` inside); pass 2 is the usual `ClipRRect` + blur + tint + child; pass 3 draws
-    `shaders/liquid_rim.frag` as a paint shader. Plain glass is unchanged. Measured on macOS/Impeller:
-    in the backdrop shader `FlutterFragCoord()` and `uSize` cover the whole render target (not the
-    clip); in a paint shader `FlutterFragCoord()` is canvas-logical, so the rim takes logical rect +
-    `uScale = dpr`. Cost: two backdrop copies plus one rim draw per glass.
+    edges and corners (no fade, clamping or rim change). DONE: shader now implements this inward model
+    (`edgeWidth: null` = automatic W, `refraction: 1.0` = native, `LiquidGlass.clear` blur 1.5). Decoded
+    on the simulator, ours is within ~1 pt of native at every depth for a pill, card, 120x44 shape,
+    top-left screen corner and partly off-screen glass. Structure is 2 passes: one `BackdropFilter`
+    in the `ClipRRect` with `compose(outer: shader, inner: blur)` (blur first, then inward refraction,
+    no margin), then `shaders/liquid_rim.frag` painted last. Remaining photometric gaps: native clear is
+    slightly lighter with a crisper, brighter rim; native regular lets content through brighter (a
+    lift, not an opaque tint), and ours is too flat and opaque.
   - Earlier next steps: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
     problem, Android check, shader-path tests, and design merging.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui';
@@ -21,19 +22,20 @@ import 'dart:ui';
 class LiquidGlass {
   /// Creates liquid glass settings.
   ///
-  /// * [blur]: Blur sigma along both axes, defaults to 2.0.
+  /// * [blur]: Blur sigma along both axes, defaults to 3.0 (1.5 for [clear]).
   /// * [tintColor]: Tint color of the glass, defaults to [Colors.black].
   /// * [tintStrength]: Opacity of the tint from 0 to 1, defaults to 0.15.
-  /// * [refraction]: How strongly the edges bend the backdrop, 0 for none,
-  ///   defaults to 1.0.
-  /// * [edgeWidth]: Width of the curved edge in logical pixels. Defaults to
-  ///   null, which uses half the shorter side, so the whole shape is curved.
+  /// * [refraction]: How strongly the edges bend the backdrop, 0 for none.
+  ///   1.0, the default, matches Apple's native glass.
+  /// * [edgeWidth]: Width of the refracting edge band in logical pixels.
+  ///   Defaults to null, which uses `min(20, 0.69 * R)` where R is half the
+  ///   shorter side, as measured on Apple's glass.
   /// * [highlight]: Intensity of the rim from 0 to 1, defaults to 0.6.
   const LiquidGlass({
     this.blur = 3.0,
     this.tintColor = Colors.white,
     this.tintStrength = 0.1,
-    this.refraction = 1.4,
+    this.refraction = 1.0,
     this.edgeWidth,
     this.highlight = 0.6,
   });
@@ -44,12 +46,11 @@ class LiquidGlass {
     blur: 7.0,
     tintColor: Color(0xFFC8D3D8),
     tintStrength: 1.0,
-    edgeWidth: 40.0,
   );
 
   /// Highly transparent glass with a slight dark tint, like Apple's
   /// `Glass.clear`. Use it over rich media.
-  static const clear = LiquidGlass(edgeWidth: 40.0);
+  static const clear = LiquidGlass(blur: 1.5);
 
   /// Blur sigma along both axes.
   final double blur;
@@ -60,11 +61,14 @@ class LiquidGlass {
   /// Opacity of the tint from 0 to 1.
   final double tintStrength;
 
-  /// Strength of the edge refraction.
+  /// Strength of the edge refraction, 1.0 matches Apple's native glass.
+  ///
+  /// The backdrop is sampled from up to `3 * edgeWidth * refraction` logical
+  /// pixels deeper inside the glass, only inward and never from outside it.
   final double refraction;
 
-  /// Width of the curved edge in logical pixels, or null for half the
-  /// shorter side.
+  /// Width of the refracting edge band in logical pixels, or null for
+  /// `min(20, 0.69 * R)` with R half the shorter side.
   final double? edgeWidth;
 
   /// Intensity of the rim.
@@ -169,17 +173,13 @@ extension GlassWidget<T extends Widget> on T {
 }
 
 /// Clips to the glass shape and blurs the backdrop. When [liquid] is set and
-/// shaders are available, it also bends the backdrop with the liquid glass
-/// shader and draws the rim.
+/// shaders are available, the blur and the refraction are one backdrop filter
+/// (`compose(outer: refraction shader, inner: blur)`), so liquid glass takes
+/// two passes:
 ///
-/// Liquid glass needs two passes, so it is built from the outside in:
-///
-/// 1. A refraction pass, clipped to the glass rect plus a margin (so it may
-///    paint outside the glass box). It runs only the shader, which passes the
-///    backdrop through unchanged outside the glass shape and bends it inside,
-///    sampling from the margin around the glass.
-/// 2. The usual clip, blur and tint, which blur the already bent backdrop.
-/// 3. The rim, painted last so the blur does not soften it.
+/// 1. Clip, blur, refract (inward only, so the clip is the glass shape) and
+///    tint (the child).
+/// 2. The rim, painted last so the blur does not soften it.
 class _GlassBackdrop extends StatefulWidget {
   const _GlassBackdrop({
     required this.blur,
@@ -205,6 +205,8 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
   static Future<List<FragmentProgram>>? _programs;
   FragmentShader? _refraction;
   FragmentShader? _rim;
+  ImageFilter? _filter;
+  ImageFilter? _filterBlur;
 
   @override
   void initState() {
@@ -246,17 +248,29 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
 
   @override
   Widget build(BuildContext context) {
-    // The plain glass: clip to the shape, blur what is behind, then the tint.
+    final liquid = widget.liquid;
+    final refraction = _refraction;
+    final rim = _rim;
+    final live = liquid != null && refraction != null && rim != null;
+    if (live && !identical(_filterBlur, widget.blur)) {
+      // The uniforms are set at paint time, the filter object stays the same.
+      _filterBlur = widget.blur;
+      _filter = ImageFilter.compose(
+        outer: ImageFilter.shader(refraction),
+        inner: widget.blur,
+      );
+    }
+    // Clip to the shape, blur (and refract) what is behind, then the tint.
     final glass = ClipRRect(
       clipper: widget.clipper,
       clipBehavior: widget.clipBehavior,
       borderRadius: widget.borderRadius,
-      child: BackdropFilter(filter: widget.blur, child: widget.child),
+      child: BackdropFilter(
+        filter: live ? _filter! : widget.blur,
+        child: widget.child,
+      ),
     );
-    final liquid = widget.liquid;
-    final refraction = _refraction;
-    final rim = _rim;
-    if (liquid == null || refraction == null || rim == null) return glass;
+    if (!live) return glass;
     return _LiquidGlassLayers(
       refraction: refraction,
       rim: rim,
@@ -297,8 +311,9 @@ class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   }
 }
 
-/// Lays out like its child. Paints the refraction pass before the child (in a
-/// clip larger than the box) and the rim after it. Hit testing is unchanged.
+/// Lays out like its child. Sets the refraction uniforms before the child
+/// paints (the child holds the backdrop filter) and paints the rim after it.
+/// Hit testing is unchanged.
 class _RenderLiquidGlassLayers extends RenderProxyBox {
   _RenderLiquidGlassLayers(this._config);
 
@@ -308,29 +323,14 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  final LayerHandle<ClipRectLayer> _clipLayer = LayerHandle<ClipRectLayer>();
-  final LayerHandle<BackdropFilterLayer> _refractLayer =
-      LayerHandle<BackdropFilterLayer>();
-
-  @override
-  bool get alwaysNeedsCompositing => true;
-
-  @override
-  void dispose() {
-    _clipLayer.layer = null;
-    _refractLayer.layer = null;
-    super.dispose();
-  }
-
   @override
   void paint(PaintingContext context, Offset offset) {
     final c = _config;
     final dpr = c.devicePixelRatio;
-    final edge = (c.liquid.edgeWidth ?? size.shortestSide / 2) * dpr;
-    // The farthest the shader reads from outside the glass shape, plus a
-    // little slack for the antialiased edge.
-    final reach = 0.7 * edge * c.liquid.refraction + 3 * dpr;
-    final margin = reach / dpr;
+    // Band width W and displacement scale A (A = 3 W), in logical pixels.
+    final width =
+        c.liquid.edgeWidth ?? math.min(20.0, 0.69 * size.shortestSide / 2);
+    final amount = 3 * width * c.liquid.refraction;
 
     // Spike: the position goes stale if an ancestor moves this box without
     // repainting it (for example while scrolling).
@@ -341,27 +341,13 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
       ..setFloat(4, size.width * dpr)
       ..setFloat(5, size.height * dpr)
       ..setFloat(6, c.radius * dpr)
-      ..setFloat(7, edge)
-      ..setFloat(8, c.liquid.refraction);
+      ..setFloat(7, width * dpr)
+      ..setFloat(8, amount * dpr);
 
-    // Pass 1: bend the backdrop, in a clip that includes the margin.
-    _clipLayer.layer = context.pushClipRect(
-      true,
-      offset,
-      (Offset.zero & size).inflate(margin),
-      (clipContext, clipOffset) {
-        final layer = _refractLayer.layer ?? BackdropFilterLayer();
-        layer.filter = ImageFilter.shader(c.refraction);
-        _refractLayer.layer = layer;
-        clipContext.pushLayer(layer, (_, __) {}, clipOffset);
-      },
-      oldLayer: _clipLayer.layer,
-    );
-
-    // Pass 2: clip, blur and tint (the child).
+    // Clip, blur, refract and tint (the child).
     super.paint(context, offset);
 
-    // Pass 3: the rim, crisp on top of everything.
+    // The rim, crisp on top of everything.
     // A paint shader works in canvas (logical) coordinates, unlike the
     // backdrop shader above, which works in physical pixels of the target.
     c.rim

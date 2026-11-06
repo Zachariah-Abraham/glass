@@ -1,23 +1,28 @@
 #version 460 core
 #include <flutter/runtime_effect.glsl>
 
-// Refraction pass of liquid glass, used as a backdrop filter ALONE (the blur is
-// a separate, later pass). It runs in a clip that is larger than the glass, so
-// it can read the backdrop outside the glass shape: content just outside the
-// rim is pulled in and squashed. Outside the shape it returns the backdrop
-// unchanged, so the larger clip is invisible.
+// Refraction of liquid glass, used as the outer part of a backdrop filter whose
+// inner part is the blur (so this shader reads the already blurred backdrop).
+// The filter is clipped to the glass shape.
 //
-// Measured on macOS (Impeller/Metal): FlutterFragCoord() is in physical pixels
-// of the whole render target (not relative to the clip), and uSize is the size
-// of the whole render target. Both are used consistently with uRect, which the
-// caller gives in the same global physical pixels.
+// Model, measured on Apple's native iOS 26 glass: the sample point moves only
+// INWARD, along the inward normal of the rounded-rect distance field (radial at
+// the corner arcs, no tangential part). With t the distance from the edge,
+//   source = p + d(t) * n_in,
+//   d(t) = A * (1 - sqrt(1 - (1 - t/W)^2))   for t < W, else 0,
+// so content from deeper inside is compressed into the rim, and content
+// outside the glass is never pulled in. d is capped at 0.75 * A.
+//
+// FlutterFragCoord() is in physical pixels of the whole render target (not
+// relative to the clip), and uSize is the size of the whole render target.
+// Both are consistent with uRect, which the caller gives in the same pixels.
 
 uniform vec2 uSize;         // floats 0-1: input texture size (set by the engine)
 uniform vec4 uRect;         // floats 2-5: glass rect left, top, width, height (physical px)
 uniform float uRadius;      // float 6: corner radius in px
-uniform float uThickness;   // float 7: width in px of the curved edge band
-uniform float uRefraction;  // float 8: refraction strength, ~1 = default
-uniform sampler2D uTexture; // the backdrop
+uniform float uWidth;       // float 7: W, width in px of the refracting edge band
+uniform float uAmount;      // float 8: A, displacement scale in px
+uniform sampler2D uTexture; // the (blurred) backdrop
 
 out vec4 fragColor;
 
@@ -39,36 +44,19 @@ float shapeSdf(vec2 p, out vec2 grad) {
   return d;
 }
 
-vec3 sampleBackdrop(vec2 p) {
-  return texture(uTexture, clamp(p / uSize, vec2(0.0), vec2(1.0))).rgb;
-}
-
 void main() {
   vec2 fragCoord = FlutterFragCoord().xy;
-  vec4 base = texture(uTexture, fragCoord / uSize);
-
   vec2 grad;
   float d = shapeSdf(fragCoord, grad);
 
-  // ~1px antialiased coverage of the shape. Outside it the pixel is untouched.
-  float cover = 1.0 - smoothstep(-0.5, 0.5, d);
-  if (cover <= 0.0) {
-    fragColor = base;
-    return;
+  float w = max(uWidth, 1e-3);
+  float t = max(-d, 0.0);
+  float disp = 0.0;
+  if (t < w) {
+    float k = 1.0 - t / w;
+    disp = min(uAmount * (1.0 - sqrt(max(1.0 - k * k, 0.0))), 0.75 * uAmount);
   }
-
-  float thick = max(uThickness, 1.0);
-  float depth = max(-d, 0.0);
-  // u: 0 in the flat centre, 1 at the very rim.
-  float u = clamp(1.0 - depth / thick, 0.0, 1.0);
-
-  // Dome profile: a quarter circle, flat in the centre and infinitely steep at
-  // the rim. The sample point moves toward the outside, so content near the rim
-  // (and, at the rim itself, content from up to `off` px beyond it) is
-  // squeezed into the edge band, as in a thick convex slab.
-  float prof = 1.0 - sqrt(max(1.0 - u * u, 0.0));
-  float off = 0.7 * thick * uRefraction * prof;
-  vec3 col = sampleBackdrop(fragCoord + grad * off);
-
-  fragColor = vec4(mix(base.rgb, col, cover), 1.0);
+  // Inward = against the outward gradient.
+  vec2 src = fragCoord - grad * disp;
+  fragColor = texture(uTexture, clamp(src / uSize, vec2(0.0), vec2(1.0)));
 }
