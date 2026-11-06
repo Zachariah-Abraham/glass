@@ -43,9 +43,9 @@ _Last updated: 2026-11-03_
       does not exist (Flutter 3.47); `MaterialScrollBehavior` picks stretch for Material 3 and glow
       for Material 2 from `useMaterial3`. Also verified on the emulator: wrapping the scroll view in `asGlass` (glass outside, content
       scrolls inside) keeps the blur. iOS behaviour is untested. Untested workarounds: `useMaterial3: false`,
-      `ClampingScrollPhysics`. Next: README "Known limitations" with the verified workaround, an
-      emulator regression test (`workflow_dispatch` or local only), then draft a reply for the
-      human to approve before posting and closing.
+      `ClampingScrollPhysics`. Human decision 2026-11-06: this is a usage pitfall, not a package limitation, and no
+      regression test is wanted (edge case). README has a "Using glass with scrolling" section.
+      Next: draft a reply for the human to approve before posting and closing.
 - [ ] Apple "liquid glass" support (needs scoping: refraction needs a fragment shader).
 - [ ] Optional hardening of automated publishing: GitHub tag protection rules for `v*`, and a
       required `pub.dev` environment (AGENTS.md §6).
