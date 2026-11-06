@@ -13,7 +13,8 @@ extension GlassWidget<T extends Widget> on T {
   /// * [clipBorderRadius]: The border radius of the rounded corners.
   ///   Values are clamped so that horizontal and vertical radii sums do not exceed width/height.
   ///   This value is ignored if clipper is non-null.
-  /// * [clipBehaviour]: Defaults to [Clip.antiAlias].
+  /// * [clipBehavior]: How the glass is clipped, defaults to [Clip.antiAlias].
+  /// * [clipBehaviour]: Deprecated misspelling of [clipBehavior]. Ignored if [clipBehavior] is set.
   /// * [tileMode]: Defines what happens at the edge of a gradient or the sampling of a source image in an [ImageFilter].
   /// * [clipper]: If non-null, determines which clip to use.
   Widget asGlass({
@@ -23,7 +24,9 @@ extension GlassWidget<T extends Widget> on T {
     Color tintColor = Colors.white,
     bool frosted = true,
     BorderRadius clipBorderRadius = BorderRadius.zero,
-    Clip clipBehaviour = Clip.antiAlias,
+    Clip? clipBehavior,
+    @Deprecated('Use clipBehavior instead. Will be removed in 3.0.0.')
+    Clip? clipBehaviour,
     TileMode tileMode = TileMode.clamp,
     CustomClipper<RRect>? clipper,
   }) {
@@ -31,7 +34,7 @@ extension GlassWidget<T extends Widget> on T {
         ? this
         : ClipRRect(
             clipper: clipper,
-            clipBehavior: clipBehaviour,
+            clipBehavior: clipBehavior ?? clipBehaviour ?? Clip.antiAlias,
             borderRadius: clipBorderRadius,
             child: BackdropFilter(
               filter: ImageFilter.blur(

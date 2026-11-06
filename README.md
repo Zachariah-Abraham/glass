@@ -49,7 +49,8 @@ Glass blurs what is *behind* the widget, so it only shows up when there is conte
 | `tintColor` | `Colors.white` | Tint of the glass. Use `Colors.transparent` for no tint. |
 | `frosted` | `true` | Adds a noise texture for a frosted look. |
 | `clipBorderRadius` | `BorderRadius.zero` | Rounded corners. Ignored if `clipper` is set. |
-| `clipBehaviour` | `Clip.antiAlias` | How the glass is clipped. |
+| `clipBehavior` | `Clip.antiAlias` | How the glass is clipped. |
+| `clipBehaviour` | `null` | **Deprecated** misspelling of `clipBehavior`, removed in 3.0.0. |
 | `tileMode` | `TileMode.clamp` | How the blur samples at the edges. |
 | `clipper` | `null` | Custom `CustomClipper<RRect>`. |
 
