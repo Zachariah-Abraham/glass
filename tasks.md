@@ -3,7 +3,7 @@
 Living status of work on this repo. **Update it whenever you make progress** (see AGENTS.md §1).
 Newest information goes first in each section. Use absolute dates.
 
-_Last updated: 2026-11-03_
+_Last updated: 2026-11-06_
 
 ## Current state
 - **glass 2.1.0 is published on pub.dev** (2026-11-03). `main` is at or ahead of the `v2.1.0` tag.
@@ -18,12 +18,17 @@ _Last updated: 2026-11-03_
   plain `x.y.z` (no `+N`).
 
 ## In progress
-- Test automation (PR #13, branch `test/goldens-and-example-build`): 7 built-in golden scenes
-  (references rendered on Linux CI, reviewed by the human 2026-11-06), a pinned-Flutter `golden`
-  job and an example web-build job. `example/integration_test/app_test.dart` smoke test and CI `integration` job (Linux desktop,
-  xvfb) added on branch `test/integration-smoke`, passes locally on macOS, CI unverified. Still to
-  do: a manually triggered Android emulator test for issue #7 (slow and flaky tests stay local or
-  `workflow_dispatch`, not on every PR).
+- Scoping Apple "liquid glass" support (started 2026-11-06, proposal given to the human,
+  awaiting decisions). Findings so far:
+  - Refraction needs a fragment shader run on the backdrop: `BackdropFilter(filter: ImageFilter.shader(...))`.
+    It throws `UnsupportedError` without Impeller; check `ImageFilter.isShaderFilterSupported` and fall
+    back to the existing blur (web, Skia, and probably `flutter test` goldens).
+  - `ImageFilter.shader` is in Flutter 3.29.0 (maybe earlier; not checked on 3.27). The minimum is
+    3.27, so a CI run on 3.27.0 decides whether the minimum has to rise.
+  - Packages ship shaders via `flutter: shaders:` in `pubspec.yaml` and load them asynchronously with
+    `FragmentProgram.fromAsset('packages/glass/shaders/<name>.frag')`.
+  - Prior art: `liquid_glass_renderer` (whynotmake-it, 1.0.0-dev, needs Flutter 3.47 + Flutter GPU,
+    blends shapes). Flutter's own Cupertino Liquid Glass work is tracked in flutter/flutter#170310.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
   2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
   `@Deprecated` alias, ships as a minor (2.2.0). Step 2 (later, next major 3.0.0): delete
@@ -31,7 +36,9 @@ _Last updated: 2026-11-03_
   decided yet.
 
 ## Backlog (suggested, not yet approved by the human)
-- [ ] Issue #7 (blur disappears at scroll limits): **reproduced 2026-11-06** on the Android
+- [x] Issue #7 (blur disappears at scroll limits): replied and closed 2026-11-06
+      (https://github.com/Zachariah-Abraham/glass/issues/7#issuecomment-6688301780); README section in
+      PR #15. **Reproduced 2026-11-06** on the Android
       emulator `Medium_Phone_API_37.0` (Android 17) with the issue's layout (`asGlass` on a tall
       `Column` inside a `SingleChildScrollView`, over a striped background, default Material 3
       theme). At rest the stripes are blurred. While dragging past the top edge (held touch via
@@ -45,12 +52,12 @@ _Last updated: 2026-11-03_
       scrolls inside) keeps the blur. iOS behaviour is untested. Untested workarounds: `useMaterial3: false`,
       `ClampingScrollPhysics`. Human decision 2026-11-06: this is a usage pitfall, not a package limitation, and no
       regression test is wanted (edge case). README has a "Using glass with scrolling" section.
-      Next: draft a reply for the human to approve before posting and closing.
-- [ ] Apple "liquid glass" support (needs scoping: refraction needs a fragment shader).
 - [ ] Optional hardening of automated publishing: GitHub tag protection rules for `v*`, and a
       required `pub.dev` environment (AGENTS.md §6).
 
 ## Done
+- 2026-11-06: Merged PR #13 (7 Linux-rendered golden scenes, pinned-Flutter `golden` job, example
+  web build) and PR #14 (`example/integration_test/app_test.dart`, Linux desktop `integration` job).
 - 2026-11-03: Deleted `doc/api/` from git and added it to `.gitignore` and `.pubignore`.
 - 2026-11-03: Merged PR #10: CI (`ci.yml`), `.pubignore` (archive ~3 MB → ~750 KB), pub.dev
   metadata (`repository`, `issue_tracker`, `topics`; shows after the next release) and
