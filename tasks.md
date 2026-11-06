@@ -3,7 +3,7 @@
 Living status of work on this repo. **Update it whenever you make progress** (see AGENTS.md §1).
 Newest information goes first in each section. Use absolute dates.
 
-_Last updated: 2026-11-06_
+_Last updated: 2026-11-07_
 
 ## Current state
 - **glass 2.1.0 is published on pub.dev** (2026-11-03). `main` is at or ahead of the `v2.1.0` tag.
@@ -48,8 +48,18 @@ _Last updated: 2026-11-06_
     to 3.29 (allowed by the human).
   - Prior art: `liquid_glass_renderer` (needs Flutter 3.47 + Flutter GPU). Flutter's own Cupertino work:
     flutter/flutter#170310.
-  - Next: human reviews spike screenshots; then fix the stale-position problem, Android check, tests,
-    and design merging.
+  - 2026-11-07: presets `LiquidGlass.regular` / `LiquidGlass.clear` added (explicit `blurX`, `blurY`,
+    `tintColor`, `frosted` override the preset; those params are now nullable) and covered by a
+    `group('liquid')` in `test/glass_widget_test.dart`. Shader tuned against native screenshots: dome
+    bend in a 40 pt band (`edgeWidth: 40` on both presets), crisp ~1-3 px hairline rim, no dispersion
+    or edge darkening. Measured: native clear *brightens* the dark scene (~9% white), regular is a
+    near-opaque light blue-grey (~(177,193,199)). Remaining difference: the backdrop texture only
+    covers the glass rect, so near the rim the shader mirrors content from inside the glass (ghost
+    lines of text) instead of pulling in content from outside it, as native does (squashed circles,
+    text slivers). Fixing it needs a backdrop larger than the glass. Also `copyWith` can't reset
+    `edgeWidth` to null.
+  - Next: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
+    problem, Android check, shader-path tests, and design merging.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
   2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
   `@Deprecated` alias, ships as a minor (2.2.0). Step 2 (later, next major 3.0.0): delete
