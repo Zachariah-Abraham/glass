@@ -56,6 +56,29 @@ Glass blurs what is *behind* the widget, so it only shows up when there is conte
 
 A full example can be found in the example directory.
 
+## Known limitations
+
+### The blur disappears while overscrolling inside a scroll view (Android)
+
+If a glass widget is **inside** a scrollable, Android's Material 3 stretch overscroll renders the
+scrollable in its own layer. While you drag past the top or bottom edge, the glass has nothing
+behind it to blur, so the blur vanishes until you release. This comes from how Flutter renders
+the stretch effect, not from the package itself.
+
+Turn the stretch off for that scroll view:
+
+```Dart
+ScrollConfiguration(
+  behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
+  child: SingleChildScrollView(
+    child: Column(children: [...]).asGlass(),
+  ),
+)
+```
+
+Alternatively, put the scroll view **inside** the glass (`SingleChildScrollView(...).asGlass()`)
+so the glass stays fixed while the content scrolls.
+
 ## About me
 
 Visit my LinkedIn at https://www.linkedin.com/in/zaca

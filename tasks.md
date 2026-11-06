@@ -41,7 +41,8 @@ _Last updated: 2026-11-03_
       `ScrollConfiguration(behavior: ScrollConfiguration.of(context).copyWith(overscroll: false), ...)`;
       the blur then stays intact during the drag. NOTE: `ThemeData(androidOverscrollIndicator:)`
       does not exist (Flutter 3.47); `MaterialScrollBehavior` picks stretch for Material 3 and glow
-      for Material 2 from `useMaterial3`. Untested workarounds: `useMaterial3: false`,
+      for Material 2 from `useMaterial3`. Also verified on the emulator: wrapping the scroll view in `asGlass` (glass outside, content
+      scrolls inside) keeps the blur. iOS behaviour is untested. Untested workarounds: `useMaterial3: false`,
       `ClampingScrollPhysics`. Next: README "Known limitations" with the verified workaround, an
       emulator regression test (`workflow_dispatch` or local only), then draft a reply for the
       human to approve before posting and closing.
