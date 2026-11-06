@@ -8,9 +8,9 @@ import 'package:glass/glass.dart';
 const _size = Size(240, 240);
 const _sceneKey = Key('scene');
 
-/// A fixed-size scene with high-contrast stripes behind a centered glass pane,
-/// so blur, tint and noise are all visible. It contains no text, so the output
-/// doesn't depend on fonts.
+/// A fixed-size scene with color stripes and a flat black and white band behind a
+/// centered glass pane. The stripes show the blur, and the black and white areas make
+/// tint differences visible. It contains no text, so the output doesn't depend on fonts.
 Widget _scene(Widget Function(Widget pane) glass) {
   const colors = [
     Colors.red,
@@ -38,16 +38,16 @@ Widget _scene(Widget Function(Widget pane) glass) {
                 ],
               ),
             ),
-            Positioned.fill(
-              child: Column(
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 90,
+              height: 60,
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < 8; i++)
-                    Expanded(
-                      child: ColoredBox(
-                        color: i.isEven ? Colors.black26 : Colors.white24,
-                      ),
-                    ),
+                children: const [
+                  Expanded(child: ColoredBox(color: Colors.black)),
+                  Expanded(child: ColoredBox(color: Colors.white)),
                 ],
               ),
             ),
@@ -113,7 +113,7 @@ void main() {
       await _expectGolden(
         tester,
         'colored_tint',
-        (pane) => pane.asGlass(tintColor: Colors.red, frosted: false),
+        (pane) => pane.asGlass(tintColor: Colors.blue, frosted: false),
       );
     });
 
