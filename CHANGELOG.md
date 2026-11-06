@@ -2,6 +2,13 @@
 
 * Address lints
 
+## [2.2.0](https://github.com/Zachariah-Abraham/glass/compare/v2.1.0...v2.2.0) (2026-11-06)
+
+
+### Features
+
+* add clipBehavior and deprecate misspelled clipBehaviour ([7e53b0d](https://github.com/Zachariah-Abraham/glass/commit/7e53b0d0d279b7f42cea259f9ed0c1d717470838))
+
 ## [2.1.0](https://github.com/Zachariah-Abraham/glass/compare/v2.0.0...v2.1.0) (2026-11-03)
 
 
