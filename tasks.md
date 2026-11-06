@@ -18,9 +18,17 @@ _Last updated: 2026-11-03_
   plain `x.y.z` (no `+N`).
 
 ## In progress
-- _(none)_
+- Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
+  2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
+  `@Deprecated` alias, ships as a minor (2.2.0). Step 2 (later, next major 3.0.0): delete
+  `clipBehaviour`, with a `feat!:` commit or `BREAKING CHANGE:` footer. Other 3.0.0 candidates: none
+  decided yet.
 
 ## Backlog (suggested, not yet approved by the human)
+- [ ] Issue #7 (blur disappears at scroll limits): likely Android stretch overscroll, whose
+      `ImageFilter` layer hides the backdrop. Not reproduced on a device yet. Plan: README "Known
+      limitations" with workarounds, an example, a regression test, then reply and close.
+- [ ] Apple "liquid glass" support (needs scoping: refraction needs a fragment shader).
 - [ ] Optional hardening of automated publishing: GitHub tag protection rules for `v*`, and a
       required `pub.dev` environment (AGENTS.md §6).
 
