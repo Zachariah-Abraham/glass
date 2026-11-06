@@ -30,10 +30,10 @@ class LiquidGlass {
   ///   null, which uses half the shorter side, so the whole shape is curved.
   /// * [highlight]: Intensity of the rim from 0 to 1, defaults to 0.6.
   const LiquidGlass({
-    this.blur = 2.0,
-    this.tintColor = Colors.black,
-    this.tintStrength = 0.15,
-    this.refraction = 1.0,
+    this.blur = 3.0,
+    this.tintColor = Colors.white,
+    this.tintStrength = 0.1,
+    this.refraction = 1.4,
     this.edgeWidth,
     this.highlight = 0.6,
   });
@@ -41,14 +41,15 @@ class LiquidGlass {
   /// Frosted, mostly opaque glass with a light tint, like Apple's
   /// `Glass.regular`. Use it where legibility of content on the glass matters.
   static const regular = LiquidGlass(
-    blur: 8.0,
-    tintColor: Colors.white,
-    tintStrength: 0.45,
+    blur: 7.0,
+    tintColor: Color(0xFFC8D3D8),
+    tintStrength: 1.0,
+    edgeWidth: 40.0,
   );
 
   /// Highly transparent glass with a slight dark tint, like Apple's
   /// `Glass.clear`. Use it over rich media.
-  static const clear = LiquidGlass();
+  static const clear = LiquidGlass(edgeWidth: 40.0);
 
   /// Blur sigma along both axes.
   final double blur;

@@ -50,40 +50,26 @@ void main() {
 
   float thick = max(uThickness, 1.0);
   float depth = max(-d, 0.0);
-  // t: 0 in the flat centre, 1 at the very edge.
-  float t = clamp(1.0 - depth / thick, 0.0, 1.0);
+  // u: 0 in the flat centre, 1 at the very rim.
+  float u = clamp(1.0 - depth / thick, 0.0, 1.0);
 
-  // Bevel profile: a rounded (quarter-circle) lip. Zero in the centre, grows
-  // smoothly and steeply toward the edge, like a thick glass slab.
-  float prof = 1.0 - sqrt(max(1.0 - t * t, 0.0));
-  float maxShift = 0.8 * thick * uRefraction;
-  vec2 inward = -grad;
-  vec2 offset = inward * prof * maxShift;
+  // Dome profile: a quarter circle, flat in the centre and infinitely steep at
+  // the rim. The sample point moves toward the outside, so content near the rim
+  // is squeezed into the edge band (minified), as in a thick convex slab. The
+  // backdrop texture only covers the glass rect, so a sample that would land
+  // outside is mirrored back inside.
+  float prof = 1.0 - sqrt(max(1.0 - u * u, 0.0));
+  float off = 0.7 * thick * uRefraction * prof;
+  float sd = abs(depth - off);  // depth of the sampled point
+  vec3 col = sampleBackdrop(fragCoord, -grad * (sd - depth));
 
-  // Subtle chromatic dispersion: red/blue sample slightly different distances.
-  float disp = 0.06 * prof;
-  vec3 col;
-  col.r = sampleBackdrop(fragCoord, offset * (1.0 - disp)).r;
-  col.g = sampleBackdrop(fragCoord, offset).g;
-  col.b = sampleBackdrop(fragCoord, offset * (1.0 + disp)).b;
-
-  // Lighting. Light comes from the top-left: outward normals facing it are lit,
-  // those facing bottom-right get a weaker secondary highlight.
+  // Light from the top-left. Crisp ~2px hairline at the rim, a little
+  // brighter on the sides facing the light.
   vec2 lightDir = normalize(vec2(-1.0, -1.0));
-  float facing = dot(grad, lightDir);            // +1 top-left, -1 bottom-right
-  float rimMask = smoothstep(0.0, 1.0, t);       // 0 centre, 1 edge
-  float thin = pow(t, 3.0);                      // concentrates on the very edge
-  float spec = (max(facing, 0.0) + 0.55 * max(-facing, 0.0));
-  float rim = spec * (0.35 * rimMask * rimMask + 0.65 * thin) * uHighlight;
-  col += vec3(rim * 0.55);
-
-  // Faint inner darkening opposite the light, just inside the edge band.
-  float shade = max(-facing, 0.0) * rimMask * rimMask * 0.06 * uHighlight;
-  col *= 1.0 - shade;
-
-  // Thin bright hairline at the boundary for definition.
-  float hair = (1.0 - smoothstep(0.0, 1.5, depth)) * 0.08 * uHighlight;
-  col += vec3(hair);
+  float facing = dot(grad, lightDir);  // +1 top-left, -1 bottom-right
+  float line = 1.0 - smoothstep(1.0, 3.0, depth);
+  float spec = 0.55 + 0.45 * max(facing, 0.0) + 0.1 * max(-facing, 0.0);
+  col = mix(col, vec3(0.88, 0.95, 1.0), clamp(line * spec * 1.0 * uHighlight, 0.0, 1.0));
 
   fragColor = vec4(mix(base.rgb, clamp(col, 0.0, 1.0), cover), 1.0);
 }
