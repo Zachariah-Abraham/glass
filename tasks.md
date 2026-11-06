@@ -18,11 +18,11 @@ _Last updated: 2026-11-03_
   plain `x.y.z` (no `+N`).
 
 ## In progress
-- Test automation (branch `test/goldens-and-example-build`): built-in golden tests (7 scenes,
-  pinned-Flutter CI job) and an example web-build job are written. Not yet verified on Linux CI:
-  the references were generated on macOS. If CI reports pixel diffs, regenerate on Linux. Still to
-  do: a web/Linux `integration_test` smoke test, and a manually triggered Android emulator test for
-  issue #7 (decided: slow and flaky tests stay local or `workflow_dispatch`, not on every PR).
+- Test automation (PR #13, branch `test/goldens-and-example-build`): 7 built-in golden scenes
+  (references rendered on Linux CI, reviewed by the human 2026-11-06), a pinned-Flutter `golden`
+  job and an example web-build job. Still to do: a web/Linux `integration_test` smoke test, and a
+  manually triggered Android emulator test for issue #7 (slow and flaky tests stay local or
+  `workflow_dispatch`, not on every PR).
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
   2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
   `@Deprecated` alias, ships as a minor (2.2.0). Step 2 (later, next major 3.0.0): delete

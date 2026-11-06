@@ -178,6 +178,12 @@ those incidental changes as part of unrelated work. Either revert them
     deterministic (fixed size, device pixel ratio 1, no animation).
   - Regenerate with `$F test --update-goldens --tags golden` using the pinned version, whenever
     the look changes on purpose or the pinned version is bumped.
+  - **Generate references on Linux, not macOS.** macOS output differs by a few pixels, so CI fails
+    on macOS-made references. Push the change, let the `golden` job fail, download its
+    `golden-failures` artifact (`gh run download <id> -n golden-failures`) and copy each
+    `<name>_testImage.png` to `test/goldens/<name>.png`.
+  - Some differences are subtle by design (noise is at most ~9/255, a 10% tint ~26/255). The tests
+    are pixel-exact, so they still catch regressions even when you can't see the difference.
   - **Always open the changed PNGs and look at them before committing.** An empty or wrong scene
     still "passes" once its blank image is the reference.
   - Goldens are excluded from the published package (`.pubignore`).
