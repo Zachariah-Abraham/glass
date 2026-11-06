@@ -103,7 +103,7 @@ F=~/fvm/versions/stable/bin/flutter   # Flutter 3.47.x / Dart 3.13.x as of 2026-
 
 $F pub get                      # root package
 $F analyze                      # root package (must be clean before committing)
-$F test                         # root package tests (none exist yet, see tasks.md)
+$F test --exclude-tags golden   # root package tests, without pixel goldens (see "Golden tests")
 (cd example && $F analyze && $F test)
 dart format .                   # or: ~/fvm/versions/stable/bin/dart format .
 $F pub publish --dry-run        # validates the package; NEVER run without --dry-run unless the human asks
@@ -167,10 +167,21 @@ those incidental changes as part of unrelated work. Either revert them
   - Blur sigma, tile mode, clip behavior, border radius, and clipper reach the right widgets.
   - `tintColor: Colors.transparent` produces no gradient. `frosted: false` produces no image.
   - The noise asset resolves (`package: 'glass'`).
-- Use `find.byType` and `tester.widget<T>()` to inspect properties. Consider golden tests for the
-  visual output, but keep them deterministic and run them on a single platform.
-- The example app's test must test the example app. See `tasks.md`: it's currently the stock
-  counter template and fails.
+- Use `find.byType` and `tester.widget<T>()` to inspect properties.
+- **Golden tests** (`test/glass_golden_test.dart`, tag `golden`, images in `test/goldens/`) render
+  `asGlass` variants over a striped background and compare pixels with Flutter's built-in
+  `matchesGoldenFile`. Rules:
+  - Pixel output depends on the Flutter version, so CI runs them only in the `golden` job, pinned
+    to `GOLDEN_FLUTTER_VERSION` in `.github/workflows/ci.yml`. The version matrix runs
+    `flutter test --exclude-tags golden`. Use the same locally unless you're on the pinned version.
+  - Scenes contain no text, so results don't depend on fonts. Keep it that way, and keep them
+    deterministic (fixed size, device pixel ratio 1, no animation).
+  - Regenerate with `$F test --update-goldens --tags golden` using the pinned version, whenever
+    the look changes on purpose or the pinned version is bumped.
+  - **Always open the changed PNGs and look at them before committing.** An empty or wrong scene
+    still "passes" once its blank image is the reference.
+  - Goldens are excluded from the published package (`.pubignore`).
+- CI also builds the example app for web against the package (`example-build` job).
 - Run `analyze` and `test` for **both** the root package and `example/` before committing.
 
 ### Example app
@@ -182,9 +193,10 @@ those incidental changes as part of unrelated work. Either revert them
 ---
 
 ## 5. Definition of done (per change)
-CI (`.github/workflows/ci.yml`) runs on pushes to `main` and on PRs: analyze and tests for the root
-and `example/` on Flutter 3.27.0 (the minimum) and latest stable, plus a format check and
-`flutter pub publish --dry-run` on stable. Dev dependencies must resolve on the minimum SDK, which
+CI (`.github/workflows/ci.yml`) runs on pushes to `main` and on PRs: analyze and tests (excluding
+goldens) for the root and `example/` on Flutter 3.27.0 (the minimum) and latest stable, plus a
+format check and `flutter pub publish --dry-run` on stable. Separate jobs run the golden tests on a
+pinned Flutter version and build the example for web. Dev dependencies must resolve on the minimum SDK, which
 is why `flutter_lints` is `^5` (v6 needs Dart 3.8).
 
 1. `$F analyze` is clean in the root and in `example/`.

@@ -37,8 +37,9 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      # Goldens are pixel comparisons and only valid on the pinned Flutter version (see `golden` job).
       - name: Test
-        run: flutter test
+        run: flutter test --exclude-tags golden
 
       - name: Analyze example
         working-directory: example
@@ -53,3 +54,51 @@ jobs:
       - name: Validate package for publishing
         if: matrix.flutter-version == 'stable'
         run: flutter pub publish --dry-run
+
+  golden:
+    name: Golden tests
+    runs-on: ubuntu-latest
+    env:
+      # Pixel output changes between Flutter releases. Keep this pinned, and when you bump it,
+      # regenerate the goldens (AGENTS.md, "Golden tests") and review the images.
+      GOLDEN_FLUTTER_VERSION: '3.47.7'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.GOLDEN_FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run golden tests
+        run: flutter test --tags golden
+
+      - name: Upload failure diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures
+          path: test/failures/
+          if-no-files-found: ignore
+
+  example-build:
+    name: Build example (web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # Platform folders are gitignored, so generate the one we build.
+      - name: Build the example app against the package
+        working-directory: example
+        run: |
+          flutter create --platforms=web .
+          flutter build web
