@@ -202,7 +202,7 @@ void main() {
         );
         expectColorClose(
           gradient.colors[1],
-          preset.tintColor.withValues(alpha: preset.tintStrength * 0.8),
+          preset.tintColor.withValues(alpha: preset.tintStrength),
         );
       }
     });
@@ -238,7 +238,7 @@ void main() {
       );
       expectColorClose(
         gradient.colors[1],
-        tint.withValues(alpha: preset.tintStrength * 0.8),
+        tint.withValues(alpha: preset.tintStrength),
       );
     });
 

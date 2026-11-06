@@ -30,27 +30,31 @@ class LiquidGlass {
   /// * [edgeWidth]: Width of the refracting edge band in logical pixels.
   ///   Defaults to null, which uses `min(20, 0.69 * R)` where R is half the
   ///   shorter side, as measured on Apple's glass.
-  /// * [highlight]: Intensity of the rim from 0 to 1, defaults to 0.6.
+  /// * [lift]: Brightness added to the blurred backdrop before the tint, from
+  ///   0 to 1 (0.085 is about 22 of 255), defaults to 0.
+  /// * [highlight]: Intensity of the rim, 1.0 (the default) matches Apple's
+  ///   native glass, 0 hides it.
   const LiquidGlass({
     this.blur = 3.0,
     this.tintColor = Colors.white,
     this.tintStrength = 0.1,
     this.refraction = 1.0,
     this.edgeWidth,
-    this.highlight = 0.6,
+    this.lift = 0.0,
+    this.highlight = 1.0,
   });
 
   /// Frosted, mostly opaque glass with a light tint, like Apple's
   /// `Glass.regular`. Use it where legibility of content on the glass matters.
   static const regular = LiquidGlass(
     blur: 7.0,
-    tintColor: Color(0xFFC8D3D8),
-    tintStrength: 1.0,
+    tintColor: Color(0xFFEEF7FB),
+    tintStrength: 0.74,
   );
 
   /// Highly transparent glass with a slight dark tint, like Apple's
   /// `Glass.clear`. Use it over rich media.
-  static const clear = LiquidGlass(blur: 1.5);
+  static const clear = LiquidGlass(blur: 1.5, tintStrength: 0.0, lift: 0.085);
 
   /// Blur sigma along both axes.
   final double blur;
@@ -71,7 +75,10 @@ class LiquidGlass {
   /// `min(20, 0.69 * R)` with R half the shorter side.
   final double? edgeWidth;
 
-  /// Intensity of the rim.
+  /// Brightness added to the blurred backdrop (before the tint), 0 for none.
+  final double lift;
+
+  /// Intensity of the rim, 1.0 matches Apple's native glass.
   final double highlight;
 
   /// Returns a copy with the given fields replaced.
@@ -81,6 +88,7 @@ class LiquidGlass {
     double? tintStrength,
     double? refraction,
     double? edgeWidth,
+    double? lift,
     double? highlight,
   }) {
     return LiquidGlass(
@@ -89,6 +97,7 @@ class LiquidGlass {
       tintStrength: tintStrength ?? this.tintStrength,
       refraction: refraction ?? this.refraction,
       edgeWidth: edgeWidth ?? this.edgeWidth,
+      lift: lift ?? this.lift,
       highlight: highlight ?? this.highlight,
     );
   }
@@ -133,7 +142,7 @@ extension GlassWidget<T extends Widget> on T {
     final tint = tintColor ?? liquid?.tintColor ?? Colors.white;
     // Plain glass keeps its exact 10% → 8% gradient.
     final tintStart = liquid?.tintStrength ?? 0.1;
-    final tintEnd = liquid == null ? 0.08 : liquid.tintStrength * 0.8;
+    final tintEnd = liquid == null ? 0.08 : liquid.tintStrength;
     final blur = ImageFilter.blur(
       sigmaX: blurX ?? liquid?.blur ?? 10.0,
       sigmaY: blurY ?? liquid?.blur ?? 10.0,
@@ -342,7 +351,8 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
       ..setFloat(5, size.height * dpr)
       ..setFloat(6, c.radius * dpr)
       ..setFloat(7, width * dpr)
-      ..setFloat(8, amount * dpr);
+      ..setFloat(8, amount * dpr)
+      ..setFloat(9, c.liquid.lift);
 
     // Clip, blur, refract and tint (the child).
     super.paint(context, offset);

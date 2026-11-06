@@ -74,9 +74,15 @@ _Last updated: 2026-11-07_
     on the simulator, ours is within ~1 pt of native at every depth for a pill, card, 120x44 shape,
     top-left screen corner and partly off-screen glass. Structure is 2 passes: one `BackdropFilter`
     in the `ClipRRect` with `compose(outer: shader, inner: blur)` (blur first, then inward refraction,
-    no margin), then `shaders/liquid_rim.frag` painted last. Remaining photometric gaps: native clear is
-    slightly lighter with a crisper, brighter rim; native regular lets content through brighter (a
-    lift, not an opaque tint), and ours is too flat and opaque.
+    no margin), then `shaders/liquid_rim.frag` painted last. Photometry fitted 2026-11-07 from native deep-interior
+    pixels (scripts in scratchpad `fit/`): regular = blur ~6.7 pt then `0.26*in + (176,184,188)`, i.e.
+    tint `0xEEF7FB` at 74% (flat, no gradient); clear = blur ~1.5 pt plus an additive lift of +22/255
+    (new `LiquidGlass.lift`, shader uniform 9). Rim (`liquid_rim.frag`): white, ~1 pt (3 px) wide,
+    additive alpha 0.55/0.41/0.26 over the first 3 px, the same at every angle (no light direction);
+    `highlight` 1.0 = native. In liquid mode the tint gradient is flat. Card matches native within
+    ~3/255 over flat areas. Remaining: the clear pill text looks a bit sharper than native, regular's
+    transfer curve is slightly concave natively (≤2/255), and native darkens the rim pixel over white
+    backgrounds (not modelled).
   - Earlier next steps: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
     problem, Android check, shader-path tests, and design merging.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,

@@ -40,12 +40,10 @@ void main() {
   float cover = 1.0 - smoothstep(-0.5, 0.5, d);
   float depth = max(-d, 0.0);
 
-  // Light from the top-left. Crisp ~2px hairline at the rim, a little
-  // brighter on the sides facing the light.
-  vec2 lightDir = normalize(vec2(-1.0, -1.0));
-  float facing = dot(grad, lightDir);  // +1 top-left, -1 bottom-right
-  float line = 1.0 - smoothstep(1.0, 3.0, depth);
-  float spec = 0.55 + 0.45 * max(facing, 0.0) + 0.1 * max(-facing, 0.0);
-  float a = clamp(line * spec * uHighlight, 0.0, 1.0) * cover;
-  fragColor = vec4(vec3(0.88, 0.95, 1.0) * a, a);
+  // Measured on Apple's glass: a pure white hairline whose coverage is about
+  // 0.55, 0.41, 0.26 on the first three physical pixels inside the edge, with
+  // the same strength all around the shape (no light direction).
+  float line = max(0.55 - 0.126 * depth, 0.0) * (1.0 - smoothstep(2.8, 3.4, depth));
+  float a = clamp(line * uHighlight, 0.0, 1.0) * cover;
+  fragColor = vec4(vec3(a), a);
 }
