@@ -31,9 +31,20 @@ _Last updated: 2026-11-03_
   decided yet.
 
 ## Backlog (suggested, not yet approved by the human)
-- [ ] Issue #7 (blur disappears at scroll limits): likely Android stretch overscroll, whose
-      `ImageFilter` layer hides the backdrop. Not reproduced on a device yet. Plan: README "Known
-      limitations" with workarounds, an example, a regression test, then reply and close.
+- [ ] Issue #7 (blur disappears at scroll limits): **reproduced 2026-11-06** on the Android
+      emulator `Medium_Phone_API_37.0` (Android 17) with the issue's layout (`asGlass` on a tall
+      `Column` inside a `SingleChildScrollView`, over a striped background, default Material 3
+      theme). At rest the stripes are blurred. While dragging past the top edge (held touch via
+      `adb shell input motionevent DOWN/MOVE`) the blur vanishes; tint and noise stay. Cause: the
+      Material 3 stretch overscroll renders the scrollable in its own layer, so the
+      `BackdropFilter` has nothing behind it. Verified fix for users: wrap the scroll view in
+      `ScrollConfiguration(behavior: ScrollConfiguration.of(context).copyWith(overscroll: false), ...)`;
+      the blur then stays intact during the drag. NOTE: `ThemeData(androidOverscrollIndicator:)`
+      does not exist (Flutter 3.47); `MaterialScrollBehavior` picks stretch for Material 3 and glow
+      for Material 2 from `useMaterial3`. Untested workarounds: `useMaterial3: false`,
+      `ClampingScrollPhysics`. Next: README "Known limitations" with the verified workaround, an
+      emulator regression test (`workflow_dispatch` or local only), then draft a reply for the
+      human to approve before posting and closing.
 - [ ] Apple "liquid glass" support (needs scoping: refraction needs a fragment shader).
 - [ ] Optional hardening of automated publishing: GitHub tag protection rules for `v*`, and a
       required `pub.dev` environment (AGENTS.md §6).
