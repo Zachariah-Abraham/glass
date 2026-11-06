@@ -20,8 +20,9 @@ _Last updated: 2026-11-03_
 ## In progress
 - Test automation (PR #13, branch `test/goldens-and-example-build`): 7 built-in golden scenes
   (references rendered on Linux CI, reviewed by the human 2026-11-06), a pinned-Flutter `golden`
-  job and an example web-build job. Still to do: a web/Linux `integration_test` smoke test, and a
-  manually triggered Android emulator test for issue #7 (slow and flaky tests stay local or
+  job and an example web-build job. `example/integration_test/app_test.dart` smoke test and CI `integration` job (Linux desktop,
+  xvfb) added on branch `test/integration-smoke`, passes locally on macOS, CI unverified. Still to
+  do: a manually triggered Android emulator test for issue #7 (slow and flaky tests stay local or
   `workflow_dispatch`, not on every PR).
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
   2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
