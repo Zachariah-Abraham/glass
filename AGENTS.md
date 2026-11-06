@@ -188,6 +188,10 @@ those incidental changes as part of unrelated work. Either revert them
     still "passes" once its blank image is the reference.
   - Goldens are excluded from the published package (`.pubignore`).
 - CI also builds the example app for web against the package (`example-build` job).
+- `example/integration_test/app_test.dart` is a smoke test on a real engine (not the widget-test
+  binding). CI runs it on Linux desktop under xvfb (`integration` job); locally run
+  `flutter create --platforms=macos . && flutter test integration_test -d macos` in `example/`, then
+  revert the incidental changes to tracked files (`example/macos/`, `pubspec.lock`, etc.).
 - Run `analyze` and `test` for **both** the root package and `example/` before committing.
 
 ### Example app
