@@ -4,25 +4,19 @@ Current state and pending work only. **Keep it short:** when something is done, 
 commit history and `CHANGELOG.md` are the record); move lasting facts to `AGENTS.md`. Use absolute
 dates. See AGENTS.md §1.
 
-_Last updated: 2026-11-07_
+_Last updated: 2026-11-08_
 
 ## Current state
-- **glass 2.3.0** (experimental liquid glass, minimum Flutter 3.29 / Dart 3.7) was released on
-  2026-11-07: release PR #17 merged, tag `v2.3.0`, and `publish.yml` uploaded it ("Successfully uploaded
-  ... version 2.3.0"). Releases are automated (AGENTS.md §6).
+- **glass 2.3.1** was released on 2026-11-08 (release PR #20, tag `v2.3.1`, `publish.yml` succeeded).
+  It adds the pub.dev `screenshots:` gallery (weather, music, travel, photos, from `doc/screenshots/`),
+  the `liquid-glass` topic and a new `description`. 2.3.0 (2026-11-07) added experimental liquid glass
+  and raised the minimum to Flutter 3.29 / Dart 3.7. Releases are automated (AGENTS.md §6).
 - Root and `example/` analyze clean and tests pass on Flutter 3.47.7 (FVM `stable`), with and without
   `--enable-impeller`.
 
 ## In progress
-- Showcase recording for the merged liquid glass PR #16 and a LinkedIn post: **the human records it.**
-  The scene is `example/lib/showcase.dart` (merged in PR #18). Run it with
-  `cd example && flutter run -t lib/showcase.dart -d <device>`.
-
-- pub.dev screenshots and metadata (PR #19): `pubspec.yaml`
-  has a `screenshots:` gallery (in this order: weather, music, travel, photos; images are in `doc/screenshots/`,
-  made with `example/lib/screens.dart`), the `liquid-glass` topic (it replaces `widget`), and a new
-  `description`. They reach pub.dev with the next release (a `fix:` commit, so 2.3.1). `README.md` now shows
-  weather and music from `doc/screenshots/` (by URL from `main`, so they appear on GitHub after the merge).
+- Showcase recording and a LinkedIn post: **the human records it.** Run
+  `cd example && flutter run --release -t lib/showcase.dart -d <device>`.
 
 ## Pending (not started)
 - Liquid glass gaps:
