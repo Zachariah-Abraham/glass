@@ -2,10 +2,12 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 # Glass
-Easily convert any Widget into a glass / frosted glass version of itself, following the glassmorphism / glassmorphic  design trend.
+Easily convert any Widget into a glass / frosted glass version of itself, following the glassmorphism / glassmorphic design trend, or into Apple-style liquid glass (experimental).
 
-![Sample screenshot](https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/example/screenshots/2.PNG)
-![Sample screenshot 2](https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/example/screenshots/3.png)
+<p>
+  <img src="https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/doc/screenshots/weather.jpg" alt="Plain glass, liquid glass regular and liquid glass clear compared" width="260">
+  <img src="https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/doc/screenshots/music.jpg" alt="Dark liquid glass mini player and tab bar in a music app" width="260">
+</p>
 
 ## Installation
 

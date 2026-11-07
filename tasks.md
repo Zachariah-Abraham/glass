@@ -21,8 +21,8 @@ _Last updated: 2026-11-07_
 - pub.dev screenshots and metadata (PR #19, stacked on PR #18): `pubspec.yaml`
   has a `screenshots:` gallery (in this order: weather, music, travel, photos; images are in `doc/screenshots/`,
   made with `example/lib/screens.dart`), the `liquid-glass` topic (it replaces `widget`), and a new
-  `description`. They reach pub.dev with the next release (a `fix:` commit, so 2.3.1). The README images
-  (`example/screenshots/2.PNG`, `3.png`) are unchanged.
+  `description`. They reach pub.dev with the next release (a `fix:` commit, so 2.3.1). `README.md` now shows
+  weather and music from `doc/screenshots/` (by URL from `main`, so they appear on GitHub after the merge).
 
 ## Pending (not started)
 - Liquid glass gaps:
