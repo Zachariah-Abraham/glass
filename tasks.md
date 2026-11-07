@@ -174,6 +174,10 @@ _Last updated: 2026-11-07_
 - 2026-10-29: Added `AGENTS.md` (incl. the publishing guide in §6), `CLAUDE.md` and `tasks.md`.
 
 ## Decisions made
+- 2026-11-07: liquid glass scope (human approved): keep plain glass maintained regardless; ship a narrow,
+  experimental liquid option (`clear`/`regular` presets, refraction, rim, shadow). Before release: stale
+  position while scrolling, Android check, shader-path tests, 3.27 vs 3.29 minimum. Continuous corners are
+  deprioritized (still opt-in if ever built). Shape merging is deferred until users ask for it.
 - 2026-11-06: Use Flutter's built-in goldens, not Alchemist. The scenes have no text, so Alchemist's
   font normalization isn't needed. Goldens run on one pinned Flutter version only.
 - 2026-11-03: `flutter_lints` is `^5` because `^6` needs Dart 3.8 and the minimum SDK is Dart 3.6.
@@ -184,10 +188,4 @@ _Last updated: 2026-11-07_
 - 2026-10-29: Raising the minimum Flutter version for `withValues` is OK.
 
 ## Open questions for the human
-- 2026-11-07: is the liquid path worth shipping next to `liquid_glass_renderer`? Comparison given to the
-  human: the renderer is far more complete (blending, glint, iOS 27 presets) but needs exactly Flutter 3.47 /
-  Dart 3.13 and the opt-in Flutter GPU preview for refraction (otherwise `FakeGlass`, no refraction). Our
-  niche: one-line `asGlass` on any widget, refraction through a plain `BackdropFilter` + `ImageFilter.shader`
-  (Impeller, no Flutter GPU flag). Suggested: keep plain glass maintained regardless; ship a narrow,
-  experimental liquid option; defer merging. Awaiting the human's decision.
 - Do you want the remaining backlog items done? Hardening is deferred by the human.
