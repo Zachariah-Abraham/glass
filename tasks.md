@@ -4,7 +4,7 @@ Current state and pending work only. **Keep it short:** when something is done, 
 commit history and `CHANGELOG.md` are the record); move lasting facts to `AGENTS.md`. Use absolute
 dates. See AGENTS.md §1.
 
-_Last updated: 2026-11-07_
+_Last updated: 2026-11-08_
 
 ## Current state
 - **glass 2.3.0** (experimental liquid glass, minimum Flutter 3.29 / Dart 3.7) was released on
@@ -14,15 +14,12 @@ _Last updated: 2026-11-07_
   `--enable-impeller`.
 
 ## In progress
-- Showcase recording for the merged liquid glass PR #16 and a LinkedIn post: **the human records it.**
-  The scene is `example/lib/showcase.dart` (merged in PR #18). Run it with
-  `cd example && flutter run -t lib/showcase.dart -d <device>`.
-
-- pub.dev screenshots and metadata (PR #19): `pubspec.yaml`
-  has a `screenshots:` gallery (in this order: weather, music, travel, photos; images are in `doc/screenshots/`,
-  made with `example/lib/screens.dart`), the `liquid-glass` topic (it replaces `widget`), and a new
-  `description`. They reach pub.dev with the next release (a `fix:` commit, so 2.3.1). `README.md` now shows
-  weather and music from `doc/screenshots/` (by URL from `main`, so they appear on GitHub after the merge).
+- Release PR #20 (glass 2.3.1) is open and CI is green. It ships the pub.dev `screenshots:` gallery
+  (weather, music, travel, photos, from `doc/screenshots/`), the `liquid-glass` topic and the new
+  `description` (PR #19). **The human merges it**, which tags `v2.3.1` and runs `publish.yml`. After
+  publishing, check that pub.dev shows the gallery, topics and description.
+- Showcase recording and a LinkedIn post: **the human records it.** Run
+  `cd example && flutter run --release -t lib/showcase.dart -d <device>`.
 
 ## Pending (not started)
 - Liquid glass gaps:
