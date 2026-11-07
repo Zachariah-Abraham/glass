@@ -23,8 +23,11 @@ class LiquidGlass {
   /// Creates liquid glass settings.
   ///
   /// * [blur]: Blur sigma along both axes, defaults to 3.0 (1.6 for [clear]).
-  /// * [tintColor]: Tint color of the glass, defaults to [Colors.black].
-  /// * [tintStrength]: Opacity of the tint from 0 to 1, defaults to 0.15.
+  /// * [tintColor]: Tint color of the glass, defaults to [Colors.white].
+  /// * [tintStrength]: Opacity of the tint from 0 to 1, defaults to 0.1.
+  /// * [saturation]: Saturation of the blurred backdrop before the tint, 1.0
+  ///   (the default) leaves it unchanged, 0 makes it grey and values above 1
+  ///   make colors more vivid, as Apple's `Glass.regular` does (about 2.3).
   /// * [refraction]: How strongly the edges bend the backdrop, 0 for none.
   ///   1.0, the default, matches Apple's native glass.
   /// * [edgeWidth]: Width of the refracting edge band in logical pixels.
@@ -34,8 +37,7 @@ class LiquidGlass {
   ///   0 to 1 (0.075 is about 19 of 255), defaults to 0.
   /// * [midtoneLift]: Brightens the mid-tones of the blurred backdrop before
   ///   the tint (`x += midtoneLift * x * (1 - x)`), which makes the tinted
-  ///   result slightly concave like Apple's `Glass.regular`. Defaults to 0
-  ///   (linear).
+  ///   result slightly concave like Apple's glass. Defaults to 0 (linear).
   /// * [highlight]: Intensity of the rim, 1.0 (the default) matches Apple's
   ///   native glass, 0 hides it.
   /// * [shadow]: A soft shadow painted just outside the glass shape, null (the
@@ -46,6 +48,7 @@ class LiquidGlass {
     this.blur = 3.0,
     this.tintColor = Colors.white,
     this.tintStrength = 0.1,
+    this.saturation = 1.0,
     this.refraction = 1.0,
     this.edgeWidth,
     this.lift = 0.0,
@@ -58,8 +61,10 @@ class LiquidGlass {
   /// `Glass.regular`. Use it where legibility of content on the glass matters.
   static const regular = LiquidGlass(
     blur: 7.0,
-    tintColor: Color(0xFFF2F8FB),
-    tintStrength: 0.735,
+    tintColor: Color(0xFFF7F7F7),
+    tintStrength: 0.731,
+    saturation: 2.32,
+    midtoneLift: 0.242,
     shadow: BoxShadow(
       color: Color(0x16000000),
       offset: Offset(0, 8),
@@ -84,6 +89,11 @@ class LiquidGlass {
 
   /// Opacity of the tint from 0 to 1.
   final double tintStrength;
+
+  /// Saturation of the blurred backdrop before the tint, 1.0 for unchanged.
+  ///
+  /// Only applies where the backdrop bends (with Impeller), like [refraction].
+  final double saturation;
 
   /// Strength of the edge refraction, 1.0 matches Apple's native glass.
   ///
@@ -117,6 +127,7 @@ class LiquidGlass {
     double? blur,
     Color? tintColor,
     double? tintStrength,
+    double? saturation,
     double? refraction,
     double? edgeWidth,
     double? lift,
@@ -128,6 +139,7 @@ class LiquidGlass {
       blur: blur ?? this.blur,
       tintColor: tintColor ?? this.tintColor,
       tintStrength: tintStrength ?? this.tintStrength,
+      saturation: saturation ?? this.saturation,
       refraction: refraction ?? this.refraction,
       edgeWidth: edgeWidth ?? this.edgeWidth,
       lift: lift ?? this.lift,
@@ -191,27 +203,24 @@ extension GlassWidget<T extends Widget> on T {
             clipper: clipper,
             clipBehavior: clipBehavior ?? clipBehaviour ?? Clip.antiAlias,
             borderRadius: clipBorderRadius,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: (tint != Colors.transparent)
-                    ? LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          tint.withValues(alpha: tintStart),
-                          tint.withValues(alpha: tintEnd),
-                        ],
-                      )
-                    : null,
-                image: (frosted ?? liquid == null)
-                    ? DecorationImage(
-                        image: AssetImage('images/noise.png', package: 'glass'),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: this,
-            ),
+            tint: tint,
+            gradient: (tint != Colors.transparent)
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      tint.withValues(alpha: tintStart),
+                      tint.withValues(alpha: tintEnd),
+                    ],
+                  )
+                : null,
+            image: (frosted ?? liquid == null)
+                ? DecorationImage(
+                    image: AssetImage('images/noise.png', package: 'glass'),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+            child: this,
           );
   }
 }
@@ -221,8 +230,10 @@ extension GlassWidget<T extends Widget> on T {
 /// (`compose(outer: refraction shader, inner: blur)`), so liquid glass takes
 /// two passes:
 ///
-/// 1. Clip, blur, refract (inward only, so the clip is the glass shape) and
-///    tint (the child).
+/// 1. Clip, blur, refract (inward only, so the clip is the glass shape),
+///    saturate and tint. The shader does the tint itself, because saturation
+///    can push colors below 0 before the tint and the tint must see that, so
+///    the tint [gradient] is only painted when the shader isn't used.
 /// 2. The rim, painted last so the blur does not soften it.
 class _GlassBackdrop extends StatefulWidget {
   const _GlassBackdrop({
@@ -231,6 +242,9 @@ class _GlassBackdrop extends StatefulWidget {
     required this.clipper,
     required this.clipBehavior,
     required this.borderRadius,
+    required this.tint,
+    required this.gradient,
+    required this.image,
     required this.child,
   });
 
@@ -239,6 +253,15 @@ class _GlassBackdrop extends StatefulWidget {
   final CustomClipper<RRect>? clipper;
   final Clip clipBehavior;
   final BorderRadius borderRadius;
+
+  /// The tint color, used by the shader.
+  final Color tint;
+
+  /// The tint as painted on top of the blur when the shader isn't used.
+  final Gradient? gradient;
+
+  /// The frost (noise) texture, or null.
+  final DecorationImage? image;
   final Widget child;
 
   @override
@@ -311,7 +334,13 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
       borderRadius: widget.borderRadius,
       child: BackdropFilter(
         filter: live ? _filter! : widget.blur,
-        child: widget.child,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: live ? null : widget.gradient,
+            image: widget.image,
+          ),
+          child: widget.child,
+        ),
       ),
     );
     if (!live) return glass;
@@ -319,6 +348,7 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
       refraction: refraction,
       rim: rim,
       liquid: liquid,
+      tint: widget.gradient == null ? Colors.transparent : widget.tint,
       radius: widget.borderRadius.topLeft.x,
       devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
       child: glass,
@@ -331,6 +361,7 @@ class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
     required this.refraction,
     required this.rim,
     required this.liquid,
+    required this.tint,
     required this.radius,
     required this.devicePixelRatio,
     super.child,
@@ -339,6 +370,7 @@ class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   final FragmentShader refraction;
   final FragmentShader rim;
   final LiquidGlass liquid;
+  final Color tint;
   final double radius;
   final double devicePixelRatio;
 
@@ -409,12 +441,17 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
       ..setFloat(7, width * dpr)
       ..setFloat(8, amount * dpr)
       ..setFloat(9, c.liquid.lift)
-      ..setFloat(10, c.liquid.midtoneLift);
+      ..setFloat(10, c.liquid.midtoneLift)
+      ..setFloat(11, c.tint.r)
+      ..setFloat(12, c.tint.g)
+      ..setFloat(13, c.tint.b)
+      ..setFloat(14, c.tint == Colors.transparent ? 0 : c.liquid.tintStrength)
+      ..setFloat(15, c.liquid.saturation);
 
     final shadow = c.liquid.shadow;
     if (shadow != null) _paintShadow(context.canvas, offset, shadow);
 
-    // Clip, blur, refract and tint (the child).
+    // Clip, blur, refract, saturate and tint, then the child.
     super.paint(context, offset);
 
     // The rim, crisp on top of everything.

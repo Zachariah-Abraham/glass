@@ -286,6 +286,7 @@ void main() {
       const shadow = BoxShadow(blurRadius: 4);
       expect(LiquidGlass.clear.copyWith(shadow: shadow).shadow, shadow);
       expect(LiquidGlass.clear.copyWith(midtoneLift: 0.2).midtoneLift, 0.2);
+      expect(LiquidGlass.clear.copyWith(saturation: 2).saturation, 2);
     });
 
     test('copyWith with no arguments keeps every field', () {
@@ -295,6 +296,7 @@ void main() {
       expect(copy.blur, base.blur);
       expect(copy.tintColor, base.tintColor);
       expect(copy.tintStrength, base.tintStrength);
+      expect(copy.saturation, base.saturation);
       expect(copy.refraction, base.refraction);
       expect(copy.edgeWidth, base.edgeWidth);
       expect(copy.highlight, base.highlight);

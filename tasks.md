@@ -99,6 +99,23 @@ _Last updated: 2026-11-07_
     chroma depends on the backdrop, so one tint can't match both); regular pill ~5 levels too light
     (size-dependent, not modelled); native regular shows more sliver contrast in the edge band;
     shadow ~1% weak on the pill.
+  - 2026-11-07 saturation fix: native regular's tint is neutral; the blue came from a saturation boost
+    of the backdrop. Fitted on 19 native uniform-colour refs (`native/ref_hex*.png`, `ref_lv*`; script
+    scratchpad `sat/fit.py`, rms 2.2/255): saturate around Rec. 709 luma by 2.32, mid-tone lift 0.242,
+    then mix with 0xF7F7F7 at 0.731. Clear has no saturation (fit 0.99). New `LiquidGlass.saturation`
+    (default 1.0) and shader uniforms 11-15 (tint rgb, tint strength, saturation). The tint is now done
+    IN the shader on the live liquid path (saturated values go below 0 before the tint, so a separate
+    tint layer would clamp them); `_GlassBackdrop` builds the tint/noise `Container` and drops its
+    gradient only when the shader is live (fallback and tests unchanged). Verified on the simulator:
+    over white 249 (native 250, was bluish 244/248/250), over red/blue/teal/orange within ~4. Aligned
+    regular card (210.7,219.5,223.1) vs native (206.7,217.6,222.2); pill still ~3-8 lighter (size
+    dependence). Finding: native's rim is also backdrop-dependent over saturated colours (yellowish over
+    orange, darker R/B over green); ours is a white overlay. Not modelled.
+  - Corner shape: native rounded rects use continuous ("squircle") corners
+    (`RoundedRectangle(style: .continuous)`); ours are circular. This changes the outline and the bend
+    direction near corners (native at 20° around the corner bends at ~32°, ours 20°; up to ~8 pt
+    difference in source position at the rim), which is why L and i merge at the card's corner
+    natively. Pills are unaffected. Explained to the human 2026-11-07; not decided yet.
   - Earlier next steps: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
     problem, Android check, shader-path tests, and design merging.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,

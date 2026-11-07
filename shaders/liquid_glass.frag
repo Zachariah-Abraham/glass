@@ -24,6 +24,9 @@ uniform float uWidth;       // float 7: W, width in px of the refracting edge ba
 uniform float uAmount;      // float 8: A, displacement scale in px
 uniform float uLift;        // float 9: brightness added to the blurred backdrop (0..1)
 uniform float uMid;         // float 10: mid-tone lift of the blurred backdrop (x += uMid * x * (1 - x))
+uniform vec3 uTint;         // floats 11-13: tint color (0..1, not premultiplied)
+uniform float uTintMix;     // float 14: tint strength (0..1)
+uniform float uSat;         // float 15: saturation of the blurred backdrop (1 = unchanged)
 uniform sampler2D uTexture; // the (blurred) backdrop
 
 out vec4 fragColor;
@@ -62,6 +65,12 @@ void main() {
   vec2 src = fragCoord - grad * disp;
   vec4 c = texture(uTexture, clamp(src / uSize, vec2(0.0), vec2(1.0)));
   vec3 rgb = c.a > 0.0 ? c.rgb / c.a : c.rgb;
-  rgb += uMid * rgb * (1.0 - rgb);
-  fragColor = vec4(min(rgb * c.a + uLift * c.a, vec3(1.0)), c.a);
+  // Measured on Apple's glass (sRGB values): saturate around the Rec. 709
+  // luma, then the mid-tone lift and lift, then the tint. Saturation can go
+  // below 0 or above 1 here; only the result is clamped.
+  float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+  rgb = luma + uSat * (rgb - luma);
+  rgb += uMid * rgb * (1.0 - rgb) + uLift;
+  rgb = clamp(mix(rgb, uTint, uTintMix), 0.0, 1.0);
+  fragColor = vec4(rgb * c.a, c.a);
 }
