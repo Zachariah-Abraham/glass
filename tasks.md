@@ -55,6 +55,18 @@ _Last updated: 2026-11-07_
     paints the shadow. Verified on the simulator with a scratchpad scroll scene (`lg_demo` `SCROLL=start:jump`,
     `scroll_shot.sh`): after a jump the glass is pixel-identical to opening at that offset (before: off by up
     to 255); static scenes unchanged. No widget test (shader isn't live in tests yet).
+  - NEXT (human, 2026-11-07): Android check. Run the scratchpad demo (`lg_demo`, or rebuild an equivalent:
+    glass over a hue-coded or grid background, see `_Meas`/`_Scroll` in the demo) on the Android emulator
+    `Medium_Phone_API_37.0` (Impeller on Vulkan, and GLES via `--no-enable-vulkan` if available). Check that
+    `FlutterFragCoord()` in the backdrop shader is global physical px with y down (on GLES y may be flipped:
+    then the bend and rim appear mirrored vertically or offset), that the rim/bend line up with the clip, and
+    the scroll scene (`SCROLL=0:300` vs `SCROLL=300:300`). If y is flipped, fix it in `liquid_glass.frag`
+    (e.g. a uniform for the flip or `uSize.y - y`) rather than in Dart.
+  - Before release (human approved 2026-11-07): rotation, skew and perspective. `_RenderLiquidBackdrop._uniforms`
+    sends `MatrixUtils.transformRect(getTransformTo(null), ...)`, an upright bounding box, so under a rotated or
+    tilted ancestor the clip and blur are right but the bend band and rim follow the bounding box (untested,
+    from reading the code). Fix: pass the inverse transform (6 floats affine, 9 for perspective) and compute
+    the SDF in local space, mapping the bend direction back to screen space. No public API change.
   - Known gaps: `clipper` and non-uniform radii are ignored by the shader; no tests for
     the shader path yet (`flutter test --enable-impeller` makes `isShaderFilterSupported` true, so
     widget tests can cover it); merging not started.
@@ -189,7 +201,8 @@ _Last updated: 2026-11-07_
 ## Decisions made
 - 2026-11-07: liquid glass scope (human approved): keep plain glass maintained regardless; ship a narrow,
   experimental liquid option (`clear`/`regular` presets, refraction, rim, shadow). Before release: (stale
-  position while scrolling: fixed 2026-11-07), Android check, shader-path tests, 3.27 vs 3.29 minimum. Continuous corners are
+  position while scrolling: fixed 2026-11-07), Android check (NEXT), rotation/skew/perspective support,
+  shader-path tests, 3.27 vs 3.29 minimum. Continuous corners are
   deprioritized (still opt-in if ever built). Shape merging is deferred until users ask for it.
 - 2026-11-06: Use Flutter's built-in goldens, not Alchemist. The scenes have no text, so Alchemist's
   font normalization isn't needed. Goldens run on one pinned Flutter version only.
