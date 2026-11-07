@@ -2,6 +2,13 @@
 
 * Address lints
 
+## [2.3.0](https://github.com/Zachariah-Abraham/glass/compare/v2.2.0...v2.3.0) (2026-11-07)
+
+
+### Features
+
+* add experimental liquid glass option (requires Flutter 3.29 or newer) ([78c9a34](https://github.com/Zachariah-Abraham/glass/commit/78c9a34cf4da3f29d3ce444806df75821a7f2b16))
+
 ## [2.2.0](https://github.com/Zachariah-Abraham/glass/compare/v2.1.0...v2.2.0) (2026-11-06)
 
 
