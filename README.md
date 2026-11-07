@@ -15,7 +15,8 @@ Easily convert any Widget into a glass / frosted glass version of itself, follow
 flutter pub add glass
 ```
 
-Requires Flutter 3.27 or newer (Dart 3.6+). Older Flutter versions automatically resolve to glass 2.0.0.
+Requires Flutter 3.29 or newer (Dart 3.7+). Older Flutter versions automatically resolve to an earlier glass
+release (2.1.x on Flutter 3.27, 2.0.0 before that).
 
 ### 2. Import it
 

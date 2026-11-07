@@ -199,14 +199,15 @@ extension GlassWidget<T extends Widget> on T {
     return !enabled
         ? this
         : _GlassBackdrop(
-            blur: blur,
-            liquid: liquid,
-            clipper: clipper,
-            clipBehavior: clipBehavior ?? clipBehaviour ?? Clip.antiAlias,
-            borderRadius: clipBorderRadius,
-            tint: tint,
-            gradient: (tint != Colors.transparent)
-                ? LinearGradient(
+          blur: blur,
+          liquid: liquid,
+          clipper: clipper,
+          clipBehavior: clipBehavior ?? clipBehaviour ?? Clip.antiAlias,
+          borderRadius: clipBorderRadius,
+          tint: tint,
+          gradient:
+              (tint != Colors.transparent)
+                  ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
@@ -214,15 +215,16 @@ extension GlassWidget<T extends Widget> on T {
                       tint.withValues(alpha: tintEnd),
                     ],
                   )
-                : null,
-            image: (frosted ?? liquid == null)
-                ? DecorationImage(
+                  : null,
+          image:
+              (frosted ?? liquid == null)
+                  ? DecorationImage(
                     image: AssetImage('images/noise.png', package: 'glass'),
                     fit: BoxFit.cover,
                   )
-                : null,
-            child: this,
-          );
+                  : null,
+          child: this,
+        );
   }
 }
 
@@ -329,17 +331,19 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
       clipper: widget.clipper,
       clipBehavior: widget.clipBehavior,
       borderRadius: widget.borderRadius,
-      child: live
-          ? _LiquidBackdrop(
-              blur: widget.blur,
-              refraction: refraction,
-              liquid: liquid,
-              tint: widget.gradient == null ? Colors.transparent : widget.tint,
-              radius: widget.borderRadius.topLeft.x,
-              devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-              child: content,
-            )
-          : BackdropFilter(filter: widget.blur, child: content),
+      child:
+          live
+              ? _LiquidBackdrop(
+                blur: widget.blur,
+                refraction: refraction,
+                liquid: liquid,
+                tint:
+                    widget.gradient == null ? Colors.transparent : widget.tint,
+                radius: widget.borderRadius.topLeft.x,
+                devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                child: content,
+              )
+              : BackdropFilter(filter: widget.blur, child: content),
     );
     if (!live) return glass;
     return _LiquidGlassLayers(
@@ -391,17 +395,15 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
       Radius.circular(math.min(_config.radius, size.shortestSide / 2)),
     );
     final reach = shadow.blurRadius * 1.5 + shadow.offset.distance;
-    final outside = Path()
-      ..fillType = PathFillType.evenOdd
-      ..addRect(rrect.outerRect.inflate(reach))
-      ..addRRect(rrect);
+    final outside =
+        Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect(rrect.outerRect.inflate(reach))
+          ..addRRect(rrect);
     canvas
       ..save()
       ..clipPath(outside)
-      ..drawRRect(
-        rrect.shift(shadow.offset),
-        shadow.toPaint(),
-      )
+      ..drawRRect(rrect.shift(shadow.offset), shadow.toPaint())
       ..restore();
   }
 

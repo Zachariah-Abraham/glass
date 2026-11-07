@@ -21,9 +21,7 @@ class _MyAppState extends State<MyApp> {
       home: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('images/demo.png'),
-            ),
+            image: DecorationImage(image: AssetImage('images/demo.png')),
           ),
           child: Center(
             child: Column(
@@ -31,8 +29,8 @@ class _MyAppState extends State<MyApp> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () =>
-                      setState(() => effectEnabled = !effectEnabled),
+                  onPressed:
+                      () => setState(() => effectEnabled = !effectEnabled),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.all(200),
                   ),

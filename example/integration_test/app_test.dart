@@ -7,8 +7,9 @@ import 'package:example/main.dart' as app;
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('example app renders glass on a real engine and toggles it',
-      (tester) async {
+  testWidgets('example app renders glass on a real engine and toggles it', (
+    tester,
+  ) async {
     app.main();
     await tester.pumpAndSettle();
 

@@ -38,16 +38,21 @@ Future<void> _pumpLive(WidgetTester tester, Widget widget) async {
   );
   // The first load compiles the shader and can take a while. Once it is
   // done, the plain BackdropFilter is gone.
-  for (var i = 0;
-      i < 100 && find.byType(BackdropFilter).evaluate().isNotEmpty;
-      i++) {
+  for (
+    var i = 0;
+    i < 100 && find.byType(BackdropFilter).evaluate().isNotEmpty;
+    i++
+  ) {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 20)),
     );
     await tester.pump();
   }
-  expect(find.byType(BackdropFilter), findsNothing,
-      reason: 'the liquid shader did not load');
+  expect(
+    find.byType(BackdropFilter),
+    findsNothing,
+    reason: 'the liquid shader did not load',
+  );
   await tester.pump();
 }
 
@@ -57,9 +62,11 @@ List<BackdropFilterLayer> _backdropLayers(WidgetTester tester) {
   void visit(Layer layer) {
     if (layer is BackdropFilterLayer) result.add(layer);
     if (layer is ContainerLayer) {
-      for (var child = layer.firstChild;
-          child != null;
-          child = child.nextSibling) {
+      for (
+        var child = layer.firstChild;
+        child != null;
+        child = child.nextSibling
+      ) {
         visit(child);
       }
     }
@@ -110,15 +117,18 @@ int _red((ByteData, int) image, double x, double y) {
 void main() {
   setUpAll(_bundleShaderUnderPackageKey);
 
-  testWidgets('uses the shader instead of a plain BackdropFilter', skip: _skip,
-      (tester) async {
-    await _pumpLive(tester, _scene());
+  testWidgets(
+    'uses the shader instead of a plain BackdropFilter',
+    skip: _skip,
+    (tester) async {
+      await _pumpLive(tester, _scene());
 
-    expect(find.byType(BackdropFilter), findsNothing);
-    final layers = _backdropLayers(tester);
-    expect(layers, hasLength(1));
-    expect(layers.single.filter, isNotNull);
-  });
+      expect(find.byType(BackdropFilter), findsNothing);
+      final layers = _backdropLayers(tester);
+      expect(layers, hasLength(1));
+      expect(layers.single.filter, isNotNull);
+    },
+  );
 
   testWidgets('draws the rim inside the edge', skip: _skip, (tester) async {
     const key = Key('boundary');
@@ -157,39 +167,47 @@ void main() {
     expect(_red(image, rim.dx, rim.dy), greaterThan(inside + 40));
   });
 
-  testWidgets('rebuilds the filter when an ancestor moves the glass',
-      skip: _skip, (tester) async {
-    final controller = ScrollController();
-    addTearDown(controller.dispose);
-    await _pumpLive(
-      tester,
-      SingleChildScrollView(
-        controller: controller,
-        child: SizedBox(
-          height: 1000,
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 120),
-              // Its own repaint boundary: scrolling moves it without
-              // repainting it.
-              child: RepaintBoundary(
-                child: const SizedBox(width: 100, height: 60)
-                    .asGlass(liquid: LiquidGlass.clear),
+  testWidgets(
+    'rebuilds the filter when an ancestor moves the glass',
+    skip: _skip,
+    (tester) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      await _pumpLive(
+        tester,
+        SingleChildScrollView(
+          controller: controller,
+          child: SizedBox(
+            height: 1000,
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 120),
+                // Its own repaint boundary: scrolling moves it without
+                // repainting it.
+                child: RepaintBoundary(
+                  child: const SizedBox(
+                    width: 100,
+                    height: 60,
+                  ).asGlass(liquid: LiquidGlass.clear),
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-    final before = _backdropLayers(tester).single.filter;
+      );
+      final before = _backdropLayers(tester).single.filter;
 
-    await tester.pump();
-    expect(_backdropLayers(tester).single.filter, same(before),
-        reason: 'nothing moved, so the filter is reused');
+      await tester.pump();
+      expect(
+        _backdropLayers(tester).single.filter,
+        same(before),
+        reason: 'nothing moved, so the filter is reused',
+      );
 
-    controller.jumpTo(100);
-    await tester.pump();
-    expect(_backdropLayers(tester).single.filter, isNot(same(before)));
-  });
+      controller.jumpTo(100);
+      await tester.pump();
+      expect(_backdropLayers(tester).single.filter, isNot(same(before)));
+    },
+  );
 }

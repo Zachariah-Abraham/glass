@@ -92,9 +92,14 @@ _Last updated: 2026-11-07_
     and is skipped under Impeller. CI doesn't run `--enable-impeller` yet (it's unknown whether it works
     in Linux flutter_tester; try it as a step in the stable job when CI changes are next pushed).
   - Known gaps: `clipper` and non-uniform radii are ignored by the shader; merging not started.
-  - `ImageFilter.shader` is probably NOT in Flutter 3.27.0 (engine PR #53490 merged 2024-11-08, after
-    the 3.27 branch point; moderate confidence). The 3.27 CI job will confirm; if so, raise the minimum
-    to 3.29 (allowed by the human).
+  - 2026-11-07 DONE minimum raised to Flutter 3.29.0 / Dart 3.7 (allowed by the human). Checked the
+    engine sources: 3.27.0's `dart:ui` (engine 83bacfc5) has no `ImageFilter.shader` or
+    `isShaderFilterSupported`; 3.29.0's has both (web: `isShaderFilterSupported` is false, so web keeps
+    the plain blur). On 3.29.0 locally: root and example analyze clean, tests pass with and without
+    `--enable-impeller` (the rim is dimmer there than on 3.47, 87 vs ~166 over black, so the rim tests
+    compare it to the interior). Updated `pubspec.yaml`, `example/pubspec.yaml`, the CI matrix
+    (3.27.0 → 3.29.0), README and AGENTS.md. Dart 3.7 switched `dart format` to the tall style, so
+    the same commit reformats lib/, test/ and example/.
   - Prior art: `liquid_glass_renderer` (needs Flutter 3.47 + Flutter GPU). Flutter's own Cupertino work:
     flutter/flutter#170310.
   - 2026-11-07: presets `LiquidGlass.regular` / `LiquidGlass.clear` added (explicit `blurX`, `blurY`,
@@ -224,7 +229,7 @@ _Last updated: 2026-11-07_
 - 2026-11-07: liquid glass scope (human approved): keep plain glass maintained regardless; ship a narrow,
   experimental liquid option (`clear`/`regular` presets, refraction, rim, shadow). Before release: (stale
   position while scrolling: fixed 2026-11-07), (Android check: done 2026-11-07), (rotation/skew/perspective support: done),
-  (shader-path tests: done), 3.27 vs 3.29 minimum. Continuous corners are
+  (shader-path tests: done), (minimum raised to 3.29: done). Continuous corners are
   deprioritized (still opt-in if ever built). Shape merging is deferred until users ask for it.
 - 2026-11-06: Use Flutter's built-in goldens, not Alchemist. The scenes have no text, so Alchemist's
   font normalization isn't needed. Goldens run on one pinned Flutter version only.
