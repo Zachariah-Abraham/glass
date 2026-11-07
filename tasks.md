@@ -22,7 +22,9 @@ _Last updated: 2026-11-07_
   Human decisions 2026-11-06: extend `asGlass` itself (an optional config, not a new method; a
   breaking release is acceptable if that turns out to be necessary); try to keep the 3.27 minimum and
   raise it only if needed; shape merging ("blobs" like SwiftUI's `GlassEffectContainer`) is wanted,
-  but must be our own implementation: don't read or copy `liquid_glass_renderer`'s source.
+  but must be our own implementation. 2026-11-07: the human lifted the no-reading rule; reading
+    `liquid_glass_renderer` (Apache-2.0) and `liquid_glass_widgets` (MIT) is fine now. Copying code would
+    still need their licence notices (that is why flutter/packages#13163 was reverted), so keep ours original.
   - Done in the spike: `LiquidGlass` settings class (`thickness`, `refraction`, `highlight`) and an
     `asGlass(liquid:)` parameter, default null = unchanged rendering. `shaders/liquid_glass.frag`
     (rounded-rect SDF, edge refraction, rim highlight, slight dispersion; blur is composed in Dart
@@ -182,4 +184,10 @@ _Last updated: 2026-11-07_
 - 2026-10-29: Raising the minimum Flutter version for `withValues` is OK.
 
 ## Open questions for the human
+- 2026-11-07: is the liquid path worth shipping next to `liquid_glass_renderer`? Comparison given to the
+  human: the renderer is far more complete (blending, glint, iOS 27 presets) but needs exactly Flutter 3.47 /
+  Dart 3.13 and the opt-in Flutter GPU preview for refraction (otherwise `FakeGlass`, no refraction). Our
+  niche: one-line `asGlass` on any widget, refraction through a plain `BackdropFilter` + `ImageFilter.shader`
+  (Impeller, no Flutter GPU flag). Suggested: keep plain glass maintained regardless; ship a narrow,
+  experimental liquid option; defer merging. Awaiting the human's decision.
 - Do you want the remaining backlog items done? Hardening is deferred by the human.
