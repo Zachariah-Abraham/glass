@@ -275,6 +275,17 @@ void main() {
       expect(copy.tintColor, base.tintColor);
       expect(copy.refraction, base.refraction);
       expect(copy.highlight, base.highlight);
+      expect(copy.lift, base.lift);
+      expect(copy.midtoneLift, base.midtoneLift);
+      expect(copy.shadow, base.shadow);
+    });
+
+    test('only regular has a shadow, and copyWith can set one', () {
+      expect(LiquidGlass.regular.shadow, isNotNull);
+      expect(LiquidGlass.clear.shadow, isNull);
+      const shadow = BoxShadow(blurRadius: 4);
+      expect(LiquidGlass.clear.copyWith(shadow: shadow).shadow, shadow);
+      expect(LiquidGlass.clear.copyWith(midtoneLift: 0.2).midtoneLift, 0.2);
     });
 
     test('copyWith with no arguments keeps every field', () {

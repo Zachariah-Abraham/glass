@@ -85,10 +85,20 @@ _Last updated: 2026-11-07_
     the earlier impression came from different fonts and wrapping in the two demo scenes. The clear
     interior was ~10% too sharp; fixed with clear blur 1.5 → 1.6. Blur order checked: native also
     blurs before refracting. Regular on the aligned scene: native lets text slivers show with more
-    contrast and the pill is ~5 levels darker than ours; native regular also casts a soft shadow
-    outside the shape (not modelled). Remaining: regular's
-    transfer curve is slightly concave natively (≤2/255), and native darkens the rim pixel over white
-    backgrounds (not modelled).
+    contrast and the pill is ~5 levels darker than ours.
+  - 2026-11-07 polish pass (measured over uniform black/grey/white and the aligned scene; crops in
+    scratchpad `polish/`): the "darker rim pixel over white" was a misreading. Native's rim is a
+    backdrop-independent white overlay, alpha ~0.65/0.47/0.29 on the first 3 px, no dark outline, same
+    for both presets; `liquid_rim.frag` now uses that. Native regular casts a multiplicative shadow
+    (~8.6% black, sigma ~15 pt, y +8 pt; clear has none): new `LiquidGlass.shadow` (`BoxShadow?`),
+    painted by `_RenderLiquidGlassLayers._paintShadow` outside the shape only, no layout/hit-test
+    change. New `LiquidGlass.midtoneLift` (shader uniform 10, `x += m*x*(1-x)`), used only by clear
+    (0.086, with lift 0.0745). Regular is now tint `0xF2F8FB` at 0.735. Aligned-scene luminance native
+    vs ours: clear card 120.3/120.8, clear pill 72.9/75.0, regular card 208.4/208.5, regular pill
+    190.1/195.8. Remaining: regular over white is slightly bluish (244/248/250 vs neutral 250; native
+    chroma depends on the backdrop, so one tint can't match both); regular pill ~5 levels too light
+    (size-dependent, not modelled); native regular shows more sliver contrast in the edge band;
+    shadow ~1% weak on the pill.
   - Earlier next steps: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
     problem, Android check, shader-path tests, and design merging.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,

@@ -23,6 +23,7 @@ uniform float uRadius;      // float 6: corner radius in px
 uniform float uWidth;       // float 7: W, width in px of the refracting edge band
 uniform float uAmount;      // float 8: A, displacement scale in px
 uniform float uLift;        // float 9: brightness added to the blurred backdrop (0..1)
+uniform float uMid;         // float 10: mid-tone lift of the blurred backdrop (x += uMid * x * (1 - x))
 uniform sampler2D uTexture; // the (blurred) backdrop
 
 out vec4 fragColor;
@@ -60,5 +61,7 @@ void main() {
   // Inward = against the outward gradient.
   vec2 src = fragCoord - grad * disp;
   vec4 c = texture(uTexture, clamp(src / uSize, vec2(0.0), vec2(1.0)));
-  fragColor = vec4(min(c.rgb + uLift * c.a, vec3(1.0)), c.a);
+  vec3 rgb = c.a > 0.0 ? c.rgb / c.a : c.rgb;
+  rgb += uMid * rgb * (1.0 - rgb);
+  fragColor = vec4(min(rgb * c.a + uLift * c.a, vec3(1.0)), c.a);
 }

@@ -31,9 +31,17 @@ class LiquidGlass {
   ///   Defaults to null, which uses `min(20, 0.69 * R)` where R is half the
   ///   shorter side, as measured on Apple's glass.
   /// * [lift]: Brightness added to the blurred backdrop before the tint, from
-  ///   0 to 1 (0.085 is about 22 of 255), defaults to 0.
+  ///   0 to 1 (0.075 is about 19 of 255), defaults to 0.
+  /// * [midtoneLift]: Brightens the mid-tones of the blurred backdrop before
+  ///   the tint (`x += midtoneLift * x * (1 - x)`), which makes the tinted
+  ///   result slightly concave like Apple's `Glass.regular`. Defaults to 0
+  ///   (linear).
   /// * [highlight]: Intensity of the rim, 1.0 (the default) matches Apple's
   ///   native glass, 0 hides it.
+  /// * [shadow]: A soft shadow painted just outside the glass shape, null (the
+  ///   default) for none. Only its color, `offset` and `blurRadius` are used.
+  ///   It doesn't affect layout or hit testing and is painted outside the
+  ///   glass's bounds, so an ancestor that clips can cut it off.
   const LiquidGlass({
     this.blur = 3.0,
     this.tintColor = Colors.white,
@@ -41,20 +49,32 @@ class LiquidGlass {
     this.refraction = 1.0,
     this.edgeWidth,
     this.lift = 0.0,
+    this.midtoneLift = 0.0,
     this.highlight = 1.0,
+    this.shadow,
   });
 
   /// Frosted, mostly opaque glass with a light tint, like Apple's
   /// `Glass.regular`. Use it where legibility of content on the glass matters.
   static const regular = LiquidGlass(
     blur: 7.0,
-    tintColor: Color(0xFFEEF7FB),
-    tintStrength: 0.74,
+    tintColor: Color(0xFFF2F8FB),
+    tintStrength: 0.735,
+    shadow: BoxShadow(
+      color: Color(0x16000000),
+      offset: Offset(0, 8),
+      blurRadius: 30,
+    ),
   );
 
   /// Highly transparent glass with a slight dark tint, like Apple's
   /// `Glass.clear`. Use it over rich media.
-  static const clear = LiquidGlass(blur: 1.6, tintStrength: 0.0, lift: 0.085);
+  static const clear = LiquidGlass(
+    blur: 1.6,
+    tintStrength: 0.0,
+    lift: 0.0745,
+    midtoneLift: 0.086,
+  );
 
   /// Blur sigma along both axes.
   final double blur;
@@ -78,8 +98,19 @@ class LiquidGlass {
   /// Brightness added to the blurred backdrop (before the tint), 0 for none.
   final double lift;
 
+  /// Brightens the mid-tones of the blurred backdrop before the tint, 0 for
+  /// a linear tint.
+  final double midtoneLift;
+
   /// Intensity of the rim, 1.0 matches Apple's native glass.
   final double highlight;
+
+  /// Soft shadow painted just outside the glass shape, or null for none.
+  ///
+  /// Only the color, `offset` and `blurRadius` are used. The shadow is clipped
+  /// out of the glass itself, doesn't affect layout or hit testing, and can be
+  /// cut off by an ancestor that clips.
+  final BoxShadow? shadow;
 
   /// Returns a copy with the given fields replaced.
   LiquidGlass copyWith({
@@ -89,7 +120,9 @@ class LiquidGlass {
     double? refraction,
     double? edgeWidth,
     double? lift,
+    double? midtoneLift,
     double? highlight,
+    BoxShadow? shadow,
   }) {
     return LiquidGlass(
       blur: blur ?? this.blur,
@@ -98,7 +131,9 @@ class LiquidGlass {
       refraction: refraction ?? this.refraction,
       edgeWidth: edgeWidth ?? this.edgeWidth,
       lift: lift ?? this.lift,
+      midtoneLift: midtoneLift ?? this.midtoneLift,
       highlight: highlight ?? this.highlight,
+      shadow: shadow ?? this.shadow,
     );
   }
 }
@@ -332,6 +367,27 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  /// Paints [shadow] around the glass shape, but not under it.
+  void _paintShadow(Canvas canvas, Offset offset, BoxShadow shadow) {
+    final rrect = RRect.fromRectAndRadius(
+      offset & size,
+      Radius.circular(math.min(_config.radius, size.shortestSide / 2)),
+    );
+    final reach = shadow.blurRadius * 1.5 + shadow.offset.distance;
+    final outside = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(rrect.outerRect.inflate(reach))
+      ..addRRect(rrect);
+    canvas
+      ..save()
+      ..clipPath(outside)
+      ..drawRRect(
+        rrect.shift(shadow.offset),
+        shadow.toPaint(),
+      )
+      ..restore();
+  }
+
   @override
   void paint(PaintingContext context, Offset offset) {
     final c = _config;
@@ -352,7 +408,11 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
       ..setFloat(6, c.radius * dpr)
       ..setFloat(7, width * dpr)
       ..setFloat(8, amount * dpr)
-      ..setFloat(9, c.liquid.lift);
+      ..setFloat(9, c.liquid.lift)
+      ..setFloat(10, c.liquid.midtoneLift);
+
+    final shadow = c.liquid.shadow;
+    if (shadow != null) _paintShadow(context.canvas, offset, shadow);
 
     // Clip, blur, refract and tint (the child).
     super.paint(context, offset);
