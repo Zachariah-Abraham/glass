@@ -269,6 +269,7 @@ class _GlassBackdrop extends StatefulWidget {
 
 class _GlassBackdropState extends State<_GlassBackdrop> {
   static Future<FragmentProgram>? _program;
+  static FragmentProgram? _loadedProgram;
   FragmentShader? _refraction;
 
   @override
@@ -289,11 +290,18 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
         !ImageFilter.isShaderFilterSupported) {
       return;
     }
+    // Once loaded, later glass widgets use the shader from their first frame.
+    final loaded = _loadedProgram;
+    if (loaded != null) {
+      _refraction = loaded.fragmentShader();
+      return;
+    }
     _program ??= FragmentProgram.fromAsset(
       'packages/glass/shaders/liquid_glass.frag',
     );
     _program!.then((program) {
-      if (!mounted) return;
+      _loadedProgram = program;
+      if (!mounted || _refraction != null) return;
       setState(() => _refraction = program.fragmentShader());
     }, onError: (Object _) {}); // Keep the plain blur if loading fails.
   }
