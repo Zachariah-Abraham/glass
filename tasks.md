@@ -18,7 +18,7 @@ _Last updated: 2026-11-07_
   The scene is `example/lib/showcase.dart` (PR #18, open for review). Run it with
   `cd example && flutter run -t lib/showcase.dart -d <device>`.
 
-- pub.dev screenshots and metadata (branch `docs/pub-screenshots`, stacked on PR #18): `pubspec.yaml`
+- pub.dev screenshots and metadata (PR #19, stacked on PR #18): `pubspec.yaml`
   has a `screenshots:` gallery (in this order: weather, music, travel, photos; images are in `doc/screenshots/`,
   made with `example/lib/screens.dart`), the `liquid-glass` topic (it replaces `widget`), and a new
   `description`. They reach pub.dev with the next release (a `fix:` commit, so 2.3.1). The README images
