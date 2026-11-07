@@ -89,14 +89,15 @@ _Last updated: 2026-11-07_
     from their first frame (before, each one showed one frame of plain blur, and in tests the callback
     on the static future never ran after the first test because it was scheduled in that test's
     fake-async zone). The `glass_widget_test.dart` liquid group is now "liquid without shader support"
-    and is skipped under Impeller. CI doesn't run `--enable-impeller` yet (it's unknown whether it works
-    in Linux flutter_tester; try it as a step in the stable job when CI changes are next pushed).
-  - 2026-11-07 STATUS: every before-release item is done (stale scroll, Android, rotation, shader
-    tests, 3.29 minimum). Branch `spike/liquid-glass` is local and unpushed. NEXT, needs the human:
-    decide whether to push it and open a PR (CI has never run on it: watch the 3.29.0 matrix job and
-    the goldens, which shouldn't change). Still to do before a PR: a README section for `liquid:`
-    (presets, Impeller-only, the plain-blur fallback on web/Skia), and optionally a CI step
-    `flutter test --enable-impeller --exclude-tags golden` (not yet known to work on Linux).
+    and is skipped under Impeller. CI runs them in a "Test with Impeller" step on 3.29.0 and stable
+    (works on Linux; `GLASS_REQUIRE_SHADER=1` makes a guard test fail if shader filters are unavailable,
+    so the step can't pass by skipping).
+  - 2026-11-07 STATUS: every before-release item is done. Branch pushed, **PR #16 open**
+    (https://github.com/Zachariah-Abraham/glass/pull/16), all CI jobs green (3.29.0 and stable, Impeller step,
+    goldens unchanged, web build, integration). README has a "Liquid glass (experimental)" section. Gallery
+    app `example/lib/gallery.dart` (`flutter run -t lib/gallery.dart`, 8 stories over an animated background)
+    verified running on the iOS simulator (Metal), Android emulator (GLES), macOS (Impeller MetalSDF by
+    default) and Chrome (fallback). NEXT, needs the human: review the gallery and decide whether to merge PR #16.
   - Known gaps: `clipper` and non-uniform radii are ignored by the shader; merging not started.
   - 2026-11-07 DONE minimum raised to Flutter 3.29.0 / Dart 3.7 (allowed by the human). Checked the
     engine sources: 3.27.0's `dart:ui` (engine 83bacfc5) has no `ImageFilter.shader` or

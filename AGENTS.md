@@ -65,6 +65,7 @@ documentation, and the changelog matter more than they would in an app.
 | `lib/src/glass_widget.dart` | The whole implementation: `extension GlassWidget<T extends Widget> on T` with `asGlass(...)`. |
 | `images/noise.png` | Noise texture for the "frosted" look. Declared as a package asset in `pubspec.yaml` and loaded with `AssetImage('images/noise.png', package: 'glass')`. |
 | `example/` | Demo app (`example/lib/main.dart`) that depends on the package through `path: ../`. Shown on pub.dev. |
+| `example/lib/gallery.dart` | Storybook-style gallery of plain and liquid glass over an animated background, for checking the look per platform: `cd example && flutter create --platforms=<p> . && flutter run -t lib/gallery.dart -d <device>` (then revert `.metadata`, `analysis_options.yaml`, `pubspec.lock`). Not covered by tests. |
 | `example/screenshots/` | Screenshots referenced by URL from `README.md`. Don't rename them. |
 | `doc/api/` | Not tracked. Generated dartdoc output (`dart doc`) is gitignored and in `.pubignore`; the human removed the old checked-in copy on 2026-11-03. Don't commit it. |
 | `CHANGELOG.md` | Displayed on pub.dev. Update it for every user-visible change. |

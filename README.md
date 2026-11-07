@@ -82,7 +82,7 @@ Container(child: someChild).asGlass(
 Things to know:
 
 - The refraction and rim need a fragment shader backdrop filter, which Flutter supports only on
-  **Impeller** (the default on iOS and Android, and opt-in elsewhere). On web and on the Skia renderer, `liquid:`
+  **Impeller** (the default on iOS, Android and macOS). On web and on the Skia renderer, `liquid:`
   falls back to plain blur and tint, so it is safe to use everywhere.
 - The shape follows `clipBorderRadius` with a uniform (circular) radius. A custom `clipper` or
   different radii per corner are clipped correctly, but the refraction ignores them.
