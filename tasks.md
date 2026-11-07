@@ -80,7 +80,13 @@ _Last updated: 2026-11-07_
     (new `LiquidGlass.lift`, shader uniform 9). Rim (`liquid_rim.frag`): white, ~1 pt (3 px) wide,
     additive alpha 0.55/0.41/0.26 over the first 3 px, the same at every angle (no light direction);
     `highlight` 1.0 = native. In liquid mode the tint gradient is flat. Card matches native within
-    ~3/255 over flat areas. Remaining: the clear pill text looks a bit sharper than native, regular's
+    ~3/255 over flat areas. Text clarity (2026-11-07): with a pixel-identical
+    background (the demo can show native's no-glass screenshot), the band is not sharper than native;
+    the earlier impression came from different fonts and wrapping in the two demo scenes. The clear
+    interior was ~10% too sharp; fixed with clear blur 1.5 → 1.6. Blur order checked: native also
+    blurs before refracting. Regular on the aligned scene: native lets text slivers show with more
+    contrast and the pill is ~5 levels darker than ours; native regular also casts a soft shadow
+    outside the shape (not modelled). Remaining: regular's
     transfer curve is slightly concave natively (≤2/255), and native darkens the rim pixel over white
     backgrounds (not modelled).
   - Earlier next steps: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position

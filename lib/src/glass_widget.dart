@@ -22,7 +22,7 @@ import 'dart:ui';
 class LiquidGlass {
   /// Creates liquid glass settings.
   ///
-  /// * [blur]: Blur sigma along both axes, defaults to 3.0 (1.5 for [clear]).
+  /// * [blur]: Blur sigma along both axes, defaults to 3.0 (1.6 for [clear]).
   /// * [tintColor]: Tint color of the glass, defaults to [Colors.black].
   /// * [tintStrength]: Opacity of the tint from 0 to 1, defaults to 0.15.
   /// * [refraction]: How strongly the edges bend the backdrop, 0 for none.
@@ -54,7 +54,7 @@ class LiquidGlass {
 
   /// Highly transparent glass with a slight dark tint, like Apple's
   /// `Glass.clear`. Use it over rich media.
-  static const clear = LiquidGlass(blur: 1.5, tintStrength: 0.0, lift: 0.085);
+  static const clear = LiquidGlass(blur: 1.6, tintStrength: 0.0, lift: 0.085);
 
   /// Blur sigma along both axes.
   final double blur;
