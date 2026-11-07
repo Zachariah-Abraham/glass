@@ -41,6 +41,12 @@ jobs:
       - name: Test
         run: flutter test --exclude-tags golden
 
+      # The liquid shader only runs on Impeller; test/liquid_shader_test.dart is skipped above.
+      - name: Test with Impeller
+        env:
+          GLASS_REQUIRE_SHADER: '1'
+        run: flutter test --enable-impeller --exclude-tags golden
+
       - name: Analyze example
         working-directory: example
         run: |

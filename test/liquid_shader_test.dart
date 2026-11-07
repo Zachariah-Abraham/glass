@@ -117,6 +117,13 @@ int _red((ByteData, int) image, double x, double y) {
 void main() {
   setUpAll(_bundleShaderUnderPackageKey);
 
+  // CI sets this so the Impeller step can't pass by skipping everything.
+  test(
+    'shader filters are supported',
+    skip: Platform.environment['GLASS_REQUIRE_SHADER'] != '1',
+    () => expect(ui.ImageFilter.isShaderFilterSupported, isTrue),
+  );
+
   testWidgets(
     'uses the shader instead of a plain BackdropFilter',
     skip: _skip,
