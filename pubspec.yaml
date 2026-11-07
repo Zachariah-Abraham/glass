@@ -2,7 +2,7 @@ name: glass
 description: >-
   Turn any widget into frosted glass or Apple-style liquid glass (refraction,
   rim light, tint) with a single asGlass() call.
-version: 2.3.0
+version: 2.3.1
 homepage: https://github.com/Zachariah-Abraham/glass
 repository: https://github.com/Zachariah-Abraham/glass
 issue_tracker: https://github.com/Zachariah-Abraham/glass/issues

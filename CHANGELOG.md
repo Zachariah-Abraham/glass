@@ -2,6 +2,13 @@
 
 * Address lints
 
+## [2.3.1](https://github.com/Zachariah-Abraham/glass/compare/v2.3.0...v2.3.1) (2026-11-07)
+
+
+### Bug Fixes
+
+* add pub.dev screenshots, liquid-glass topic and a clearer description ([#19](https://github.com/Zachariah-Abraham/glass/issues/19)) ([79c6c4c](https://github.com/Zachariah-Abraham/glass/commit/79c6c4caf23824f61fa2832c4bd5e908203df996))
+
 ## [2.3.0](https://github.com/Zachariah-Abraham/glass/compare/v2.2.0...v2.3.0) (2026-11-07)
 
 
