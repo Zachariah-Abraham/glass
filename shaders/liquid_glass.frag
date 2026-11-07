@@ -27,6 +27,7 @@ uniform float uMid;         // float 10: mid-tone lift of the blurred backdrop (
 uniform vec3 uTint;         // floats 11-13: tint color (0..1, not premultiplied)
 uniform float uTintMix;     // float 14: tint strength (0..1)
 uniform float uSat;         // float 15: saturation of the blurred backdrop (1 = unchanged)
+uniform float uHighlight;   // float 16: rim intensity (1 = native)
 uniform sampler2D uTexture; // the (blurred) backdrop
 
 out vec4 fragColor;
@@ -72,5 +73,18 @@ void main() {
   rgb = luma + uSat * (rgb - luma);
   rgb += uMid * rgb * (1.0 - rgb) + uLift;
   rgb = clamp(mix(rgb, uTint, uTintMix), 0.0, 1.0);
+
+  // The rim, measured on Apple's glass over uniform colors (the same for clear
+  // and regular, all around the shape, no light direction): over the first
+  // three physical pixels inside the edge, mix in white by a = 0.65, 0.47,
+  // 0.29, then saturate the result by 1 + 6.3 a^2 around its luma. So it is
+  // white over grey but takes on the color behind it over saturated colors
+  // (yellowish over orange, a deeper green over green).
+  float a = max(0.735 - 0.178 * t, 0.0) * (1.0 - smoothstep(3.0, 3.3, t));
+  a = clamp(a * uHighlight, 0.0, 1.0);
+  rgb = mix(rgb, vec3(1.0), a);
+  float rimLuma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+  rgb = clamp(rimLuma + (1.0 + 6.3 * a * a) * (rgb - rimLuma), 0.0, 1.0);
+
   fragColor = vec4(rgb * c.a, c.a);
 }

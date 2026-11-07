@@ -109,13 +109,24 @@ _Last updated: 2026-11-07_
     gradient only when the shader is live (fallback and tests unchanged). Verified on the simulator:
     over white 249 (native 250, was bluish 244/248/250), over red/blue/teal/orange within ~4. Aligned
     regular card (210.7,219.5,223.1) vs native (206.7,217.6,222.2); pill still ~3-8 lighter (size
-    dependence). Finding: native's rim is also backdrop-dependent over saturated colours (yellowish over
-    orange, darker R/B over green); ours is a white overlay. Not modelled.
+    dependence).
+  - 2026-11-07 backdrop-coloured rim: native's rim takes on the colour behind it (yellowish over orange,
+    deeper green over green). Fitted on the uniform refs (scratchpad `sat/rim.py`, rms 2.3/255 vs 32.8
+    for a white-only rim): mix in white by `a = 0.735 - 0.178*t` over the first 3 physical px
+    (0.65/0.47/0.29), then saturate by `1 + 6.3*a^2` around luma. The rim now lives in
+    `shaders/liquid_glass.frag` (it needs the backdrop), `highlight` is uniform 16, and
+    `shaders/liquid_rim.frag` and its second paint pass are gone. So the rim now draws under the
+    child and noise instead of over them. Verified on the simulator (scratchpad `rimc/cmp.py`):
+    regular rim within ~4/255 rms of native over 8 colours (yellow's innermost px is off by up to 27).
   - Corner shape: native rounded rects use continuous ("squircle") corners
     (`RoundedRectangle(style: .continuous)`); ours are circular. This changes the outline and the bend
     direction near corners (native at 20° around the corner bends at ~32°, ours 20°; up to ~8 pt
     difference in source position at the rim), which is why L and i merge at the card's corner
-    natively. Pills are unaffected. Explained to the human 2026-11-07; not decided yet.
+    natively. Pills are unaffected. Human decision 2026-11-07: add continuous corners as an **opt-in**
+    option (default stays circular). Principle: we model the *effect*; platform defaults such as
+    corner shape and borders stay under the caller's control even when that changes the result.
+    Not implemented yet (plan: our own superellipse outline for the clip and the shader SDF, so it
+    doesn't need Flutter 3.32's `ClipRSuperellipse`).
   - Earlier next steps: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
     problem, Android check, shader-path tests, and design merging.
 - Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,

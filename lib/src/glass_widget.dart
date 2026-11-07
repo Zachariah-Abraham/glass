@@ -227,14 +227,12 @@ extension GlassWidget<T extends Widget> on T {
 
 /// Clips to the glass shape and blurs the backdrop. When [liquid] is set and
 /// shaders are available, the blur and the refraction are one backdrop filter
-/// (`compose(outer: refraction shader, inner: blur)`), so liquid glass takes
-/// two passes:
-///
-/// 1. Clip, blur, refract (inward only, so the clip is the glass shape),
-///    saturate and tint. The shader does the tint itself, because saturation
-///    can push colors below 0 before the tint and the tint must see that, so
-///    the tint [gradient] is only painted when the shader isn't used.
-/// 2. The rim, painted last so the blur does not soften it.
+/// (`compose(outer: refraction shader, inner: blur)`). The shader refracts
+/// (inward only, so the clip is the glass shape), saturates, tints and draws
+/// the rim, all after the blur so the rim stays crisp. It does the tint itself
+/// because saturation can push colors below 0 before the tint and the tint
+/// must see that, so the tint [gradient] is only painted when the shader isn't
+/// used. The rim is in the shader too because it depends on the backdrop.
 class _GlassBackdrop extends StatefulWidget {
   const _GlassBackdrop({
     required this.blur,
@@ -269,9 +267,8 @@ class _GlassBackdrop extends StatefulWidget {
 }
 
 class _GlassBackdropState extends State<_GlassBackdrop> {
-  static Future<List<FragmentProgram>>? _programs;
+  static Future<FragmentProgram>? _program;
   FragmentShader? _refraction;
-  FragmentShader? _rim;
   ImageFilter? _filter;
   ImageFilter? _filterBlur;
 
@@ -293,23 +290,18 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
         !ImageFilter.isShaderFilterSupported) {
       return;
     }
-    _programs ??= Future.wait([
-      FragmentProgram.fromAsset('packages/glass/shaders/liquid_glass.frag'),
-      FragmentProgram.fromAsset('packages/glass/shaders/liquid_rim.frag'),
-    ]);
-    _programs!.then((programs) {
+    _program ??= FragmentProgram.fromAsset(
+      'packages/glass/shaders/liquid_glass.frag',
+    );
+    _program!.then((program) {
       if (!mounted) return;
-      setState(() {
-        _refraction = programs[0].fragmentShader();
-        _rim = programs[1].fragmentShader();
-      });
+      setState(() => _refraction = program.fragmentShader());
     }, onError: (Object _) {}); // Keep the plain blur if loading fails.
   }
 
   @override
   void dispose() {
     _refraction?.dispose();
-    _rim?.dispose();
     super.dispose();
   }
 
@@ -317,8 +309,7 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
   Widget build(BuildContext context) {
     final liquid = widget.liquid;
     final refraction = _refraction;
-    final rim = _rim;
-    final live = liquid != null && refraction != null && rim != null;
+    final live = liquid != null && refraction != null;
     if (live && !identical(_filterBlur, widget.blur)) {
       // The uniforms are set at paint time, the filter object stays the same.
       _filterBlur = widget.blur;
@@ -346,7 +337,6 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
     if (!live) return glass;
     return _LiquidGlassLayers(
       refraction: refraction,
-      rim: rim,
       liquid: liquid,
       tint: widget.gradient == null ? Colors.transparent : widget.tint,
       radius: widget.borderRadius.topLeft.x,
@@ -359,7 +349,6 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
 class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   const _LiquidGlassLayers({
     required this.refraction,
-    required this.rim,
     required this.liquid,
     required this.tint,
     required this.radius,
@@ -368,7 +357,6 @@ class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   });
 
   final FragmentShader refraction;
-  final FragmentShader rim;
   final LiquidGlass liquid;
   final Color tint;
   final double radius;
@@ -387,9 +375,9 @@ class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   }
 }
 
-/// Lays out like its child. Sets the refraction uniforms before the child
-/// paints (the child holds the backdrop filter) and paints the rim after it.
-/// Hit testing is unchanged.
+/// Lays out like its child. Paints the shadow and sets the shader uniforms
+/// before the child paints (the child holds the backdrop filter). Hit testing
+/// is unchanged.
 class _RenderLiquidGlassLayers extends RenderProxyBox {
   _RenderLiquidGlassLayers(this._config);
 
@@ -446,28 +434,13 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
       ..setFloat(12, c.tint.g)
       ..setFloat(13, c.tint.b)
       ..setFloat(14, c.tint == Colors.transparent ? 0 : c.liquid.tintStrength)
-      ..setFloat(15, c.liquid.saturation);
+      ..setFloat(15, c.liquid.saturation)
+      ..setFloat(16, c.liquid.highlight);
 
     final shadow = c.liquid.shadow;
     if (shadow != null) _paintShadow(context.canvas, offset, shadow);
 
-    // Clip, blur, refract, saturate and tint, then the child.
+    // Clip, blur, refract, saturate, tint and rim, then the child.
     super.paint(context, offset);
-
-    // The rim, crisp on top of everything.
-    // A paint shader works in canvas (logical) coordinates, unlike the
-    // backdrop shader above, which works in physical pixels of the target.
-    c.rim
-      ..setFloat(0, offset.dx)
-      ..setFloat(1, offset.dy)
-      ..setFloat(2, size.width)
-      ..setFloat(3, size.height)
-      ..setFloat(4, c.radius)
-      ..setFloat(5, c.liquid.highlight)
-      ..setFloat(6, dpr);
-    context.canvas.drawRect(
-      offset & size,
-      Paint()..shader = c.rim,
-    );
   }
 }

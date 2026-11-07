@@ -127,6 +127,9 @@ those incidental changes as part of unrelated work. Either revert them
   `## [x.y.z] - YYYY-MM-DD` followed by bullets.
 - New parameters must be optional and keep today's defaults, so existing users see identical
   rendering.
+- When imitating a platform look (for example Apple's liquid glass), model the *effect*, but keep
+  platform defaults such as corner shape and borders under the caller's control, even if that
+  changes the result. Platform-specific shapes (for example continuous corners) are opt-in.
 - Every public member gets a `///` dartdoc comment that describes each parameter and its default,
   in the style of the existing `asGlass` doc comment.
 - Keep the SDK constraints in `pubspec.yaml` honest. If you use an API such as `Color.withValues`
