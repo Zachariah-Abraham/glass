@@ -25,8 +25,10 @@ another agent may pick up where you left off. The human should be able to learn 
 state by reading the docs alone. So:
 
 1. **Update [`tasks.md`](tasks.md) whenever you make progress**: when you start a task, finish
-   one, find a new problem, or change plans. Record what's done, what's in progress (and how far
-   along it is), what's next, and any blockers or open questions.
+   one, find a new problem, or change plans. It holds only the current state, what's in progress
+   (and how far along it is), pending work, blockers and open questions. **Delete finished items**
+   instead of keeping a history (git and `CHANGELOG.md` are the record), and move facts every future
+   agent needs into this file.
 2. **Update this file (`AGENTS.md`)** if you learn something every future agent needs: a new
    command, a tooling quirk, a convention, or an architecture change. Keep it accurate. Delete
    stale information instead of piling notes on top of it.
@@ -63,11 +65,13 @@ documentation, and the changelog matter more than they would in an app.
 |---|---|
 | `lib/glass.dart` | Public library entry point. Only exports `src/`. |
 | `lib/src/glass_widget.dart` | The whole implementation: `extension GlassWidget<T extends Widget> on T` with `asGlass(...)`. |
+| `shaders/liquid_glass.frag` | Fragment shader for liquid glass (refraction, saturation, tint, lift, rim). Declared under `flutter: shaders:` in `pubspec.yaml`. |
 | `images/noise.png` | Noise texture for the "frosted" look. Declared as a package asset in `pubspec.yaml` and loaded with `AssetImage('images/noise.png', package: 'glass')`. |
 | `example/` | Demo app (`example/lib/main.dart`) that depends on the package through `path: ../`. Shown on pub.dev. |
 | `example/lib/gallery.dart` | Storybook-style gallery of plain and liquid glass over an animated background, for checking the look per platform: `cd example && flutter create --platforms=<p> . && flutter run -t lib/gallery.dart -d <device>` (then revert `.metadata`, `analysis_options.yaml`, `pubspec.lock`). Not covered by tests. |
+| `example/lib/showcase.dart` | Hands-free 12 s looping liquid glass scene for screen recordings (`flutter run -t lib/showcase.dart`). Not covered by tests. |
 | `example/screenshots/` | Screenshots referenced by URL from `README.md`. Don't rename them. |
-| `doc/api/` | Not tracked. Generated dartdoc output (`dart doc`) is gitignored and in `.pubignore`; the human removed the old checked-in copy on 2026-11-03. Don't commit it. |
+| `doc/api/` | Not tracked. Generated dartdoc output (`dart doc`) is gitignored and in `.pubignore`. Don't commit it. |
 | `CHANGELOG.md` | Displayed on pub.dev. Update it for every user-visible change. |
 
 ### How `asGlass` works
@@ -89,6 +93,27 @@ Things to keep in mind:
   them every frame.
 - The return type is `Widget`. 2.0.0 made this a breaking change from `ClipRRect`. Changing the
   public signature or defaults requires a **major** version bump.
+
+### Liquid glass (`asGlass(liquid: LiquidGlass...)`, experimental)
+- `LiquidGlass` holds the settings; `LiquidGlass.clear` and `LiquidGlass.regular` are presets fitted
+  to native iOS 26 `Glass.clear` / `Glass.regular` screenshots. Explicit `blurX`, `blurY`, `tintColor`
+  and `frosted` override the preset. `liquid: null` (default) renders exactly as plain glass.
+- The live path needs `ImageFilter.isShaderFilterSupported` (Impeller: iOS, Android, macOS). Web
+  and Skia fall back to a plain `BackdropFilter` with the preset's blur and tint.
+- `_GlassBackdropState` loads the shader once and caches it in the static `_loadedProgram`.
+  `_RenderLiquidBackdrop` pushes a `_LiquidBackdropLayer` (a `BackdropFilterLayer` with
+  `alwaysNeedsAddToScene`), and builds `ImageFilter.compose(outer: shader, inner: blur)`. It computes
+  the uniforms right before every push from `getTransformTo(null)`, and builds a new filter only when
+  they change. This is required because ancestors (scroll views) move the glass without repainting it,
+  and the engine copies a shader filter's uniforms the first time it is pushed, so `setFloat` on an
+  existing filter does nothing. The shader works in the glass's local space through two 3x3 matrices,
+  so rotation, skew and perspective work. `_RenderLiquidGlassLayers` paints the optional `shadow`
+  outside the shape.
+- Native model the shader follows: it samples **inward** only, along the inward normal,
+  `source = p + d(t)*n_in` with `W = min(20 pt, 0.69*min(w,h)/2)`, `A = 3W` and
+  `d(t) = A*(1 - sqrt(1 - (1 - t/W)^2))` for depth `t < W`. Blur comes before refraction. The rim is a
+  3 physical px white mix that takes on the backdrop's colour. `FlutterFragCoord()` in a backdrop
+  shader is global physical px, y down, on Metal, Vulkan and GLES.
 
 ---
 
@@ -212,6 +237,9 @@ those incidental changes as part of unrelated work. Either revert them
   `lavapipe` (software rendering on the host CPU, 1 core) and runs the gallery at ~1-4 fps. Start it with
   `~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0 -gpu host -cores 4` for GPU rendering.
   Emulator frame rates are still only a rough guide; check performance on a real device.
+- **Recording demos:** the iOS simulator only runs debug builds, and its screen recordings stutter
+  (many frames > 50 ms apart). For smooth videos, record a `--release` build on a real device or on
+  macOS desktop.
 
 ### Example app
 - `example/` is the package's showcase on pub.dev. Keep it minimal, idiomatic, warning-free, and
