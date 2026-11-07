@@ -21,6 +21,10 @@ class GalleryApp extends StatelessWidget {
     return MaterialApp(
       title: 'glass gallery',
       debugShowCheckedModeBanner: false,
+      // Let a mouse drag scroll too, so desktop and web feel like a phone.
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: ui.PointerDeviceKind.values.toSet(),
+      ),
       theme: ThemeData(
         colorSchemeSeed: Colors.indigo,
         brightness: Brightness.dark,
