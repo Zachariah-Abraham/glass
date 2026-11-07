@@ -7,8 +7,8 @@ dates. See AGENTS.md §1.
 _Last updated: 2026-11-08_
 
 ## Current state
-- **glass 2.3.1** was released on 2026-11-08 (release PR #20, tag `v2.3.1`, `publish.yml` succeeded).
-  It adds the pub.dev `screenshots:` gallery (weather, music, travel, photos, from `doc/screenshots/`),
+- **glass 2.3.2** was released on 2026-11-08 (release PR #23, tag `v2.3.2`, `publish.yml` succeeded). It
+  adds the animated `doc/readme/showcase.webp` as the third README image. 2.3.1 (same day) added the pub.dev `screenshots:` gallery (weather, music, travel, photos, from `doc/screenshots/`),
   the `liquid-glass` topic and a new `description`. 2.3.0 (2026-11-07) added experimental liquid glass
   and raised the minimum to Flutter 3.29 / Dart 3.7. Releases are automated (AGENTS.md §6).
 - Root and `example/` analyze clean and tests pass on Flutter 3.47.7 (FVM `stable`), with and without
