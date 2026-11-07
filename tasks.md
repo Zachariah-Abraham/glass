@@ -55,13 +55,18 @@ _Last updated: 2026-11-07_
     paints the shadow. Verified on the simulator with a scratchpad scroll scene (`lg_demo` `SCROLL=start:jump`,
     `scroll_shot.sh`): after a jump the glass is pixel-identical to opening at that offset (before: off by up
     to 255); static scenes unchanged. No widget test (shader isn't live in tests yet).
-  - NEXT (human, 2026-11-07): Android check. Run the scratchpad demo (`lg_demo`, or rebuild an equivalent:
-    glass over a hue-coded or grid background, see `_Meas`/`_Scroll` in the demo) on the Android emulator
-    `Medium_Phone_API_37.0` (Impeller on Vulkan, and GLES via `--no-enable-vulkan` if available). Check that
-    `FlutterFragCoord()` in the backdrop shader is global physical px with y down (on GLES y may be flipped:
-    then the bend and rim appear mirrored vertically or offset), that the rim/bend line up with the clip, and
-    the scroll scene (`SCROLL=0:300` vs `SCROLL=300:300`). If y is flipped, fix it in `liquid_glass.frag`
-    (e.g. a uniform for the flip or `uSize.y - y`) rather than in Dart.
+  - 2026-11-07 DONE Android check, no code change needed. Emulator `Medium_Phone_API_37.0` (1080x2400, dpr 2.625)
+    with the scratchpad demo `lg_demo` (its `_MeasPainter` now reads the device dpr and size instead of assuming the
+    iPhone). The emulator picks Impeller **OpenGLES** by default; Vulkan was forced with
+    `<meta-data android:name="io.flutter.embedding.android.ImpellerBackend" android:value="vulkan" />` in the demo's
+    `AndroidManifest.xml`. On both backends `FlutterFragCoord()` in the backdrop shader is global physical px with
+    y down (no flip). Decoded from hue-coded backgrounds, the inward bend on all four sides of a 300x180 card and a
+    260x80 pill matches the model `d(t)` within ~1-2 pt for t >= 2 pt (the rim pixel at 1.5 pt is off by up to 5 pt
+    because the rim changes its colour and hue), and the rim lines up with the clip. GLES and Vulkan
+    are practically pixel-identical (mean diff < 1.4/255 inside the glass). The scroll scene (`SCROLL=0:300` vs
+    `300:300`) is pixel-identical on both. The regular preset (tint, shadow) renders as on iOS.
+    Script: scratchpad `and_shot.sh`, data in scratchpad `android/`. Not checked: real devices, and Skia
+    (no Impeller).
   - Before release (human approved 2026-11-07): rotation, skew and perspective. `_RenderLiquidBackdrop._uniforms`
     sends `MatrixUtils.transformRect(getTransformTo(null), ...)`, an upright bounding box, so under a rotated or
     tilted ancestor the clip and blur are right but the bend band and rim follow the bounding box (untested,
@@ -201,7 +206,7 @@ _Last updated: 2026-11-07_
 ## Decisions made
 - 2026-11-07: liquid glass scope (human approved): keep plain glass maintained regardless; ship a narrow,
   experimental liquid option (`clear`/`regular` presets, refraction, rim, shadow). Before release: (stale
-  position while scrolling: fixed 2026-11-07), Android check (NEXT), rotation/skew/perspective support,
+  position while scrolling: fixed 2026-11-07), (Android check: done 2026-11-07), rotation/skew/perspective support,
   shader-path tests, 3.27 vs 3.29 minimum. Continuous corners are
   deprioritized (still opt-in if ever built). Shape merging is deferred until users ask for it.
 - 2026-11-06: Use Flutter's built-in goldens, not Alchemist. The scenes have no text, so Alchemist's
