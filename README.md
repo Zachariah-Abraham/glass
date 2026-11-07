@@ -15,7 +15,8 @@ Easily convert any Widget into a glass / frosted glass version of itself, follow
 flutter pub add glass
 ```
 
-Requires Flutter 3.27 or newer (Dart 3.6+). Older Flutter versions automatically resolve to glass 2.0.0.
+Requires Flutter 3.29 or newer (Dart 3.7+). Older Flutter versions automatically resolve to an earlier glass
+release (2.1.x on Flutter 3.27, 2.0.0 before that).
 
 ### 2. Import it
 
@@ -54,7 +55,40 @@ Glass blurs what is *behind* the widget, so it only shows up when there is conte
 | `tileMode` | `TileMode.clamp` | How the blur samples at the edges. |
 | `clipper` | `null` | Custom `CustomClipper<RRect>`. |
 
+| `liquid` | `null` | Experimental liquid glass settings, see below. |
+
 A full example can be found in the example directory.
+
+## Liquid glass (experimental)
+
+Pass `liquid:` to get a glass that bends the backdrop at its edges and draws a light rim, modelled
+on Apple's liquid glass:
+
+```Dart
+Container(child: someChild).asGlass(
+  clipBorderRadius: BorderRadius.circular(32),
+  liquid: LiquidGlass.clear, // or LiquidGlass.regular
+)
+```
+
+- `LiquidGlass.clear` is highly transparent, for use over rich media (like Apple's `Glass.clear`).
+- `LiquidGlass.regular` is a light, mostly opaque frost with a soft shadow, for when content on the
+  glass must stay legible (like Apple's `Glass.regular`).
+- For your own look, create `LiquidGlass(...)` with `blur`, `tintColor`, `tintStrength`,
+  `saturation`, `refraction`, `edgeWidth`, `lift`, `midtoneLift`, `highlight` and `shadow`, or
+  start from a preset with `LiquidGlass.clear.copyWith(...)`. Explicit `blurX`, `blurY`,
+  `tintColor` and `frosted` arguments to `asGlass` override the preset.
+
+Things to know:
+
+- The refraction and rim need a fragment shader backdrop filter, which Flutter supports only on
+  **Impeller** (the default on iOS, Android and macOS). On web and on the Skia renderer, `liquid:`
+  falls back to plain blur and tint, so it is safe to use everywhere.
+- The shape follows `clipBorderRadius` with a uniform (circular) radius. A custom `clipper` or
+  different radii per corner are clipped correctly, but the refraction ignores them.
+- Corners are circular, not Apple's continuous "squircle" corners. Overlapping glass shapes don't
+  merge.
+- Like plain glass, each liquid glass is a backdrop filter, so keep the number on screen small.
 
 ## Using glass with scrolling
 

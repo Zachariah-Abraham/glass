@@ -14,6 +14,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool effectEnabled = true;
+  bool liquid = false;
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +22,7 @@ class _MyAppState extends State<MyApp> {
       home: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('images/demo.png'),
-            ),
+            image: DecorationImage(image: AssetImage('images/demo.png')),
           ),
           child: Center(
             child: Column(
@@ -31,8 +30,8 @@ class _MyAppState extends State<MyApp> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () =>
-                      setState(() => effectEnabled = !effectEnabled),
+                  onPressed:
+                      () => setState(() => effectEnabled = !effectEnabled),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.all(200),
                   ),
@@ -44,6 +43,23 @@ class _MyAppState extends State<MyApp> {
                   enabled: effectEnabled,
                   tintColor: Colors.transparent,
                   clipBorderRadius: BorderRadius.circular(15.0),
+                  // Liquid glass needs Impeller; elsewhere it falls back to plain glass.
+                  liquid: liquid ? LiquidGlass.clear : null,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Liquid glass',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: liquid,
+                      onChanged: (value) => setState(() => liquid = value),
+                    ),
+                  ],
                 ),
               ],
             ),

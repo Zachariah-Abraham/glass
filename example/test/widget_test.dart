@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -20,4 +22,25 @@ void main() {
 
     expect(find.byType(BackdropFilter), findsOneWidget);
   });
+
+  // Without Impeller, liquid glass falls back to a plain backdrop blur with its preset's sigma.
+  testWidgets(
+    'the switch turns liquid glass on and off',
+    skip: ui.ImageFilter.isShaderFilterSupported,
+    (tester) async {
+      await tester.pumpWidget(const MyApp());
+      ui.ImageFilter? filter() =>
+          tester.widget<BackdropFilter>(find.byType(BackdropFilter)).filter;
+      final plain = filter();
+
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+      expect(find.byType(BackdropFilter), findsOneWidget);
+      expect(filter(), isNot(plain));
+
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+      expect(filter(), plain);
+    },
+  );
 }

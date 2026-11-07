@@ -65,6 +65,7 @@ documentation, and the changelog matter more than they would in an app.
 | `lib/src/glass_widget.dart` | The whole implementation: `extension GlassWidget<T extends Widget> on T` with `asGlass(...)`. |
 | `images/noise.png` | Noise texture for the "frosted" look. Declared as a package asset in `pubspec.yaml` and loaded with `AssetImage('images/noise.png', package: 'glass')`. |
 | `example/` | Demo app (`example/lib/main.dart`) that depends on the package through `path: ../`. Shown on pub.dev. |
+| `example/lib/gallery.dart` | Storybook-style gallery of plain and liquid glass over an animated background, for checking the look per platform: `cd example && flutter create --platforms=<p> . && flutter run -t lib/gallery.dart -d <device>` (then revert `.metadata`, `analysis_options.yaml`, `pubspec.lock`). Not covered by tests. |
 | `example/screenshots/` | Screenshots referenced by URL from `README.md`. Don't rename them. |
 | `doc/api/` | Not tracked. Generated dartdoc output (`dart doc`) is gitignored and in `.pubignore`; the human removed the old checked-in copy on 2026-11-03. Don't commit it. |
 | `CHANGELOG.md` | Displayed on pub.dev. Update it for every user-visible change. |
@@ -127,6 +128,9 @@ those incidental changes as part of unrelated work. Either revert them
   `## [x.y.z] - YYYY-MM-DD` followed by bullets.
 - New parameters must be optional and keep today's defaults, so existing users see identical
   rendering.
+- When imitating a platform look (for example Apple's liquid glass), model the *effect*, but keep
+  platform defaults such as corner shape and borders under the caller's control, even if that
+  changes the result. Platform-specific shapes (for example continuous corners) are opt-in.
 - Every public member gets a `///` dartdoc comment that describes each parameter and its default,
   in the style of the existing `asGlass` doc comment.
 - Keep the SDK constraints in `pubspec.yaml` honest. If you use an API such as `Color.withValues`
@@ -168,6 +172,17 @@ those incidental changes as part of unrelated work. Either revert them
   - `tintColor: Colors.transparent` produces no gradient. `frosted: false` produces no image.
   - The noise asset resolves (`package: 'glass'`).
 - Use `find.byType` and `tester.widget<T>()` to inspect properties.
+- The minimum is Flutter 3.29 / Dart 3.7 because the liquid path uses `ImageFilter.shader`
+  (not in 3.27's `dart:ui`; 3.28 was never a stable release). Dart 3.7 language versions use the
+  "tall" `dart format` style.
+- To run tests on another Flutter version, install it (`fvm install 3.29.0`, then
+  `~/fvm/versions/3.29.0/bin/flutter`). When switching versions, `rm -rf build/unit_test_assets`
+  first: the compiled shader there is version-specific and isn't always rebuilt ("Runtime stages
+  buffer failed verification"). Afterwards revert the lockfile and `example/` changes `pub get` makes.
+- **Liquid shader tests** (`test/liquid_shader_test.dart`) only run with
+  `$F test --enable-impeller` (shader image filters need Impeller) and are skipped otherwise. The
+  liquid group in `test/glass_widget_test.dart` tests the plain blur fallback and is skipped under
+  Impeller. Run the suite both ways when you touch the liquid path.
 - **Golden tests** (`test/glass_golden_test.dart`, tag `golden`, images in `test/goldens/`) render
   `asGlass` variants over a striped background and compare pixels with Flutter's built-in
   `matchesGoldenFile`. Rules:
@@ -193,6 +208,10 @@ those incidental changes as part of unrelated work. Either revert them
   `flutter create --platforms=macos . && flutter test integration_test -d macos` in `example/`, then
   revert the incidental changes to tracked files (`example/macos/`, `pubspec.lock`, etc.).
 - Run `analyze` and `test` for **both** the root package and `example/` before committing.
+- **Android emulator speed:** the local AVD `Medium_Phone_API_37.0` with `hw.gpu.mode=auto` resolves to
+  `lavapipe` (software rendering on the host CPU, 1 core) and runs the gallery at ~1-4 fps. Start it with
+  `~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0 -gpu host -cores 4` for GPU rendering.
+  Emulator frame rates are still only a rough guide; check performance on a real device.
 
 ### Example app
 - `example/` is the package's showcase on pub.dev. Keep it minimal, idiomatic, warning-free, and
@@ -204,7 +223,7 @@ those incidental changes as part of unrelated work. Either revert them
 
 ## 5. Definition of done (per change)
 CI (`.github/workflows/ci.yml`) runs on pushes to `main` and on PRs: analyze and tests (excluding
-goldens) for the root and `example/` on Flutter 3.27.0 (the minimum) and latest stable, plus a
+goldens) for the root and `example/` on Flutter 3.29.0 (the minimum) and latest stable, plus a
 format check and `flutter pub publish --dry-run` on stable. Separate jobs run the golden tests on a
 pinned Flutter version and build the example for web. Dev dependencies must resolve on the minimum SDK, which
 is why `flutter_lints` is `^5` (v6 needs Dart 3.8).
@@ -242,7 +261,7 @@ version in `.release-please-manifest.json`):
      `homepage`/`repository`, optionally `issue_tracker` and `topics`) are accurate.
    - Anything users must know (for example a raised minimum SDK) appears in the changelog. Only
      commit **subjects** reach `CHANGELOG.md`; bodies do not. Put the note in a `feat:`/`fix:`
-     subject (for example `feat: require Flutter 3.27 or newer`) or add a `BREAKING CHANGE:`
+     subject (for example `feat: require Flutter 3.29 or newer`) or add a `BREAKING CHANGE:`
      footer, which release-please prints. Hand-edits to the release PR's changelog are overwritten
      the next time it regenerates.
    - Raising the minimum SDK is **not** a breaking change (pub resolves users on older SDKs to the
