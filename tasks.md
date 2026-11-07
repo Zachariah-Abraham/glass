@@ -7,17 +7,14 @@ dates. See AGENTS.md §1.
 _Last updated: 2026-11-08_
 
 ## Current state
-- **glass 2.3.0** (experimental liquid glass, minimum Flutter 3.29 / Dart 3.7) was released on
-  2026-11-07: release PR #17 merged, tag `v2.3.0`, and `publish.yml` uploaded it ("Successfully uploaded
-  ... version 2.3.0"). Releases are automated (AGENTS.md §6).
+- **glass 2.3.1** was released on 2026-11-08 (release PR #20, tag `v2.3.1`, `publish.yml` succeeded).
+  It adds the pub.dev `screenshots:` gallery (weather, music, travel, photos, from `doc/screenshots/`),
+  the `liquid-glass` topic and a new `description`. 2.3.0 (2026-11-07) added experimental liquid glass
+  and raised the minimum to Flutter 3.29 / Dart 3.7. Releases are automated (AGENTS.md §6).
 - Root and `example/` analyze clean and tests pass on Flutter 3.47.7 (FVM `stable`), with and without
   `--enable-impeller`.
 
 ## In progress
-- Release PR #20 (glass 2.3.1) is open and CI is green. It ships the pub.dev `screenshots:` gallery
-  (weather, music, travel, photos, from `doc/screenshots/`), the `liquid-glass` topic and the new
-  `description` (PR #19). **The human merges it**, which tags `v2.3.1` and runs `publish.yml`. After
-  publishing, check that pub.dev shows the gallery, topics and description.
 - Showcase recording and a LinkedIn post: **the human records it.** Run
   `cd example && flutter run --release -t lib/showcase.dart -d <device>`.
 
