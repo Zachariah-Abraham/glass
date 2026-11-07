@@ -2,6 +2,13 @@
 
 * Address lints
 
+## [2.3.2](https://github.com/Zachariah-Abraham/glass/compare/v2.3.1...v2.3.2) (2026-11-07)
+
+
+### Bug Fixes
+
+* show the animated liquid glass showcase in the README ([#22](https://github.com/Zachariah-Abraham/glass/issues/22)) ([62e460b](https://github.com/Zachariah-Abraham/glass/commit/62e460ba979ca5c233a3271d6ea4818a0c0ba3c1))
+
 ## [2.3.1](https://github.com/Zachariah-Abraham/glass/compare/v2.3.0...v2.3.1) (2026-11-07)
 
 
