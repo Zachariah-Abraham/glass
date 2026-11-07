@@ -15,7 +15,7 @@ _Last updated: 2026-11-07_
 
 ## In progress
 - Showcase recording for the merged liquid glass PR #16 and a LinkedIn post: **the human records it.**
-  The scene is `example/lib/showcase.dart` (PR from branch `docs/liquid-showcase`). Run it with
+  The scene is `example/lib/showcase.dart` (PR #18, open for review). Run it with
   `cd example && flutter run -t lib/showcase.dart -d <device>`.
 
 ## Pending (not started)
