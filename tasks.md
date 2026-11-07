@@ -67,11 +67,17 @@ _Last updated: 2026-11-07_
     `300:300`) is pixel-identical on both. The regular preset (tint, shadow) renders as on iOS.
     Script: scratchpad `and_shot.sh`, data in scratchpad `android/`. Not checked: real devices, and Skia
     (no Impeller).
-  - Before release (human approved 2026-11-07): rotation, skew and perspective. `_RenderLiquidBackdrop._uniforms`
-    sends `MatrixUtils.transformRect(getTransformTo(null), ...)`, an upright bounding box, so under a rotated or
-    tilted ancestor the clip and blur are right but the bend band and rim follow the bounding box (untested,
-    from reading the code). Fix: pass the inverse transform (6 floats affine, 9 for perspective) and compute
-    the SDF in local space, mapping the bend direction back to screen space. No public API change.
+  - 2026-11-07 DONE rotation, skew and perspective. `_RenderLiquidBackdrop._uniforms` now sends the glass's local
+    size, radius, W and A in local logical px plus two row-major 3x3 projective matrices (rows x, y, w and columns x,
+    y, translation of `dpr * getTransformTo(null)`): screen physical px → local (uniforms 7-15, inverted in Dart by
+    `_invert3`; a singular matrix gives zeros) and local → screen (16-24). `liquid_glass.frag` maps
+    `FlutterFragCoord()` to local space, evaluates the SDF and inward bend there and maps the sample point back. The
+    rim's 3 px width stays in screen pixels (local distance divided by its per-screen-pixel rate). The other
+    uniforms moved to 25-32. Verified on the Android emulator (GLES and Vulkan) and the iOS simulator with
+    the demo's `XF=rot:20|skew:0.3|persp:35` mode (whole scene transformed): rim and bend follow the real edges
+    (before: the screen-space bounding box). A 20° rotated scene matches the unrotated screenshot rotated by 20°
+    up to resampling noise (pixels off by > 40/255 in the card: 5093 old, 322 new). Unrotated scenes and the
+    scroll scene are unchanged (max diff 3/255). No widget test yet (see shader-path tests).
   - Known gaps: `clipper` and non-uniform radii are ignored by the shader; no tests for
     the shader path yet (`flutter test --enable-impeller` makes `isShaderFilterSupported` true, so
     widget tests can cover it); merging not started.

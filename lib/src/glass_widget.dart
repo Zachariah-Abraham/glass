@@ -440,7 +440,7 @@ class _LiquidBackdrop extends SingleChildRenderObjectWidget {
 }
 
 /// Pushes a [_LiquidBackdropLayer] and computes the shader uniforms for it,
-/// including the glass's position, size and scale on screen.
+/// including the transform from the glass to the screen.
 class _RenderLiquidBackdrop extends RenderProxyBox {
   _RenderLiquidBackdrop(this._config);
 
@@ -460,33 +460,60 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
   List<double> _uniforms() {
     final c = _config;
     final dpr = c.devicePixelRatio;
-    final rect = attached && hasSize
-        ? MatrixUtils.transformRect(getTransformTo(null), Offset.zero & size)
-        : Rect.zero;
-    // Scaled ancestors (for example page transitions) scale the edge too.
-    // Rotation and skew aren't supported.
-    final scale = hasSize && size.width > 0 ? rect.width / size.width : 1.0;
-    // Band width W and displacement scale A (A = 3 W), in logical pixels.
+    // Local logical pixels to screen physical pixels, restricted to the z = 0
+    // plane: a 3x3 projective matrix (rows x, y, w of the 4x4 transform,
+    // columns x, y, translation). This handles scale, rotation, skew and
+    // perspective, for example from page transitions or a Transform.
+    final m = attached && hasSize ? getTransformTo(null) : Matrix4.zero();
+    final fwd = [
+      for (final row in const [0, 1, 3])
+        for (final col in const [0, 1, 3])
+          m.entry(row, col) * (row == 3 ? 1 : dpr),
+    ];
+    final inv = _invert3(fwd);
+    // Band width W and displacement scale A (A = 3 W), in local logical px.
     final shortest = hasSize ? size.shortestSide : 0.0;
     final width = c.liquid.edgeWidth ?? math.min(20.0, 0.69 * shortest / 2);
     final amount = 3 * width * c.liquid.refraction;
-    final px = dpr * scale;
     return [
-      rect.left * dpr, // 2-5: the glass rect in physical pixels
-      rect.top * dpr,
-      rect.width * dpr,
-      rect.height * dpr,
-      c.radius * px, // 6
-      width * px, // 7
-      amount * px, // 8
-      c.liquid.lift, // 9
-      c.liquid.midtoneLift, // 10
-      c.tint.r, // 11-13
+      hasSize ? size.width : 0, // 2-3: the glass size
+      hasSize ? size.height : 0,
+      c.radius, // 4
+      width, // 5
+      amount, // 6
+      ...inv, // 7-15: screen physical px to local, rows
+      ...fwd, // 16-24: local to screen physical px, rows
+      c.liquid.lift, // 25
+      c.liquid.midtoneLift, // 26
+      c.tint.r, // 27-29
       c.tint.g,
       c.tint.b,
-      c.tint == Colors.transparent ? 0 : c.liquid.tintStrength, // 14
-      c.liquid.saturation, // 15
-      c.liquid.highlight, // 16
+      c.tint == Colors.transparent ? 0 : c.liquid.tintStrength, // 30
+      c.liquid.saturation, // 31
+      c.liquid.highlight, // 32
+    ];
+  }
+
+  /// The inverse of a row-major 3x3 matrix, or all zeros if it is singular
+  /// (for example glass turned edge-on, which shows nothing anyway).
+  static List<double> _invert3(List<double> a) {
+    final [a0, a1, a2, a3, a4, a5, a6, a7, a8] = a;
+    final c0 = a4 * a8 - a5 * a7;
+    final c1 = a5 * a6 - a3 * a8;
+    final c2 = a3 * a7 - a4 * a6;
+    final det = a0 * c0 + a1 * c1 + a2 * c2;
+    if (det == 0 || !det.isFinite) return List.filled(9, 0);
+    final k = 1 / det;
+    return [
+      c0 * k,
+      (a2 * a7 - a1 * a8) * k,
+      (a1 * a5 - a2 * a4) * k,
+      c1 * k,
+      (a0 * a8 - a2 * a6) * k,
+      (a2 * a3 - a0 * a5) * k,
+      c2 * k,
+      (a1 * a6 - a0 * a7) * k,
+      (a0 * a4 - a1 * a3) * k,
     ];
   }
 
