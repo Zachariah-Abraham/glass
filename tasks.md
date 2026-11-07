@@ -6,14 +6,15 @@ Newest information goes first in each section. Use absolute dates.
 _Last updated: 2026-11-07_
 
 ## Current state
-- **glass 2.1.0 is published on pub.dev** (2026-11-03). `main` is at or ahead of the `v2.1.0` tag.
+- **glass 2.2.0 is published on pub.dev** (2026-11-06, adds `clipBehavior`). `main` is at or ahead of the
+  `v2.2.0` tag.
 - Release flow is fully automated (AGENTS.md §6): Conventional Commits on `main` → release-please
   opens a release PR → the human merges it → `vX.Y.Z` tag → `publish.yml` publishes to pub.dev.
   - Requires the `RELEASE_PLEASE_TOKEN` Actions secret (set) and pub.dev automated publishing for
     `Zachariah-Abraham/glass` with tag pattern `v{{version}}` (enabled).
 - With Flutter 3.47.7 / Dart 3.13.5 (FVM `stable`): root and `example/` `flutter analyze` are
-  clean, and `flutter test` passes in both (10 widget tests in `test/glass_widget_test.dart`, one
-  toggle test in `example/test/widget_test.dart`).
+  clean, and `flutter test` passes in both (root: `test/glass_widget_test.dart`, goldens, and the
+  Impeller-only `test/liquid_shader_test.dart`; example: glass toggle and liquid switch tests).
 - `pubspec.yaml` `version:` is managed by release-please. Don't edit it by hand, and keep it as
   plain `x.y.z` (no `+N`).
 
@@ -92,12 +93,16 @@ _Last updated: 2026-11-07_
     and is skipped under Impeller. CI runs them in a "Test with Impeller" step on 3.29.0 and stable
     (works on Linux; `GLASS_REQUIRE_SHADER=1` makes a guard test fail if shader filters are unavailable,
     so the step can't pass by skipping).
-  - 2026-11-07 STATUS: every before-release item is done. Branch pushed, **PR #16 open**
-    (https://github.com/Zachariah-Abraham/glass/pull/16), all CI jobs green (3.29.0 and stable, Impeller step,
-    goldens unchanged, web build, integration). README has a "Liquid glass (experimental)" section. Gallery
-    app `example/lib/gallery.dart` (`flutter run -t lib/gallery.dart`, 8 stories over an animated background)
-    verified running on the iOS simulator (Metal), Android emulator (GLES), macOS (Impeller MetalSDF by
-    default) and Chrome (fallback). NEXT, needs the human: review the gallery and decide whether to merge PR #16.
+  - 2026-11-07 STATUS: every before-release item is done; PR #16
+    (https://github.com/Zachariah-Abraham/glass/pull/16) all CI green. The human approved merging it as a
+    **squash** with the subject `feat: add experimental liquid glass option (requires Flutter 3.29 or newer)` and a
+    plain body (the branch has ~15 spike-era `feat:`/`fix:` commits that must not reach the changelog). The pub.dev
+    example (`example/lib/main.dart`) has a "Liquid glass" switch (`LiquidGlass.clear`). Gallery app
+    `example/lib/gallery.dart` (`flutter run -t lib/gallery.dart`, 8 stories over an animated background, mouse
+    drag scrolls) verified on the iOS simulator (Metal), Android emulator (GLES), macOS (Impeller MetalSDF) and
+    Chrome (fallback). NEXT: after the merge, check release-please's 2.3.0 release PR (changelog text) and run
+    `pub publish --dry-run` on `main`; merging the release PR (= publishing) is the human's. Then a public,
+    presentable recording of liquid glass for the PR and a LinkedIn post (the human reviews it first).
   - Known gaps: `clipper` and non-uniform radii are ignored by the shader; merging not started.
   - 2026-11-07 DONE minimum raised to Flutter 3.29.0 / Dart 3.7 (allowed by the human). Checked the
     engine sources: 3.27.0's `dart:ui` (engine 83bacfc5) has no `ImageFilter.shader` or
@@ -190,11 +195,9 @@ _Last updated: 2026-11-07_
     doesn't need Flutter 3.32's `ClipRSuperellipse`).
   - Earlier next steps: human reviews the tuning crops; then try sampling outside the rect, fix the stale-position
     problem, Android check, shader-path tests, and design merging.
-- Renaming the misspelled public parameter `clipBehaviour` to `clipBehavior` (human decision,
-  2026-11-06). Step 1 (PR on `feat/clip-behavior`): add `clipBehavior`, keep `clipBehaviour` as a
-  `@Deprecated` alias, ships as a minor (2.2.0). Step 2 (later, next major 3.0.0): delete
-  `clipBehaviour`, with a `feat!:` commit or `BREAKING CHANGE:` footer. Other 3.0.0 candidates: none
-  decided yet.
+- Renaming `clipBehaviour` to `clipBehavior`: step 1 shipped in 2.2.0 (PR #11; `clipBehaviour` is a
+  `@Deprecated` alias). Step 2 (next major 3.0.0): delete `clipBehaviour`, with a `feat!:` commit or
+  `BREAKING CHANGE:` footer. Other 3.0.0 candidates: none decided yet.
 
 ## Backlog (suggested, not yet approved by the human)
 - [x] Issue #7 (blur disappears at scroll limits): replied and closed 2026-11-06

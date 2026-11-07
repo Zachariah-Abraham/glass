@@ -208,6 +208,10 @@ those incidental changes as part of unrelated work. Either revert them
   `flutter create --platforms=macos . && flutter test integration_test -d macos` in `example/`, then
   revert the incidental changes to tracked files (`example/macos/`, `pubspec.lock`, etc.).
 - Run `analyze` and `test` for **both** the root package and `example/` before committing.
+- **Android emulator speed:** the local AVD `Medium_Phone_API_37.0` with `hw.gpu.mode=auto` resolves to
+  `lavapipe` (software rendering on the host CPU, 1 core) and runs the gallery at ~1-4 fps. Start it with
+  `~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0 -gpu host -cores 4` for GPU rendering.
+  Emulator frame rates are still only a rough guide; check performance on a real device.
 
 ### Example app
 - `example/` is the package's showcase on pub.dev. Keep it minimal, idiomatic, warning-free, and
