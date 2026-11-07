@@ -5,8 +5,9 @@
 Easily convert any Widget into a glass / frosted glass version of itself, following the glassmorphism / glassmorphic design trend, or into Apple-style liquid glass (experimental).
 
 <p>
-  <img src="https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/doc/screenshots/weather.jpg" alt="Plain glass, liquid glass regular and liquid glass clear compared" width="260">
-  <img src="https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/doc/screenshots/music.jpg" alt="Dark liquid glass mini player and tab bar in a music app" width="260">
+  <img src="https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/doc/screenshots/weather.jpg" alt="Plain glass, liquid glass regular and liquid glass clear compared" height="520">
+  <img src="https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/doc/screenshots/music.jpg" alt="Dark liquid glass mini player and tab bar in a music app" height="520">
+  <img src="https://raw.githubusercontent.com/Zachariah-Abraham/glass/main/doc/readme/showcase.webp" alt="Animated liquid glass lens, card and tab bar refracting a scrolling feed" height="520">
 </p>
 
 ## Installation

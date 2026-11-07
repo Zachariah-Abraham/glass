@@ -14,11 +14,10 @@ _Last updated: 2026-11-08_
 - Root and `example/` analyze clean and tests pass on Flutter 3.47.7 (FVM `stable`), with and without
   `--enable-impeller`.
 
-## In progress
-- Showcase recording and a LinkedIn post: **the human records it.** Run
-  `cd example && flutter run --release -t lib/showcase.dart -d <device>`.
-
 ## Pending (not started)
+- The README's `doc/readme/showcase.webp` is 11.3 s and jumps slightly when it loops (the recording had
+  the cursor in its first 1.3 s and a skip at 12.7 s, so no clean 12 s cycle was available). A clean
+  re-record of 13+ s would allow a seamless 12 s loop. Optional, only if the human asks.
 - Liquid glass gaps:
   - the shader ignores `clipper` and non-uniform radii;
   - continuous ("squircle") corners: opt-in only, deprioritized;
