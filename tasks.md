@@ -91,6 +91,12 @@ _Last updated: 2026-11-07_
     fake-async zone). The `glass_widget_test.dart` liquid group is now "liquid without shader support"
     and is skipped under Impeller. CI doesn't run `--enable-impeller` yet (it's unknown whether it works
     in Linux flutter_tester; try it as a step in the stable job when CI changes are next pushed).
+  - 2026-11-07 STATUS: every before-release item is done (stale scroll, Android, rotation, shader
+    tests, 3.29 minimum). Branch `spike/liquid-glass` is local and unpushed. NEXT, needs the human:
+    decide whether to push it and open a PR (CI has never run on it: watch the 3.29.0 matrix job and
+    the goldens, which shouldn't change). Still to do before a PR: a README section for `liquid:`
+    (presets, Impeller-only, the plain-blur fallback on web/Skia), and optionally a CI step
+    `flutter test --enable-impeller --exclude-tags golden` (not yet known to work on Linux).
   - Known gaps: `clipper` and non-uniform radii are ignored by the shader; merging not started.
   - 2026-11-07 DONE minimum raised to Flutter 3.29.0 / Dart 3.7 (allowed by the human). Checked the
     engine sources: 3.27.0's `dart:ui` (engine 83bacfc5) has no `ImageFilter.shader` or
