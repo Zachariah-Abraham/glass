@@ -41,8 +41,21 @@ _Last updated: 2026-11-07_
     milky frost (strong blur, light tint) that we can't match with the fixed 10% tint. Native merge
     (`GlassEffectContainer(spacing: 40)`, 10 pt gap) gives one peanut shape with a smooth concave
     waist; at a 70 pt gap the shapes stay separate.
-  - Known gaps: the glass rect goes stale when an ancestor moves the glass without repainting it (for
-    example while scrolling); `clipper` and non-uniform radii are ignored by the shader; no tests for
+  - 2026-11-07 FIXED stale glass rect while scrolling. Two causes: (1) an ancestor (for example a
+    scroll view moving a repaint boundary) moves the glass without repainting it, so paint-time uniforms
+    go stale; (2) the engine copies a shader's uniforms the first time a filter object is pushed
+    (`_FragmentShaderImageFilter.nativeFilter` is a cached `late final`), so `setFloat` on an existing
+    filter has no effect. (Dragging only worked because every rebuild made a new blur and filter.)
+    Composition callbacks don't help: they run after `addToScene`. Fix: the live path uses
+    `_LiquidBackdrop`/`_RenderLiquidBackdrop`, which pushes a `_LiquidBackdropLayer` (a
+    `BackdropFilterLayer` with `alwaysNeedsAddToScene`). Right before each push it computes all uniforms
+    (rect from `getTransformTo(null)`, so scaled ancestors are handled too; rotation isn't) and builds a
+    new `compose(shader, blur)` filter only if they changed. Its ancestors are re-added every frame; siblings
+    and children stay retained, and an idle screen schedules no frames. `_RenderLiquidGlassLayers` now only
+    paints the shadow. Verified on the simulator with a scratchpad scroll scene (`lg_demo` `SCROLL=start:jump`,
+    `scroll_shot.sh`): after a jump the glass is pixel-identical to opening at that offset (before: off by up
+    to 255); static scenes unchanged. No widget test (shader isn't live in tests yet).
+  - Known gaps: `clipper` and non-uniform radii are ignored by the shader; no tests for
     the shader path yet (`flutter test --enable-impeller` makes `isShaderFilterSupported` true, so
     widget tests can cover it); merging not started.
   - `ImageFilter.shader` is probably NOT in Flutter 3.27.0 (engine PR #53490 merged 2024-11-08, after
@@ -175,8 +188,8 @@ _Last updated: 2026-11-07_
 
 ## Decisions made
 - 2026-11-07: liquid glass scope (human approved): keep plain glass maintained regardless; ship a narrow,
-  experimental liquid option (`clear`/`regular` presets, refraction, rim, shadow). Before release: stale
-  position while scrolling, Android check, shader-path tests, 3.27 vs 3.29 minimum. Continuous corners are
+  experimental liquid option (`clear`/`regular` presets, refraction, rim, shadow). Before release: (stale
+  position while scrolling: fixed 2026-11-07), Android check, shader-path tests, 3.27 vs 3.29 minimum. Continuous corners are
   deprioritized (still opt-in if ever built). Shape merging is deferred until users ask for it.
 - 2026-11-06: Use Flutter's built-in goldens, not Alchemist. The scenes have no text, so Alchemist's
   font normalization isn't needed. Goldens run on one pinned Flutter version only.

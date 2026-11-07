@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui';
@@ -269,8 +270,6 @@ class _GlassBackdrop extends StatefulWidget {
 class _GlassBackdropState extends State<_GlassBackdrop> {
   static Future<FragmentProgram>? _program;
   FragmentShader? _refraction;
-  ImageFilter? _filter;
-  ImageFilter? _filterBlur;
 
   @override
   void initState() {
@@ -310,37 +309,34 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
     final liquid = widget.liquid;
     final refraction = _refraction;
     final live = liquid != null && refraction != null;
-    if (live && !identical(_filterBlur, widget.blur)) {
-      // The uniforms are set at paint time, the filter object stays the same.
-      _filterBlur = widget.blur;
-      _filter = ImageFilter.compose(
-        outer: ImageFilter.shader(refraction),
-        inner: widget.blur,
-      );
-    }
+    final content = Container(
+      decoration: BoxDecoration(
+        gradient: live ? null : widget.gradient,
+        image: widget.image,
+      ),
+      child: widget.child,
+    );
     // Clip to the shape, blur (and refract) what is behind, then the tint.
     final glass = ClipRRect(
       clipper: widget.clipper,
       clipBehavior: widget.clipBehavior,
       borderRadius: widget.borderRadius,
-      child: BackdropFilter(
-        filter: live ? _filter! : widget.blur,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: live ? null : widget.gradient,
-            image: widget.image,
-          ),
-          child: widget.child,
-        ),
-      ),
+      child: live
+          ? _LiquidBackdrop(
+              blur: widget.blur,
+              refraction: refraction,
+              liquid: liquid,
+              tint: widget.gradient == null ? Colors.transparent : widget.tint,
+              radius: widget.borderRadius.topLeft.x,
+              devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+              child: content,
+            )
+          : BackdropFilter(filter: widget.blur, child: content),
     );
     if (!live) return glass;
     return _LiquidGlassLayers(
-      refraction: refraction,
       liquid: liquid,
-      tint: widget.gradient == null ? Colors.transparent : widget.tint,
       radius: widget.borderRadius.topLeft.x,
-      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
       child: glass,
     );
   }
@@ -348,19 +344,13 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
 
 class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   const _LiquidGlassLayers({
-    required this.refraction,
     required this.liquid,
-    required this.tint,
     required this.radius,
-    required this.devicePixelRatio,
     super.child,
   });
 
-  final FragmentShader refraction;
   final LiquidGlass liquid;
-  final Color tint;
   final double radius;
-  final double devicePixelRatio;
 
   @override
   _RenderLiquidGlassLayers createRenderObject(BuildContext context) =>
@@ -375,9 +365,8 @@ class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   }
 }
 
-/// Lays out like its child. Paints the shadow and sets the shader uniforms
-/// before the child paints (the child holds the backdrop filter). Hit testing
-/// is unchanged.
+/// Lays out like its child and paints the shadow before the child (the
+/// child holds the backdrop filter). Hit testing is unchanged.
 class _RenderLiquidGlassLayers extends RenderProxyBox {
   _RenderLiquidGlassLayers(this._config);
 
@@ -410,37 +399,159 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    final c = _config;
-    final dpr = c.devicePixelRatio;
-    // Band width W and displacement scale A (A = 3 W), in logical pixels.
-    final width =
-        c.liquid.edgeWidth ?? math.min(20.0, 0.69 * size.shortestSide / 2);
-    final amount = 3 * width * c.liquid.refraction;
-
-    // Spike: the position goes stale if an ancestor moves this box without
-    // repainting it (for example while scrolling).
-    final origin = localToGlobal(Offset.zero) * dpr;
-    c.refraction
-      ..setFloat(2, origin.dx)
-      ..setFloat(3, origin.dy)
-      ..setFloat(4, size.width * dpr)
-      ..setFloat(5, size.height * dpr)
-      ..setFloat(6, c.radius * dpr)
-      ..setFloat(7, width * dpr)
-      ..setFloat(8, amount * dpr)
-      ..setFloat(9, c.liquid.lift)
-      ..setFloat(10, c.liquid.midtoneLift)
-      ..setFloat(11, c.tint.r)
-      ..setFloat(12, c.tint.g)
-      ..setFloat(13, c.tint.b)
-      ..setFloat(14, c.tint == Colors.transparent ? 0 : c.liquid.tintStrength)
-      ..setFloat(15, c.liquid.saturation)
-      ..setFloat(16, c.liquid.highlight);
-
-    final shadow = c.liquid.shadow;
+    final shadow = _config.liquid.shadow;
     if (shadow != null) _paintShadow(context.canvas, offset, shadow);
 
     // Clip, blur, refract, saturate, tint and rim, then the child.
     super.paint(context, offset);
+  }
+}
+
+/// A backdrop filter that blurs, then runs the liquid glass shader.
+class _LiquidBackdrop extends SingleChildRenderObjectWidget {
+  const _LiquidBackdrop({
+    required this.blur,
+    required this.refraction,
+    required this.liquid,
+    required this.tint,
+    required this.radius,
+    required this.devicePixelRatio,
+    super.child,
+  });
+
+  final ImageFilter blur;
+  final FragmentShader refraction;
+  final LiquidGlass liquid;
+  final Color tint;
+  final double radius;
+  final double devicePixelRatio;
+
+  @override
+  _RenderLiquidBackdrop createRenderObject(BuildContext context) =>
+      _RenderLiquidBackdrop(this);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderLiquidBackdrop renderObject,
+  ) {
+    renderObject.config = this;
+  }
+}
+
+/// Pushes a [_LiquidBackdropLayer] and computes the shader uniforms for it,
+/// including the glass's position, size and scale on screen.
+class _RenderLiquidBackdrop extends RenderProxyBox {
+  _RenderLiquidBackdrop(this._config);
+
+  _LiquidBackdrop _config;
+  set config(_LiquidBackdrop value) {
+    _config = value;
+    markNeedsPaint();
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => child != null;
+
+  @override
+  _LiquidBackdropLayer? get layer => super.layer as _LiquidBackdropLayer?;
+
+  /// The shader uniforms from float 2 on (floats 0-1 are set by the engine).
+  List<double> _uniforms() {
+    final c = _config;
+    final dpr = c.devicePixelRatio;
+    final rect = attached && hasSize
+        ? MatrixUtils.transformRect(getTransformTo(null), Offset.zero & size)
+        : Rect.zero;
+    // Scaled ancestors (for example page transitions) scale the edge too.
+    // Rotation and skew aren't supported.
+    final scale = hasSize && size.width > 0 ? rect.width / size.width : 1.0;
+    // Band width W and displacement scale A (A = 3 W), in logical pixels.
+    final shortest = hasSize ? size.shortestSide : 0.0;
+    final width = c.liquid.edgeWidth ?? math.min(20.0, 0.69 * shortest / 2);
+    final amount = 3 * width * c.liquid.refraction;
+    final px = dpr * scale;
+    return [
+      rect.left * dpr, // 2-5: the glass rect in physical pixels
+      rect.top * dpr,
+      rect.width * dpr,
+      rect.height * dpr,
+      c.radius * px, // 6
+      width * px, // 7
+      amount * px, // 8
+      c.liquid.lift, // 9
+      c.liquid.midtoneLift, // 10
+      c.tint.r, // 11-13
+      c.tint.g,
+      c.tint.b,
+      c.tint == Colors.transparent ? 0 : c.liquid.tintStrength, // 14
+      c.liquid.saturation, // 15
+      c.liquid.highlight, // 16
+    ];
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null) {
+      layer = null;
+      return;
+    }
+    final backdrop = layer ??= _LiquidBackdropLayer();
+    backdrop
+      ..blur = _config.blur
+      ..shader = _config.refraction
+      ..uniforms = _uniforms;
+    context.pushLayer(backdrop, super.paint, offset);
+  }
+}
+
+/// A [BackdropFilterLayer] that is added to every scene, even when nothing
+/// was repainted, and builds its filter right before it is pushed.
+///
+/// The shader needs the glass rect in physical pixels of the whole screen. An
+/// ancestor can move the glass without repainting it (for example a scroll
+/// view moving a repaint boundary), and a retained layer would keep the old
+/// rect. Always adding this layer also adds its ancestors, but its siblings
+/// and children stay retained.
+///
+/// The engine copies a shader's uniforms when a filter object is first used,
+/// so changing them later has no effect on that filter. This layer therefore
+/// makes a new filter whenever the uniforms or the blur changed, and reuses
+/// the old one otherwise.
+class _LiquidBackdropLayer extends BackdropFilterLayer {
+  ImageFilter? blur;
+  FragmentShader? shader;
+  List<double> Function()? uniforms;
+
+  ImageFilter? _filter;
+  ImageFilter? _filterBlur;
+  FragmentShader? _filterShader;
+  List<double>? _filterUniforms;
+
+  @override
+  bool get alwaysNeedsAddToScene => true;
+
+  @override
+  ImageFilter? get filter => _filter;
+
+  @override
+  void addToScene(SceneBuilder builder) {
+    final blur = this.blur!, shader = this.shader!, values = uniforms!();
+    if (_filter == null ||
+        !identical(blur, _filterBlur) && blur != _filterBlur ||
+        !identical(shader, _filterShader) ||
+        !listEquals(values, _filterUniforms)) {
+      for (var i = 0; i < values.length; i++) {
+        shader.setFloat(i + 2, values[i]);
+      }
+      _filter = ImageFilter.compose(
+        outer: ImageFilter.shader(shader),
+        inner: blur,
+      );
+      _filterBlur = blur;
+      _filterShader = shader;
+      _filterUniforms = values;
+    }
+    super.addToScene(builder);
   }
 }
