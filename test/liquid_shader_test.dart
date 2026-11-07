@@ -20,7 +20,8 @@ void _bundleShaderUnderPackageKey() {
   const dir = 'build/unit_test_assets';
   final source = File('$dir/shaders/liquid_glass.frag');
   final target = File('$dir/packages/glass/shaders/liquid_glass.frag');
-  if (source.existsSync() && !target.existsSync()) {
+  // Always overwrite: a copy left by another Flutter version won't load.
+  if (source.existsSync()) {
     target.parent.createSync(recursive: true);
     source.copySync(target.path);
   }
@@ -35,11 +36,18 @@ Future<void> _pumpLive(WidgetTester tester, Widget widget) async {
   await tester.pumpWidget(
     Directionality(textDirection: TextDirection.ltr, child: widget),
   );
-  await tester.runAsync(
-    () => Future<void>.delayed(const Duration(milliseconds: 200)),
-  );
-  // The load finishes in a microtask, which calls setState; build that.
-  await tester.pump();
+  // The first load compiles the shader and can take a while. Once it is
+  // done, the plain BackdropFilter is gone.
+  for (var i = 0;
+      i < 100 && find.byType(BackdropFilter).evaluate().isNotEmpty;
+      i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await tester.pump();
+  }
+  expect(find.byType(BackdropFilter), findsNothing,
+      reason: 'the liquid shader did not load');
   await tester.pump();
 }
 
@@ -118,10 +126,12 @@ void main() {
     final image = await _capture(tester, key);
 
     // The card spans x 40-160 and y 60-140. Over black, the inside is dark
-    // and the first pixel inside the edge is the bright rim.
-    expect(_red(image, 100, 100), lessThan(60));
-    expect(_red(image, 100, 60.5), greaterThan(120));
-    expect(_red(image, 40.5, 100), greaterThan(120));
+    // and the first pixel inside the edge is the bright rim. (Its exact
+    // brightness differs between Flutter versions.)
+    final inside = _red(image, 100, 100);
+    expect(inside, lessThan(40));
+    expect(_red(image, 100, 60.5), greaterThan(inside + 50));
+    expect(_red(image, 40.5, 100), greaterThan(inside + 50));
     expect(_red(image, 100, 58.5), lessThan(10)); // outside
   });
 
@@ -142,8 +152,9 @@ void main() {
     }
 
     final rim = screen(60, 0.6), centre = screen(60, 40);
-    expect(_red(image, centre.dx, centre.dy), lessThan(60));
-    expect(_red(image, rim.dx, rim.dy), greaterThan(120));
+    final inside = _red(image, centre.dx, centre.dy);
+    expect(inside, lessThan(40));
+    expect(_red(image, rim.dx, rim.dy), greaterThan(inside + 40));
   });
 
   testWidgets('rebuilds the filter when an ancestor moves the glass',
