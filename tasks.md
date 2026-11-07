@@ -77,10 +77,21 @@ _Last updated: 2026-11-07_
     the demo's `XF=rot:20|skew:0.3|persp:35` mode (whole scene transformed): rim and bend follow the real edges
     (before: the screen-space bounding box). A 20° rotated scene matches the unrotated screenshot rotated by 20°
     up to resampling noise (pixels off by > 40/255 in the card: 5093 old, 322 new). Unrotated scenes and the
-    scroll scene are unchanged (max diff 3/255). No widget test yet (see shader-path tests).
-  - Known gaps: `clipper` and non-uniform radii are ignored by the shader; no tests for
-    the shader path yet (`flutter test --enable-impeller` makes `isShaderFilterSupported` true, so
-    widget tests can cover it); merging not started.
+    scroll scene are unchanged (max diff 3/255). Rotated rim covered by `test/liquid_shader_test.dart`.
+  - 2026-11-07 DONE shader-path tests: `test/liquid_shader_test.dart`, run with
+    `flutter test --enable-impeller` (skipped otherwise). It covers: the live path replaces the plain
+    `BackdropFilter`; the rim is lit just inside the edge over black, for an unrotated card and a card
+    rotated by 30°; and the filter is reused while nothing moves but rebuilt after a scroll moves the
+    glass's repaint boundary (it fails if `_LiquidBackdropLayer.alwaysNeedsAddToScene` is false). In the
+    package's own tests the shader asset only exists as `shaders/liquid_glass.frag`, so the test copies
+    it to `build/unit_test_assets/packages/glass/...`. Found and fixed along the way: `_GlassBackdropState`
+    now caches the loaded program in the static `_loadedProgram`, so later glass widgets use the shader
+    from their first frame (before, each one showed one frame of plain blur, and in tests the callback
+    on the static future never ran after the first test because it was scheduled in that test's
+    fake-async zone). The `glass_widget_test.dart` liquid group is now "liquid without shader support"
+    and is skipped under Impeller. CI doesn't run `--enable-impeller` yet (it's unknown whether it works
+    in Linux flutter_tester; try it as a step in the stable job when CI changes are next pushed).
+  - Known gaps: `clipper` and non-uniform radii are ignored by the shader; merging not started.
   - `ImageFilter.shader` is probably NOT in Flutter 3.27.0 (engine PR #53490 merged 2024-11-08, after
     the 3.27 branch point; moderate confidence). The 3.27 CI job will confirm; if so, raise the minimum
     to 3.29 (allowed by the human).
@@ -212,8 +223,8 @@ _Last updated: 2026-11-07_
 ## Decisions made
 - 2026-11-07: liquid glass scope (human approved): keep plain glass maintained regardless; ship a narrow,
   experimental liquid option (`clear`/`regular` presets, refraction, rim, shadow). Before release: (stale
-  position while scrolling: fixed 2026-11-07), (Android check: done 2026-11-07), rotation/skew/perspective support,
-  shader-path tests, 3.27 vs 3.29 minimum. Continuous corners are
+  position while scrolling: fixed 2026-11-07), (Android check: done 2026-11-07), (rotation/skew/perspective support: done),
+  (shader-path tests: done), 3.27 vs 3.29 minimum. Continuous corners are
   deprioritized (still opt-in if ever built). Shape merging is deferred until users ask for it.
 - 2026-11-06: Use Flutter's built-in goldens, not Alchemist. The scenes have no text, so Alchemist's
   font normalization isn't needed. Goldens run on one pinned Flutter version only.

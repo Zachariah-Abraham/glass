@@ -164,7 +164,10 @@ void main() {
     });
   });
 
-  group('liquid', () {
+  // The plain blur fallback. With shader support (`--enable-impeller`) the
+  // live path runs instead, which test/liquid_shader_test.dart covers.
+  group('liquid without shader support',
+      skip: ImageFilter.isShaderFilterSupported, () {
     // Compares colors with a tolerance, since alpha goes through doubles.
     void expectColorClose(Color actual, Color expected) {
       expect(actual.r, closeTo(expected.r, 1e-6));

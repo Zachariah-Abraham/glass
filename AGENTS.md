@@ -171,6 +171,10 @@ those incidental changes as part of unrelated work. Either revert them
   - `tintColor: Colors.transparent` produces no gradient. `frosted: false` produces no image.
   - The noise asset resolves (`package: 'glass'`).
 - Use `find.byType` and `tester.widget<T>()` to inspect properties.
+- **Liquid shader tests** (`test/liquid_shader_test.dart`) only run with
+  `$F test --enable-impeller` (shader image filters need Impeller) and are skipped otherwise. The
+  liquid group in `test/glass_widget_test.dart` tests the plain blur fallback and is skipped under
+  Impeller. Run the suite both ways when you touch the liquid path.
 - **Golden tests** (`test/glass_golden_test.dart`, tag `golden`, images in `test/goldens/`) render
   `asGlass` variants over a striped background and compare pixels with Flutter's built-in
   `matchesGoldenFile`. Rules:
