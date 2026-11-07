@@ -18,13 +18,11 @@ _Last updated: 2026-11-07_
   The scene is `example/lib/showcase.dart` (PR #18, open for review). Run it with
   `cd example && flutter run -t lib/showcase.dart -d <device>`.
 
-- pub.dev screenshots and metadata (branch `docs/pub-screenshots`, stacked on PR #18):
-  `example/lib/screens.dart` renders four screens (`--dart-define=SCREEN=travel|photos|music|weather`).
-  The screenshots were taken on the iPhone 17 Pro simulator and are **waiting for the human's review.**
-  None are committed yet. After approval: put them in `doc/screenshots/` (inside the package, unlike
-  `example/screenshots/`, which `.pubignore` excludes); add `screenshots:` to `pubspec.yaml`; add the
-  `liquid-glass` topic (max 5 topics, so drop one); update `description`; ship it all in a `fix:`
-  release.
+- pub.dev screenshots and metadata (branch `docs/pub-screenshots`, stacked on PR #18): `pubspec.yaml`
+  has a `screenshots:` gallery (in this order: weather, music, travel, photos; images are in `doc/screenshots/`,
+  made with `example/lib/screens.dart`), the `liquid-glass` topic (it replaces `widget`), and a new
+  `description`. They reach pub.dev with the next release (a `fix:` commit, so 2.3.1). The README images
+  (`example/screenshots/2.PNG`, `3.png`) are unchanged.
 
 ## Pending (not started)
 - Liquid glass gaps:

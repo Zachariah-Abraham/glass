@@ -1,15 +1,27 @@
 name: glass
-description: Allows conversion of any widget to a "glass" or "frosted glass" version of itself
+description: >-
+  Turn any widget into frosted glass or Apple-style liquid glass (refraction,
+  rim light, tint) with a single asGlass() call.
 version: 2.3.0
 homepage: https://github.com/Zachariah-Abraham/glass
 repository: https://github.com/Zachariah-Abraham/glass
 issue_tracker: https://github.com/Zachariah-Abraham/glass/issues
 topics:
   - glassmorphism
+  - liquid-glass
   - blur
   - effects
   - ui
-  - widget
+
+screenshots:
+  - description: Plain glass, liquid glass regular and liquid glass clear compared
+    path: doc/screenshots/weather.jpg
+  - description: Dark liquid glass mini player and tab bar in a music app
+    path: doc/screenshots/music.jpg
+  - description: Liquid glass buttons and booking card over a photo
+    path: doc/screenshots/travel.jpg
+  - description: Liquid glass tab bar and controls over a photo grid
+    path: doc/screenshots/photos.jpg
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
