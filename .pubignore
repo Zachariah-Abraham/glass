@@ -86,6 +86,7 @@ build/
 
 # Not needed by package users (README references these by GitHub URL)
 example/screenshots/
+doc/readme/
 
 # Generated dartdoc output (pub.dev builds its own)
 doc/api/

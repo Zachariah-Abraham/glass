@@ -73,6 +73,7 @@ documentation, and the changelog matter more than they would in an app.
 | `example/lib/screens.dart` | Realistic app screens (travel, photos, music, weather) used for the pub.dev screenshots: `flutter run -t lib/screens.dart --dart-define=SCREEN=<name>` on an iPhone simulator. Photos load from picsum.photos (Unsplash License); `photoCredits` lists the authors. Not covered by tests. |
 | `example/screenshots/` | Old screenshots. The READMEs of releases up to 2.3.0 still load them by URL from `main`, so don't rename or delete them. |
 | `doc/screenshots/` | Current screenshots (made with `example/lib/screens.dart`). They're published with the package and used by the `screenshots:` gallery in `pubspec.yaml`, and `README.md` loads them by URL from `main`. Don't rename them. Keep each one under 4 MB (pub.dev's limit). |
+| `doc/readme/` | README-only media, excluded from the package by `.pubignore`. `showcase.webp` is an animated WebP (GIF was 18-25 MB) cut from a macOS `--release` recording of `example/lib/showcase.dart`: frames with `ffmpeg`, then `img2webp -lossy -q 70 -m 6 -d 40` (Homebrew `webp`). `README.md` loads it by URL from `main`, so don't rename it. |
 | `doc/api/` | Not tracked. Generated dartdoc output (`dart doc`) is gitignored and in `.pubignore`. Don't commit it. |
 | `CHANGELOG.md` | Displayed on pub.dev. Update it for every user-visible change. |
 
@@ -308,7 +309,7 @@ version in `.release-please-manifest.json`):
 - Keep the package small (limit is ~100 MB gzipped / 256 MB uncompressed). Large demo assets and
   generated output should be excluded. A root `.pubignore` exists, and pub then **ignores
   `.gitignore`** for publishing, so `.pubignore` is a copy of `.gitignore` plus
-  `example/screenshots/` (archive ~3 MB → ~750 KB). **Keep the two files in sync** when adding
+  `example/screenshots/` and `doc/readme/` (archive ~3 MB → ~750 KB). **Keep the two files in sync** when adding
   ignore rules.
 - Only hosted pub.dev dependencies and SDK dependencies (`sdk: flutter`) are allowed. `path:`
   and `git:` dependencies are not (the `example/` app is fine because it isn't published).
