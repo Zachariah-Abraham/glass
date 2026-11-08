@@ -23,6 +23,10 @@ _Last updated: 2026-11-08_
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
   - not yet checked on real devices (performance) or on Skia.
+  - first use: `FragmentProgram.fromAsset` loads asynchronously, so the first liquid glass of an app run
+    shows the plain blur fallback for a frame or more, then switches to the shader. A public preload
+    (for example `LiquidGlass.precache()`, like `precacheImage`) was proposed on 2026-11-08 and not
+    yet approved.
 - 3.0.0 (next major): delete the deprecated `clipBehaviour` alias (use a `feat!:` commit or a
   `BREAKING CHANGE:` footer). No other 3.0.0 changes are decided.
 - Backlog, not approved: harden automated publishing (tag protection for `v*`, a required `pub.dev`
