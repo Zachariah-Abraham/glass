@@ -15,7 +15,7 @@ _Last updated: 2026-11-09_
 
 ## Pending (not started)
 - Branch `feat/liquid-clip-shape`: liquid glass bending and rim now follow `clipper` and per-corner
-  (elliptical) radii. Tests in `test/liquid_shader_test.dart`. PR not opened yet.
+  (elliptical) radii (PR #30, open). Tests in `test/liquid_shader_test.dart`.
 - Liquid glass gaps:
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
