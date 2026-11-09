@@ -13,5 +13,7 @@ jobs:
     permissions:
       id-token: write # Required for authentication using OIDC
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
-    # with:
-    #   environment: pub.dev # Uncomment if "Require GitHub Actions environment" is enabled on pub.dev
+    with:
+      # GitHub environment `pub.dev` (only `v*` tags may deploy to it). pub.dev's admin page should
+      # require this environment, so only this job can publish.
+      environment: pub.dev
