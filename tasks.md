@@ -7,12 +7,9 @@ dates. See AGENTS.md §1.
 _Last updated: 2026-11-09_
 
 ## Current state
-- **glass 2.3.2** (2026-11-08) is the latest release. 2.3.0 (2026-11-07) added experimental liquid glass
-  and raised the minimum to Flutter 3.29 / Dart 3.7. Releases are automated (AGENTS.md §6).
-- PR #25 (branch `test/typical-widgets`, open, not merged): adds `LiquidGlass.precache()` (a `feat:`,
-  so merging it makes release-please propose 2.4.0), tests of `asGlass` on everyday widgets, and the
-  `GlassWidget` extension's dartdoc (the only undocumented public API on pub.dev, which scores 160/160).
-  Merging the PR and then the release PR is the human's decision.
+- **glass 2.4.0** (2026-11-09, release PR #26, tag `v2.4.0`, `publish.yml` succeeded) is the latest
+  release. It adds `LiquidGlass.precache()`. 2.3.0 (2026-11-07) added experimental liquid glass and
+  raised the minimum to Flutter 3.29 / Dart 3.7. Releases are automated (AGENTS.md §6).
 - Root and `example/` analyze clean and tests pass on Flutter 3.47.7 (FVM `stable`), with and without
   `--enable-impeller` (`--exclude-tags golden`).
 
