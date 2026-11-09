@@ -112,7 +112,9 @@ Things to keep in mind:
   they change. This is required because ancestors (scroll views) move the glass without repainting it,
   and the engine copies a shader filter's uniforms the first time it is pushed, so `setFloat` on an
   existing filter does nothing. The shader works in the glass's local space through two 3x3 matrices,
-  so rotation, skew and perspective work. `_RenderLiquidGlassLayers` paints the optional `shadow`
+  so rotation, skew and perspective work. The shape is the clip `RRect` (`_GlassShape`: `clipper`, else
+  `clipBorderRadius`, with `scaleRadii()`), sent as its local rect plus per-corner x and y radii; the
+  shader's `shapeSdf` is a rounded-rect SDF with elliptical corners. `_RenderLiquidGlassLayers` paints the optional `shadow`
   outside the shape.
 - Native model the shader follows: it samples **inward** only, along the inward normal,
   `source = p + d(t)*n_in` with `W = min(20 pt, 0.69*min(w,h)/2)`, `A = 3W` and

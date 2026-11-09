@@ -17,9 +17,9 @@ import 'dart:ui';
 /// The bending needs the Impeller renderer. Elsewhere (for example on web) the
 /// glass keeps its blur and tint but doesn't bend the backdrop.
 ///
-/// Only uniform corner radii are supported: the shape is a rounded rectangle
-/// with the top-left radius of `clipBorderRadius`, and `clipper` is ignored by
-/// the bending.
+/// The bending follows the glass's clip shape: the rounded rectangle given by
+/// `clipBorderRadius` (each corner can have its own, also elliptical, radius)
+/// or by `clipper`.
 class LiquidGlass {
   /// Creates liquid glass settings.
   ///
@@ -353,6 +353,7 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
     final liquid = widget.liquid;
     final refraction = _refraction;
     final live = liquid != null && refraction != null;
+    final shape = _GlassShape(widget.clipper, widget.borderRadius);
     final content = Container(
       decoration: BoxDecoration(
         gradient: live ? null : widget.gradient,
@@ -373,30 +374,41 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
                 liquid: liquid,
                 tint:
                     widget.gradient == null ? Colors.transparent : widget.tint,
-                radius: widget.borderRadius.topLeft.x,
+                shape: shape,
                 devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
                 child: content,
               )
               : BackdropFilter(filter: widget.blur, child: content),
     );
     if (!live) return glass;
-    return _LiquidGlassLayers(
-      liquid: liquid,
-      radius: widget.borderRadius.topLeft.x,
-      child: glass,
-    );
+    return _LiquidGlassLayers(liquid: liquid, shape: shape, child: glass);
   }
+}
+
+/// The glass's clip shape, as [ClipRRect] computes it from the same clipper
+/// and border radius.
+class _GlassShape {
+  const _GlassShape(this.clipper, this.borderRadius);
+
+  final CustomClipper<RRect>? clipper;
+  final BorderRadius borderRadius;
+
+  /// The shape for a glass of [size], in its local coordinates. Radii that
+  /// don't fit are scaled down, as the clip does.
+  RRect rrect(Size size) =>
+      (clipper?.getClip(size) ?? borderRadius.toRRect(Offset.zero & size))
+          .scaleRadii();
 }
 
 class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   const _LiquidGlassLayers({
     required this.liquid,
-    required this.radius,
+    required this.shape,
     super.child,
   });
 
   final LiquidGlass liquid;
-  final double radius;
+  final _GlassShape shape;
 
   @override
   _RenderLiquidGlassLayers createRenderObject(BuildContext context) =>
@@ -424,10 +436,7 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
 
   /// Paints [shadow] around the glass shape, but not under it.
   void _paintShadow(Canvas canvas, Offset offset, BoxShadow shadow) {
-    final rrect = RRect.fromRectAndRadius(
-      offset & size,
-      Radius.circular(math.min(_config.radius, size.shortestSide / 2)),
-    );
+    final rrect = _config.shape.rrect(size).shift(offset);
     final reach = shadow.blurRadius * 1.5 + shadow.offset.distance;
     final outside =
         Path()
@@ -458,7 +467,7 @@ class _LiquidBackdrop extends SingleChildRenderObjectWidget {
     required this.refraction,
     required this.liquid,
     required this.tint,
-    required this.radius,
+    required this.shape,
     required this.devicePixelRatio,
     super.child,
   });
@@ -467,7 +476,7 @@ class _LiquidBackdrop extends SingleChildRenderObjectWidget {
   final FragmentShader refraction;
   final LiquidGlass liquid;
   final Color tint;
-  final double radius;
+  final _GlassShape shape;
   final double devicePixelRatio;
 
   @override
@@ -515,26 +524,37 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
           m.entry(row, col) * (row == 3 ? 1 : dpr),
     ];
     final inv = _invert3(fwd);
+    final shape = c.shape.rrect(hasSize ? size : Size.zero);
     // Band width W and displacement scale A (A = 3 W), in local logical px.
-    final shortest = hasSize ? size.shortestSide : 0.0;
-    final width = c.liquid.edgeWidth ?? math.min(20.0, 0.69 * shortest / 2);
+    final width =
+        c.liquid.edgeWidth ??
+        math.min(20.0, 0.69 * shape.outerRect.shortestSide / 2);
     final amount = 3 * width * c.liquid.refraction;
     return [
-      hasSize ? size.width : 0, // 2-3: the glass size
-      hasSize ? size.height : 0,
-      c.radius, // 4
-      width, // 5
-      amount, // 6
-      ...inv, // 7-15: screen physical px to local, rows
-      ...fwd, // 16-24: local to screen physical px, rows
-      c.liquid.lift, // 25
-      c.liquid.midtoneLift, // 26
-      c.tint.r, // 27-29
+      shape.left, // 2-5: the shape's rect
+      shape.top,
+      shape.right,
+      shape.bottom,
+      shape.tlRadiusX, // 6-9: corner radii along x
+      shape.trRadiusX,
+      shape.brRadiusX,
+      shape.blRadiusX,
+      shape.tlRadiusY, // 10-13: corner radii along y
+      shape.trRadiusY,
+      shape.brRadiusY,
+      shape.blRadiusY,
+      width, // 14
+      amount, // 15
+      ...inv, // 16-24: screen physical px to local, rows
+      ...fwd, // 25-33: local to screen physical px, rows
+      c.liquid.lift, // 34
+      c.liquid.midtoneLift, // 35
+      c.tint.r, // 36-38
       c.tint.g,
       c.tint.b,
-      c.tint == Colors.transparent ? 0 : c.liquid.tintStrength, // 30
-      c.liquid.saturation, // 31
-      c.liquid.highlight, // 32
+      c.tint == Colors.transparent ? 0 : c.liquid.tintStrength, // 39
+      c.liquid.saturation, // 40
+      c.liquid.highlight, // 41
     ];
   }
 

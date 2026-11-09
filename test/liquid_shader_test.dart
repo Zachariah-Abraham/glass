@@ -76,9 +76,30 @@ List<BackdropFilterLayer> _backdropLayers(WidgetTester tester) {
   return result;
 }
 
+/// Clips to the glass's bounds inset by [inset] on every side.
+class _InsetClipper extends CustomClipper<RRect> {
+  const _InsetClipper(this.inset);
+
+  final double inset;
+
+  @override
+  RRect getClip(Size size) => RRect.fromRectAndRadius(
+    (Offset.zero & size).deflate(inset),
+    const Radius.circular(8),
+  );
+
+  @override
+  bool shouldReclip(_InsetClipper oldClipper) => oldClipper.inset != inset;
+}
+
 /// Black glass scene: a 120x80 liquid card in the middle of a 200x200 black
 /// background, optionally rotated by [angle] around its centre.
-Widget _scene({double angle = 0, Key? boundary}) {
+Widget _scene({
+  double angle = 0,
+  Key? boundary,
+  BorderRadius? borderRadius,
+  CustomClipper<RRect>? clipper,
+}) {
   return RepaintBoundary(
     key: boundary,
     child: ColoredBox(
@@ -87,7 +108,8 @@ Widget _scene({double angle = 0, Key? boundary}) {
         child: Transform.rotate(
           angle: angle,
           child: const SizedBox(width: 120, height: 80).asGlass(
-            clipBorderRadius: BorderRadius.circular(16),
+            clipBorderRadius: borderRadius ?? BorderRadius.circular(16),
+            clipper: clipper,
             liquid: LiquidGlass.clear,
           ),
         ),
@@ -150,6 +172,40 @@ void main() {
     expect(_red(image, 100, 60.5), greaterThan(inside + 50));
     expect(_red(image, 40.5, 100), greaterThan(inside + 50));
     expect(_red(image, 100, 58.5), lessThan(10)); // outside
+  });
+
+  testWidgets('follows per-corner radii', skip: _skip, (tester) async {
+    const key = Key('boundary');
+    await _pumpLive(
+      tester,
+      _scene(
+        boundary: key,
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(30)),
+      ),
+    );
+    final image = await _capture(tester, key);
+
+    // Only the top-left corner is round. The top-right corner (x 160, y 60)
+    // is sharp, so a point 9 px inside both of its edges is not on the rim
+    // (with a 30 px radius there, it would be).
+    final inside = _red(image, 100, 100);
+    expect(_red(image, 150.9, 69.1), lessThan(inside + 20));
+    expect(_red(image, 159.5, 69.1), greaterThan(inside + 50)); // right edge
+    expect(_red(image, 40.5, 60.5), lessThan(10)); // clipped round corner
+  });
+
+  testWidgets('follows a custom clipper', skip: _skip, (tester) async {
+    const key = Key('boundary');
+    await _pumpLive(
+      tester,
+      _scene(boundary: key, clipper: const _InsetClipper(10)),
+    );
+    final image = await _capture(tester, key);
+
+    // The clipper insets the card by 10 px, so its left edge is at x 50.
+    final inside = _red(image, 100, 100);
+    expect(_red(image, 50.5, 100), greaterThan(inside + 50));
+    expect(_red(image, 48.5, 100), lessThan(10)); // outside
   });
 
   testWidgets('draws the rim along rotated edges', skip: _skip, (tester) async {
