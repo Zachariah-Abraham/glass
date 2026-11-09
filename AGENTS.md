@@ -353,7 +353,8 @@ Hardening (set up 2026-11-09):
   as a bypass actor or releases will fail to tag.
 - `publish.yml` runs in the GitHub environment `pub.dev`, which only `v*` tags may deploy to. On
   pub.dev (package Admin tab), "Require GitHub Actions environment" is set to `pub.dev`, so a
-  workflow outside that environment can't publish.
+  workflow outside that environment can't publish. (Only the human can change pub.dev settings;
+  `tasks.md` says whether this one is on yet.)
 
 ### Links
 - Publishing: https://dart.dev/tools/pub/publishing
