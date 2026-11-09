@@ -314,7 +314,8 @@ version in `.release-please-manifest.json`):
 - Keep the package small (limit is ~100 MB gzipped / 256 MB uncompressed). Large demo assets and
   generated output should be excluded. A root `.pubignore` exists, and pub then **ignores
   `.gitignore`** for publishing, so `.pubignore` is a copy of `.gitignore` plus
-  `example/screenshots/` and `doc/readme/` (archive ~3 MB → ~750 KB). **Keep the two files in sync** when adding
+  `example/screenshots/` and `doc/readme/`. The archive is ~3 MB, almost all of it the
+  `doc/screenshots/` pub.dev gallery, which must be published. **Keep the two files in sync** when adding
   ignore rules.
 - Only hosted pub.dev dependencies and SDK dependencies (`sdk: flutter`) are allowed. `path:`
   and `git:` dependencies are not (the `example/` app is fine because it isn't published).
