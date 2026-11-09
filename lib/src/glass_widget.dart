@@ -198,7 +198,6 @@ extension GlassWidget<T extends Widget> on T {
   ///   Values are clamped so that horizontal and vertical radii sums do not exceed width/height.
   ///   This value is ignored if clipper is non-null.
   /// * [clipBehavior]: How the glass is clipped, defaults to [Clip.antiAlias].
-  /// * [clipBehaviour]: Deprecated misspelling of [clipBehavior]. Ignored if [clipBehavior] is set.
   /// * [tileMode]: Defines what happens at the edge of a gradient or the sampling of a source image in an [ImageFilter].
   /// * [clipper]: If non-null, determines which clip to use.
   /// * [liquid]: If non-null, renders liquid glass with these settings, for
@@ -210,9 +209,7 @@ extension GlassWidget<T extends Widget> on T {
     Color? tintColor,
     bool? frosted,
     BorderRadius clipBorderRadius = BorderRadius.zero,
-    Clip? clipBehavior,
-    @Deprecated('Use clipBehavior instead. Will be removed in 3.0.0.')
-    Clip? clipBehaviour,
+    Clip clipBehavior = Clip.antiAlias,
     TileMode tileMode = TileMode.clamp,
     CustomClipper<RRect>? clipper,
     LiquidGlass? liquid,
@@ -232,7 +229,7 @@ extension GlassWidget<T extends Widget> on T {
           blur: blur,
           liquid: liquid,
           clipper: clipper,
-          clipBehavior: clipBehavior ?? clipBehaviour ?? Clip.antiAlias,
+          clipBehavior: clipBehavior,
           borderRadius: clipBorderRadius,
           tint: tint,
           gradient:

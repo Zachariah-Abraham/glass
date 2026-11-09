@@ -13,18 +13,13 @@ _Last updated: 2026-11-09_
 - Root and `example/` analyze clean and tests pass on Flutter 3.47.7 (FVM `stable`), with and without
   `--enable-impeller` (`--exclude-tags golden`).
 
-## Pending (not started)
-- The README's `doc/readme/showcase.webp` is 11.3 s and jumps slightly when it loops (the recording had
-  the cursor in its first 1.3 s and a skip at 12.7 s, so no clean 12 s cycle was available). A clean
-  re-record of 13+ s would allow a seamless 12 s loop. Optional, only if the human asks.
-  (`example/lib/showcase.dart` makes the scene; see "Recording demos" in AGENTS.md §4.)
+## In progress / pending
 - Liquid glass gaps:
   - the shader ignores `clipper` and non-uniform radii;
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
   - not yet checked on real devices (performance) or on Skia.
-- 3.0.0 (next major): delete the deprecated `clipBehaviour` alias (use a `feat!:` commit or a
-  `BREAKING CHANGE:` footer). No other 3.0.0 changes are decided.
+- 3.0.0: branch `feat/remove-clip-behaviour` removes the deprecated `clipBehaviour` parameter
+  (`feat!:`, so release-please will propose 3.0.0). Merging the release PR is the human's decision.
 - Backlog, not approved: harden automated publishing (tag protection for `v*`, a required `pub.dev`
   environment; AGENTS.md §6). Deferred by the human.
-- The merged branch `spike/liquid-glass` still exists on GitHub. Delete it only if the human asks.

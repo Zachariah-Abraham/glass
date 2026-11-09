@@ -54,10 +54,8 @@ Glass blurs what is *behind* the widget, so it only shows up when there is conte
 | `frosted` | `true` | Adds a noise texture for a frosted look. |
 | `clipBorderRadius` | `BorderRadius.zero` | Rounded corners. Ignored if `clipper` is set. |
 | `clipBehavior` | `Clip.antiAlias` | How the glass is clipped. |
-| `clipBehaviour` | `null` | **Deprecated** misspelling of `clipBehavior`, removed in 3.0.0. |
 | `tileMode` | `TileMode.clamp` | How the blur samples at the edges. |
 | `clipper` | `null` | Custom `CustomClipper<RRect>`. |
-
 | `liquid` | `null` | Experimental liquid glass settings, see below. |
 
 A full example can be found in the example directory.

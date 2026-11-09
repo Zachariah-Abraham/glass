@@ -74,30 +74,6 @@ void main() {
       expect(clip.clipper, isNull);
     });
 
-    testWidgets('still accepts the deprecated clipBehaviour', (tester) async {
-      // ignore: deprecated_member_use_from_same_package
-      await _pump(tester, _child.asGlass(clipBehaviour: Clip.hardEdge));
-
-      final clip = tester.widget<ClipRRect>(find.byType(ClipRRect));
-      expect(clip.clipBehavior, Clip.hardEdge);
-    });
-
-    testWidgets('clipBehavior wins over the deprecated clipBehaviour', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        _child.asGlass(
-          clipBehavior: Clip.none,
-          // ignore: deprecated_member_use_from_same_package
-          clipBehaviour: Clip.hardEdge,
-        ),
-      );
-
-      final clip = tester.widget<ClipRRect>(find.byType(ClipRRect));
-      expect(clip.clipBehavior, Clip.none);
-    });
-
     testWidgets('defaults to Clip.antiAlias', (tester) async {
       await _pump(tester, _child.asGlass());
 
