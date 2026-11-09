@@ -19,7 +19,8 @@ _Last updated: 2026-11-09_
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
   - not yet checked on real devices (performance) or on Skia.
-- 3.0.0: branch `feat/remove-clip-behaviour` removes the deprecated `clipBehaviour` parameter
+- 3.0.0: PR #28 (branch `feat/remove-clip-behaviour`) removes the deprecated `clipBehaviour` parameter
   (`feat!:`, so release-please will propose 3.0.0). Merging the release PR is the human's decision.
-- Backlog, not approved: harden automated publishing (tag protection for `v*`, a required `pub.dev`
-  environment; AGENTS.md §6). Deferred by the human.
+- Publishing hardening (AGENTS.md §6): the tag ruleset and the GitHub `pub.dev` environment exist.
+  PR #29 makes `publish.yml` use the environment. After it merges, the human must enable "Require
+  GitHub Actions environment" (`pub.dev`) on the pub.dev Admin tab. Not done yet.
