@@ -2,6 +2,13 @@
 
 * Address lints
 
+## [2.4.0](https://github.com/Zachariah-Abraham/glass/compare/v2.3.2...v2.4.0) (2026-11-09)
+
+
+### Features
+
+* add LiquidGlass.precache() to load the liquid shader ahead of time ([#25](https://github.com/Zachariah-Abraham/glass/issues/25)) ([7711130](https://github.com/Zachariah-Abraham/glass/commit/7711130316e7cbbc6dbde97ebb59e7faae10cf8a))
+
 ## [2.3.2](https://github.com/Zachariah-Abraham/glass/compare/v2.3.1...v2.3.2) (2026-11-07)
 
 
