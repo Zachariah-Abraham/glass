@@ -151,6 +151,8 @@ class LiquidGlass {
   }
 }
 
+/// Adds [asGlass] to every widget, so any widget can become a frosted or
+/// liquid glass version of itself.
 extension GlassWidget<T extends Widget> on T {
   /// .asGlass(): Converts the calling widget into a glass widget.
   ///
