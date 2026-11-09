@@ -58,6 +58,34 @@ class LiquidGlass {
     this.shadow,
   });
 
+  /// Loads the liquid glass shader ahead of time.
+  ///
+  /// The shader loads asynchronously the first time a liquid glass is built,
+  /// and until it has loaded, liquid glass draws a plain blur and tint. To
+  /// show liquid glass from the first frame, call this before the first liquid
+  /// glass is shown, for example in `main()`:
+  ///
+  /// ```dart
+  /// void main() async {
+  ///   WidgetsFlutterBinding.ensureInitialized();
+  ///   await LiquidGlass.precache();
+  ///   runApp(const MyApp());
+  /// }
+  /// ```
+  ///
+  /// The shader is loaded only once, so later calls are cheap. Completes right
+  /// away where shader filters aren't supported (see
+  /// [ImageFilter.isShaderFilterSupported]), and never throws: if loading
+  /// fails, liquid glass keeps the plain blur.
+  static Future<void> precache() async {
+    if (!ImageFilter.isShaderFilterSupported) return;
+    try {
+      await _GlassBackdropState._loadProgram();
+    } catch (_) {
+      // Keep the plain blur, as a liquid glass does when loading fails.
+    }
+  }
+
   /// Frosted, mostly opaque glass with a light tint, like Apple's
   /// `Glass.regular`. Use it where legibility of content on the glass matters.
   static const regular = LiquidGlass(
@@ -276,6 +304,14 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
   static FragmentProgram? _loadedProgram;
   FragmentShader? _refraction;
 
+  /// Starts loading the shader the first time it is called, and returns the
+  /// shared load.
+  static Future<FragmentProgram> _loadProgram() {
+    return _program ??= FragmentProgram.fromAsset(
+      'packages/glass/shaders/liquid_glass.frag',
+    ).then((program) => _loadedProgram = program);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -300,11 +336,7 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
       _refraction = loaded.fragmentShader();
       return;
     }
-    _program ??= FragmentProgram.fromAsset(
-      'packages/glass/shaders/liquid_glass.frag',
-    );
-    _program!.then((program) {
-      _loadedProgram = program;
+    _loadProgram().then((program) {
       if (!mounted || _refraction != null) return;
       setState(() => _refraction = program.fragmentShader());
     }, onError: (Object _) {}); // Keep the plain blur if loading fails.

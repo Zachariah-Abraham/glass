@@ -92,6 +92,16 @@ Things to know:
 - Corners are circular, not Apple's continuous "squircle" corners. Overlapping glass shapes don't
   merge.
 - Like plain glass, each liquid glass is a backdrop filter, so keep the number on screen small.
+- The shader loads the first time a liquid glass is built, and until then that glass shows the plain
+  blur for a frame or two. To show liquid glass from the very first frame, load it ahead of time:
+
+  ```dart
+  void main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await LiquidGlass.precache();
+    runApp(const MyApp());
+  }
+  ```
 
 ## Using glass with scrolling
 
