@@ -4,29 +4,28 @@ Current state and pending work only. **Keep it short:** when something is done, 
 commit history and `CHANGELOG.md` are the record); move lasting facts to `AGENTS.md`. Use absolute
 dates. See AGENTS.md §1.
 
-_Last updated: 2026-11-08_
+_Last updated: 2026-11-09_
 
 ## Current state
-- **glass 2.3.2** was released on 2026-11-08 (release PR #23, tag `v2.3.2`, `publish.yml` succeeded). It
-  adds the animated `doc/readme/showcase.webp` as the third README image. 2.3.1 (same day) added the pub.dev `screenshots:` gallery (weather, music, travel, photos, from `doc/screenshots/`),
-  the `liquid-glass` topic and a new `description`. 2.3.0 (2026-11-07) added experimental liquid glass
+- **glass 2.3.2** (2026-11-08) is the latest release. 2.3.0 (2026-11-07) added experimental liquid glass
   and raised the minimum to Flutter 3.29 / Dart 3.7. Releases are automated (AGENTS.md §6).
+- PR #25 (branch `test/typical-widgets`, open, not merged): adds `LiquidGlass.precache()` (a `feat:`,
+  so merging it makes release-please propose 2.4.0), tests of `asGlass` on everyday widgets, and the
+  `GlassWidget` extension's dartdoc (the only undocumented public API on pub.dev, which scores 160/160).
+  Merging the PR and then the release PR is the human's decision.
 - Root and `example/` analyze clean and tests pass on Flutter 3.47.7 (FVM `stable`), with and without
-  `--enable-impeller`.
+  `--enable-impeller` (`--exclude-tags golden`).
 
 ## Pending (not started)
 - The README's `doc/readme/showcase.webp` is 11.3 s and jumps slightly when it loops (the recording had
   the cursor in its first 1.3 s and a skip at 12.7 s, so no clean 12 s cycle was available). A clean
   re-record of 13+ s would allow a seamless 12 s loop. Optional, only if the human asks.
+  (`example/lib/showcase.dart` makes the scene; see "Recording demos" in AGENTS.md §4.)
 - Liquid glass gaps:
   - the shader ignores `clipper` and non-uniform radii;
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
   - not yet checked on real devices (performance) or on Skia.
-  - first use: `FragmentProgram.fromAsset` loads asynchronously, so the first liquid glass of an app run
-    shows the plain blur fallback for a frame or more, then switches to the shader. A public preload
-    (for example `LiquidGlass.precache()`, like `precacheImage`) was proposed on 2026-11-08 and not
-    yet approved.
 - 3.0.0 (next major): delete the deprecated `clipBehaviour` alias (use a `feat!:` commit or a
   `BREAKING CHANGE:` footer). No other 3.0.0 changes are decided.
 - Backlog, not approved: harden automated publishing (tag protection for `v*`, a required `pub.dev`

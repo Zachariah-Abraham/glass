@@ -103,7 +103,9 @@ Things to keep in mind:
   and `frosted` override the preset. `liquid: null` (default) renders exactly as plain glass.
 - The live path needs `ImageFilter.isShaderFilterSupported` (Impeller: iOS, Android, macOS). Web
   and Skia fall back to a plain `BackdropFilter` with the preset's blur and tint.
-- `_GlassBackdropState` loads the shader once and caches it in the static `_loadedProgram`.
+- `_GlassBackdropState._loadProgram()` loads the shader once (shared static future `_program`) and
+  caches it in `_loadedProgram`; glass built after that uses the shader from its first frame. Until then
+  liquid glass shows the plain blur. The public `LiquidGlass.precache()` starts the same load early.
   `_RenderLiquidBackdrop` pushes a `_LiquidBackdropLayer` (a `BackdropFilterLayer` with
   `alwaysNeedsAddToScene`), and builds `ImageFilter.compose(outer: shader, inner: blur)`. It computes
   the uniforms right before every push from `getTransformTo(null)`, and builds a new filter only when
@@ -207,8 +209,11 @@ those incidental changes as part of unrelated work. Either revert them
   `~/fvm/versions/3.29.0/bin/flutter`). When switching versions, `rm -rf build/unit_test_assets`
   first: the compiled shader there is version-specific and isn't always rebuilt ("Runtime stages
   buffer failed verification"). Afterwards revert the lockfile and `example/` changes `pub get` makes.
-- **Liquid shader tests** (`test/liquid_shader_test.dart`) only run with
-  `$F test --enable-impeller` (shader image filters need Impeller) and are skipped otherwise. The
+- **Liquid shader tests** (`test/liquid_shader_test.dart`, `test/liquid_precache_test.dart`) only run
+  with `$F test --enable-impeller` (shader image filters need Impeller) and are skipped otherwise.
+  `test/liquid_precache_test.dart` is a separate file because the loaded shader is cached per test
+  isolate. `test/typical_widgets_test.dart` wraps 25 everyday widgets (plain and liquid) and checks
+  that size, semantics, taps, typing and scrolling don't change; it runs both ways. The
   liquid group in `test/glass_widget_test.dart` tests the plain blur fallback and is skipped under
   Impeller. Run the suite both ways when you touch the liquid path.
 - **Golden tests** (`test/glass_golden_test.dart`, tag `golden`, images in `test/goldens/`) render
