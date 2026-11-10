@@ -107,7 +107,10 @@ Things to keep in mind:
   caches it in `_loadedProgram`; glass built after that uses the shader from its first frame. Until then
   liquid glass shows the plain blur. The public `LiquidGlass.precache()` starts the same load early.
   `_RenderLiquidBackdrop` pushes a `_LiquidBackdropLayer` (a `BackdropFilterLayer` with
-  `alwaysNeedsAddToScene`), and builds `ImageFilter.compose(outer: shader, inner: blur)`. It computes
+  `alwaysNeedsAddToScene`). It pushes the blur as its own backdrop filter (pushed and popped with no
+  children), then the shader filter, which reads the blurred backdrop. Don't compose them
+  (`ImageFilter.compose` makes Impeller blur far beyond the clip: a small blur got about 3x slower) and
+  don't nest them (inside the blur's save layer the shader's coordinates are no longer global). It computes
   the uniforms right before every push from `getTransformTo(null)`, and builds a new filter only when
   they change. This is required because ancestors (scroll views) move the glass without repainting it,
   and the engine copies a shader filter's uniforms the first time it is pushed, so `setFloat` on an

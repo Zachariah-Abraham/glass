@@ -259,8 +259,8 @@ extension GlassWidget<T extends Widget> on T {
 }
 
 /// Clips to the glass shape and blurs the backdrop. When [liquid] is set and
-/// shaders are available, the blur and the refraction are one backdrop filter
-/// (`compose(outer: refraction shader, inner: blur)`). The shader refracts
+/// shaders are available, a blur backdrop filter is followed by a refraction
+/// shader backdrop filter, which reads the blurred backdrop. The shader refracts
 /// (inward only, so the clip is the glass shape), saturates, tints and draws
 /// the rim, all after the blur so the rim stays crisp. It does the tint itself
 /// because saturation can push colors below 0 before the tint and the tint
@@ -607,17 +607,23 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
 ///
 /// The engine copies a shader's uniforms when a filter object is first used,
 /// so changing them later has no effect on that filter. This layer therefore
-/// makes a new filter whenever the uniforms or the blur changed, and reuses
-/// the old one otherwise.
+/// makes a new filter whenever the uniforms changed, and reuses the old one
+/// otherwise.
+///
+/// The blur is its own backdrop filter, pushed just before the shader's.
+/// Composing the two into one filter makes Impeller blur far beyond the
+/// glass's clip, which is slow for a small blur (one that isn't downsampled):
+/// a list of a dozen [LiquidGlass.clear] cards took about 20 ms per frame on
+/// an Adreno phone composed, against about 7 ms separate.
 class _LiquidBackdropLayer extends BackdropFilterLayer {
   ImageFilter? blur;
   FragmentShader? shader;
   List<double> Function()? uniforms;
 
   ImageFilter? _filter;
-  ImageFilter? _filterBlur;
   FragmentShader? _filterShader;
   List<double>? _filterUniforms;
+  BackdropFilterEngineLayer? _blurLayer;
 
   @override
   bool get alwaysNeedsAddToScene => true;
@@ -627,22 +633,26 @@ class _LiquidBackdropLayer extends BackdropFilterLayer {
 
   @override
   void addToScene(SceneBuilder builder) {
-    final blur = this.blur!, shader = this.shader!, values = uniforms!();
+    final shader = this.shader!, values = uniforms!();
     if (_filter == null ||
-        !identical(blur, _filterBlur) && blur != _filterBlur ||
         !identical(shader, _filterShader) ||
         !listEquals(values, _filterUniforms)) {
       for (var i = 0; i < values.length; i++) {
         shader.setFloat(i + 2, values[i]);
       }
-      _filter = ImageFilter.compose(
-        outer: ImageFilter.shader(shader),
-        inner: blur,
-      );
-      _filterBlur = blur;
+      _filter = ImageFilter.shader(shader);
       _filterShader = shader;
       _filterUniforms = values;
     }
+    _blurLayer = builder.pushBackdropFilter(blur!, oldLayer: _blurLayer);
+    builder.pop();
     super.addToScene(builder);
+  }
+
+  @override
+  void dispose() {
+    _blurLayer?.dispose();
+    _blurLayer = null;
+    super.dispose();
   }
 }
