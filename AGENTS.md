@@ -114,7 +114,12 @@ Things to keep in mind:
   the uniforms right before every push from `getTransformTo(null)`, and builds a new filter only when
   they change. This is required because ancestors (scroll views) move the glass without repainting it,
   and the engine copies a shader filter's uniforms the first time it is pushed, so `setFloat` on an
-  existing filter does nothing. The shader works in the glass's local space through two 3x3 matrices,
+  existing filter does nothing. `asGlass(grouped: true)` passes the nearest `BackdropGroup`'s
+  `backdropKey` to the blur only (plain glass uses `BackdropFilter.grouped`): the shader must read the
+  blurred result, not the shared unblurred backdrop. The blur is a child `BackdropFilterLayer`, added
+  in `addToScene`, because `BackdropKey`'s id is private. Grouping took a list of liquid cards on an
+  Adreno phone at 90 Hz from 14 ms to 4.5 ms raster per frame: the cost is per backdrop read, not per
+  pixel. The shader works in the glass's local space through two 3x3 matrices,
   so rotation, skew and perspective work. The shape is the clip `RRect` (`_GlassShape`: `clipper`, else
   `clipBorderRadius`, with `scaleRadii()`), sent as its local rect plus per-corner x and y radii; the
   shader's `shapeSdf` is a rounded-rect SDF with elliptical corners. `_RenderLiquidGlassLayers` paints the optional `shadow`

@@ -203,6 +203,14 @@ extension GlassWidget<T extends Widget> on T {
   /// * [clipper]: If non-null, determines which clip to use.
   /// * [liquid]: If non-null, renders liquid glass with these settings, for
   ///   example [LiquidGlass.regular]. Defaults to null, which renders plain glass.
+  /// * [grouped]: Whether this glass shares its backdrop with the other grouped
+  ///   glass (and [BackdropFilter.grouped] widgets) under the nearest
+  ///   [BackdropGroup]. On Impeller this makes many glass widgets on screen,
+  ///   for example the cards of a list, much cheaper to draw. Each grouped
+  ///   glass blurs the backdrop as it was before the group's first one was
+  ///   drawn, so grouped glass that overlaps other glass doesn't show it
+  ///   through. Defaults to false. Has no effect without a [BackdropGroup]
+  ///   ancestor.
   Widget asGlass({
     bool enabled = true,
     double? blurX,
@@ -216,6 +224,7 @@ extension GlassWidget<T extends Widget> on T {
     TileMode tileMode = TileMode.clamp,
     CustomClipper<RRect>? clipper,
     LiquidGlass? liquid,
+    bool grouped = false,
   }) {
     final tint = tintColor ?? liquid?.tintColor ?? Colors.white;
     // Plain glass keeps its exact 10% → 8% gradient.
@@ -231,6 +240,7 @@ extension GlassWidget<T extends Widget> on T {
         : _GlassBackdrop(
           blur: blur,
           liquid: liquid,
+          grouped: grouped,
           clipper: clipper,
           clipBehavior: clipBehavior ?? clipBehaviour ?? Clip.antiAlias,
           borderRadius: clipBorderRadius,
@@ -270,6 +280,7 @@ class _GlassBackdrop extends StatefulWidget {
   const _GlassBackdrop({
     required this.blur,
     required this.liquid,
+    required this.grouped,
     required this.clipper,
     required this.clipBehavior,
     required this.borderRadius,
@@ -281,6 +292,7 @@ class _GlassBackdrop extends StatefulWidget {
 
   final ImageFilter blur;
   final LiquidGlass? liquid;
+  final bool grouped;
   final CustomClipper<RRect>? clipper;
   final Clip clipBehavior;
   final BorderRadius borderRadius;
@@ -372,12 +384,18 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
                 blur: widget.blur,
                 refraction: refraction,
                 liquid: liquid,
+                backdropKey:
+                    widget.grouped
+                        ? BackdropGroup.of(context)?.backdropKey
+                        : null,
                 tint:
                     widget.gradient == null ? Colors.transparent : widget.tint,
                 shape: shape,
                 devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
                 child: content,
               )
+              : widget.grouped
+              ? BackdropFilter.grouped(filter: widget.blur, child: content)
               : BackdropFilter(filter: widget.blur, child: content),
     );
     if (!live) return glass;
@@ -466,6 +484,7 @@ class _LiquidBackdrop extends SingleChildRenderObjectWidget {
     required this.blur,
     required this.refraction,
     required this.liquid,
+    required this.backdropKey,
     required this.tint,
     required this.shape,
     required this.devicePixelRatio,
@@ -475,6 +494,9 @@ class _LiquidBackdrop extends SingleChildRenderObjectWidget {
   final ImageFilter blur;
   final FragmentShader refraction;
   final LiquidGlass liquid;
+
+  /// The shared backdrop the blur reads, or null for its own.
+  final BackdropKey? backdropKey;
   final Color tint;
   final _GlassShape shape;
   final double devicePixelRatio;
@@ -590,6 +612,7 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
     final backdrop = layer ??= _LiquidBackdropLayer();
     backdrop
       ..blur = _config.blur
+      ..blurBackdropKey = _config.backdropKey
       ..shader = _config.refraction
       ..uniforms = _uniforms;
     context.pushLayer(backdrop, super.paint, offset);
@@ -615,15 +638,23 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
 /// glass's clip, which is slow for a small blur (one that isn't downsampled):
 /// a list of a dozen [LiquidGlass.clear] cards took about 20 ms per frame on
 /// an Adreno phone composed, against about 7 ms separate.
+///
+/// With [blurBackdropKey], the blur reads the shared backdrop of a
+/// [BackdropGroup] and the shader still reads the blurred result. The shader
+/// can't share it, since the shared backdrop isn't blurred.
 class _LiquidBackdropLayer extends BackdropFilterLayer {
   ImageFilter? blur;
+  BackdropKey? blurBackdropKey;
   FragmentShader? shader;
   List<double> Function()? uniforms;
 
   ImageFilter? _filter;
   FragmentShader? _filterShader;
   List<double>? _filterUniforms;
-  BackdropFilterEngineLayer? _blurLayer;
+
+  /// Pushes the blur. It is not in the layer tree: [addToScene] adds it, so
+  /// it has no children and ends before the shader's filter starts.
+  final _blurLayer = BackdropFilterLayer();
 
   @override
   bool get alwaysNeedsAddToScene => true;
@@ -644,15 +675,16 @@ class _LiquidBackdropLayer extends BackdropFilterLayer {
       _filterShader = shader;
       _filterUniforms = values;
     }
-    _blurLayer = builder.pushBackdropFilter(blur!, oldLayer: _blurLayer);
-    builder.pop();
+    _blurLayer
+      ..filter = blur
+      ..backdropKey = blurBackdropKey
+      ..addToScene(builder);
     super.addToScene(builder);
   }
 
   @override
   void dispose() {
-    _blurLayer?.dispose();
-    _blurLayer = null;
+    _blurLayer.dispose();
     super.dispose();
   }
 }

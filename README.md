@@ -57,8 +57,8 @@ Glass blurs what is *behind* the widget, so it only shows up when there is conte
 | `clipBehaviour` | `null` | **Deprecated** misspelling of `clipBehavior`, removed in 3.0.0. |
 | `tileMode` | `TileMode.clamp` | How the blur samples at the edges. |
 | `clipper` | `null` | Custom `CustomClipper<RRect>`. |
-
 | `liquid` | `null` | Experimental liquid glass settings, see below. |
+| `grouped` | `false` | Share the backdrop of the nearest `BackdropGroup`, see [many glass widgets](#many-glass-widgets-on-screen). |
 
 A full example can be found in the example directory.
 
@@ -91,7 +91,8 @@ Things to know:
   also elliptical, radius) or a custom `clipper`.
 - Corners are circular or elliptical arcs, not Apple's continuous "squircle" corners. Overlapping
   glass shapes don't merge.
-- Like plain glass, each liquid glass is a backdrop filter, so keep the number on screen small.
+- Like plain glass, each liquid glass is a backdrop filter. For many on screen at once, see
+  [many glass widgets](#many-glass-widgets-on-screen).
 - The shader loads the first time a liquid glass is built, and until then that glass shows the plain
   blur for a frame or two. To show liquid glass from the very first frame, load it ahead of time:
 
@@ -125,6 +126,29 @@ ScrollConfiguration(
   child: ListView(children: [...]),
 )
 ```
+
+## Many glass widgets on screen
+
+Each glass reads and blurs the screen behind it, so many of them (for example glass cards in a
+list) can make scrolling stutter, especially liquid glass. Put a `BackdropGroup` above them and pass
+`grouped: true`, and they share one copy of the backdrop:
+
+```Dart
+BackdropGroup(
+  child: ListView.builder(
+    itemBuilder: (context, i) => ListTile(title: Text('Item $i')).asGlass(
+      clipBorderRadius: BorderRadius.circular(16),
+      liquid: LiquidGlass.clear,
+      grouped: true,
+    ),
+  ),
+)
+```
+
+On an Android phone at 90 Hz, a list of liquid glass cards took about 14 ms per frame, which drops
+frames, and about 4.5 ms grouped. Grouped glass blurs the backdrop as it was before the group's first
+glass was drawn, so it doesn't show other glass that it overlaps. Leave `grouped` off for glass that
+sits on top of other glass, such as a tab bar over a list of grouped cards.
 
 ## About me
 
