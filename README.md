@@ -87,10 +87,10 @@ Things to know:
 - The refraction and rim need a fragment shader backdrop filter, which Flutter supports only on
   **Impeller** (the default on iOS, Android and macOS). On web and on the Skia renderer, `liquid:`
   falls back to plain blur and tint, so it is safe to use everywhere.
-- The shape follows `clipBorderRadius` with a uniform (circular) radius. A custom `clipper` or
-  different radii per corner are clipped correctly, but the refraction ignores them.
-- Corners are circular, not Apple's continuous "squircle" corners. Overlapping glass shapes don't
-  merge.
+- The refraction and rim follow the clip shape: `clipBorderRadius` (each corner can have its own,
+  also elliptical, radius) or a custom `clipper`.
+- Corners are circular or elliptical arcs, not Apple's continuous "squircle" corners. Overlapping
+  glass shapes don't merge.
 - Like plain glass, each liquid glass is a backdrop filter, so keep the number on screen small.
 - The shader loads the first time a liquid glass is built, and until then that glass shows the plain
   blur for a frame or two. To show liquid glass from the very first frame, load it ahead of time:

@@ -14,12 +14,9 @@ _Last updated: 2026-11-09_
   `--enable-impeller` (`--exclude-tags golden`).
 
 ## Pending (not started)
-- The README's `doc/readme/showcase.webp` is 11.3 s and jumps slightly when it loops (the recording had
-  the cursor in its first 1.3 s and a skip at 12.7 s, so no clean 12 s cycle was available). A clean
-  re-record of 13+ s would allow a seamless 12 s loop. Optional, only if the human asks.
-  (`example/lib/showcase.dart` makes the scene; see "Recording demos" in AGENTS.md §4.)
+- Branch `feat/liquid-clip-shape`: liquid glass bending and rim now follow `clipper` and per-corner
+  (elliptical) radii (PR #30, open). Tests in `test/liquid_shader_test.dart`.
 - Liquid glass gaps:
-  - the shader ignores `clipper` and non-uniform radii;
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
   - not yet checked on real devices (performance) or on Skia.
