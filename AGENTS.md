@@ -310,6 +310,9 @@ version in `.release-please-manifest.json`):
      subject (for example `feat: require Flutter 3.29 or newer`) or add a `BREAKING CHANGE:`
      footer, which release-please prints. Hand-edits to the release PR's changelog are overwritten
      the next time it regenerates.
+   - Keep the `# Changelog` title on the first line of `CHANGELOG.md`; release-please inserts new
+     entries right after it. PRs are squash-merged with the PR title as the commit subject, so the
+     PR title is the changelog entry: give PRs user-facing Conventional Commit titles.
    - Raising the minimum SDK is **not** a breaking change (pub resolves users on older SDKs to the
      older release), so it is a `feat`/`fix`, not a major bump.
 - The release PR needs the repo secret `RELEASE_PLEASE_TOKEN` (a PAT or GitHub App token).
