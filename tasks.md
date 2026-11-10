@@ -14,9 +14,7 @@ _Last updated: 2026-11-10_
   `--enable-impeller` (`--exclude-tags golden`).
 
 ## Pending (not started)
-- Branch `feat/liquid-clip-shape`: liquid glass bending and rim now follow `clipper` and per-corner
-  (elliptical) radii (PR #30, open). Tests in `test/liquid_shader_test.dart`.
-- Branch `perf/liquid-backdrop`, stacked on #30 (merge #30 first): Android phone performance.
+- Branch `perf/liquid-backdrop` (PR #31, open): Android phone performance.
   - `fix:` the blur and the shader are separate backdrop filters, not `ImageFilter.compose`: a
     list of `LiquidGlass.clear` cards went from about 20 ms to 7 ms raster per frame at 60 Hz.
   - `feat:` `asGlass(grouped: true)` shares the nearest `BackdropGroup`'s backdrop. At 90 Hz (phone
