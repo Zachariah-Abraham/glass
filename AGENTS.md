@@ -365,8 +365,15 @@ version in `.release-please-manifest.json`):
 secrets) when a tag matching `v[0-9]+.[0-9]+.[0-9]+` is pushed (normally by release-please).
 pub.dev is configured for repo `Zachariah-Abraham/glass` with tag pattern `v{{version}}`. The tag
 must equal `v` + `version:` in `pubspec.yaml`, so use plain `x.y.z` (no `+N` build suffix).
-Optional hardening: GitHub tag protection rules, and a required `pub.dev` environment (enable on
-pub.dev, create the same environment on GitHub, uncomment the `with: environment` lines).
+Hardening (set up 2026-11-09):
+- GitHub ruleset "Protect release tags" (repo Settings → Rules): only repo admins may create, move or
+  delete `v*` tags. release-please creates tags with `RELEASE_PLEASE_TOKEN`, a PAT of the repo owner
+  (an admin), so it is allowed. If that token ever becomes a GitHub App or a non-admin's PAT, add it
+  as a bypass actor or releases will fail to tag.
+- `publish.yml` runs in the GitHub environment `pub.dev`, which only `v*` tags may deploy to. On
+  pub.dev (package Admin tab), "Require GitHub Actions environment" is set to `pub.dev`, so a
+  workflow outside that environment can't publish. (Only the human can change pub.dev settings;
+  `tasks.md` says whether this one is on yet.)
 
 ### Links
 - Publishing: https://dart.dev/tools/pub/publishing
