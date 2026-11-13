@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.5.0](https://github.com/Zachariah-Abraham/glass/compare/v2.4.0...v2.5.0) (2026-11-13)
+
+
+### Features
+
+* add grouped glass and speed up liquid glass on Android ([#31](https://github.com/Zachariah-Abraham/glass/issues/31)) ([fc98977](https://github.com/Zachariah-Abraham/glass/commit/fc9897750bcf6cfe703487bb299616a9dd1be8a7))
+
+
+### Bug Fixes
+
+* make liquid glass bend along a custom clipper and per-corner radii ([#30](https://github.com/Zachariah-Abraham/glass/issues/30)) ([a7bd4f8](https://github.com/Zachariah-Abraham/glass/commit/a7bd4f8947b1cfac8d6315099e19b6fd56826d5a))
+
 ## [2.4.0](https://github.com/Zachariah-Abraham/glass/compare/v2.3.2...v2.4.0) (2026-11-09)
 
 
