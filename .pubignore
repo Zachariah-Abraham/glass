@@ -96,3 +96,8 @@ test/goldens/
 
 # Failure diffs written by flutter test when a golden doesn't match
 test/failures/
+
+# CocoaPods files generated when building the example for macOS or iOS
+example/macos/Podfile
+example/macos/Podfile.lock
+example/macos/Pods/
