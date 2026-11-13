@@ -1,3 +1,5 @@
+// Flutter 3.50 deprecates material.dart; material_ui does not exist on the minimum Flutter 3.29.
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:glass/glass.dart';
 

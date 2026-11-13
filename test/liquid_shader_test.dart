@@ -1,3 +1,5 @@
+// Flutter 3.50 deprecates material.dart; material_ui does not exist on the minimum Flutter 3.29.
+// ignore_for_file: deprecated_member_use
 // Tests of the live liquid glass shader path. The shader only runs on Impeller,
 // so these are skipped unless the tests run with `flutter test --enable-impeller`.
 import 'dart:io';
