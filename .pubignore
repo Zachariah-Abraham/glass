@@ -101,3 +101,4 @@ test/failures/
 example/macos/Podfile
 example/macos/Podfile.lock
 example/macos/Pods/
+doc/agents/

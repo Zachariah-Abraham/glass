@@ -4,7 +4,7 @@ Current state and pending work only. **Keep it short:** when something is done, 
 commit history and `CHANGELOG.md` are the record); move lasting facts to `AGENTS.md`. Use absolute
 dates. See AGENTS.md §1.
 
-_Last updated: 2026-11-10_
+_Last updated: 2026-11-13_
 
 ## Current state
 - **glass 3.0.0** (2026-11-13, tag `v3.0.0`, `publish.yml` succeeded) is the latest release. It
@@ -23,4 +23,3 @@ _Last updated: 2026-11-10_
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
   - not yet checked on Skia or on iOS devices (checked on one Android phone).
-- The merged branch `spike/liquid-glass` still exists on GitHub. Delete it only if the human asks.
