@@ -1,3 +1,5 @@
+// Flutter 3.50 deprecates material.dart; material_ui does not exist on the minimum Flutter 3.29.
+// ignore_for_file: deprecated_member_use
 // asGlass on everyday widgets: it must not change their size, input or
 // semantics, with plain glass and with liquid glass. With
 // `flutter test --enable-impeller` the liquid cases run the live shader path,
