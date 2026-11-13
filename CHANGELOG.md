@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/Zachariah-Abraham/glass/compare/v2.5.0...v3.0.0) (2026-11-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* asGlass no longer accepts clipBehaviour (deprecated since 2.2.0). Use clipBehavior.
+
+### Features
+
+* remove the deprecated clipBehaviour parameter ([#28](https://github.com/Zachariah-Abraham/glass/issues/28)) ([d5418de](https://github.com/Zachariah-Abraham/glass/commit/d5418def740a254d4fd44c0d7494fac2e6420bea))
+
 ## [2.5.0](https://github.com/Zachariah-Abraham/glass/compare/v2.4.0...v2.5.0) (2026-11-13)
 
 
