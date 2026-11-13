@@ -1,3 +1,5 @@
+// Flutter 3.50 deprecates material.dart; material_ui does not exist on the minimum Flutter 3.29.
+// ignore_for_file: deprecated_member_use
 // A scripted, hands-free liquid glass scene for screen recordings. Everything
 // moves on a 12 second loop, so a recording of one cycle loops seamlessly.
 // Run it with `flutter run -t lib/showcase.dart` on an Impeller target (iOS,

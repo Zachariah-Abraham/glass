@@ -1,6 +1,16 @@
-## [2.0.0+2] - 2024-11-17
+# Changelog
 
-* Address lints
+## [2.5.0](https://github.com/Zachariah-Abraham/glass/compare/v2.4.0...v2.5.0) (2026-11-13)
+
+
+### Features
+
+* add grouped glass and speed up liquid glass on Android ([#31](https://github.com/Zachariah-Abraham/glass/issues/31)) ([fc98977](https://github.com/Zachariah-Abraham/glass/commit/fc9897750bcf6cfe703487bb299616a9dd1be8a7))
+
+
+### Bug Fixes
+
+* make liquid glass bend along a custom clipper and per-corner radii ([#30](https://github.com/Zachariah-Abraham/glass/issues/30)) ([a7bd4f8](https://github.com/Zachariah-Abraham/glass/commit/a7bd4f8947b1cfac8d6315099e19b6fd56826d5a))
 
 ## [2.4.0](https://github.com/Zachariah-Abraham/glass/compare/v2.3.2...v2.4.0) (2026-11-09)
 
@@ -44,6 +54,10 @@
 
 * replace deprecated withOpacity with withValues ([04f8eeb](https://github.com/Zachariah-Abraham/glass/commit/04f8eebec2f48f78e8ceb3cd4f1fbb26ce6f363b))
 * require Flutter 3.27 or newer (Dart 3.6) ([f457f67](https://github.com/Zachariah-Abraham/glass/commit/f457f67f68ece7b7f1aee22e8ad60a40c08577aa))
+
+## [2.0.0+2] - 2024-11-17
+
+* Address lints
 
 ## [2.0.0] - 2024-02-14
 

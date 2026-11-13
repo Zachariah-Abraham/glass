@@ -107,12 +107,22 @@ Things to keep in mind:
   caches it in `_loadedProgram`; glass built after that uses the shader from its first frame. Until then
   liquid glass shows the plain blur. The public `LiquidGlass.precache()` starts the same load early.
   `_RenderLiquidBackdrop` pushes a `_LiquidBackdropLayer` (a `BackdropFilterLayer` with
-  `alwaysNeedsAddToScene`), and builds `ImageFilter.compose(outer: shader, inner: blur)`. It computes
+  `alwaysNeedsAddToScene`). It pushes the blur as its own backdrop filter (pushed and popped with no
+  children), then the shader filter, which reads the blurred backdrop. Don't compose them
+  (`ImageFilter.compose` makes Impeller blur far beyond the clip: a small blur got about 3x slower) and
+  don't nest them (inside the blur's save layer the shader's coordinates are no longer global). It computes
   the uniforms right before every push from `getTransformTo(null)`, and builds a new filter only when
   they change. This is required because ancestors (scroll views) move the glass without repainting it,
   and the engine copies a shader filter's uniforms the first time it is pushed, so `setFloat` on an
-  existing filter does nothing. The shader works in the glass's local space through two 3x3 matrices,
-  so rotation, skew and perspective work. `_RenderLiquidGlassLayers` paints the optional `shadow`
+  existing filter does nothing. `asGlass(grouped: true)` passes the nearest `BackdropGroup`'s
+  `backdropKey` to the blur only (plain glass uses `BackdropFilter.grouped`): the shader must read the
+  blurred result, not the shared unblurred backdrop. The blur is a child `BackdropFilterLayer`, added
+  in `addToScene`, because `BackdropKey`'s id is private. Grouping took a list of liquid cards on an
+  Adreno phone at 90 Hz from 14 ms to 4.5 ms raster per frame: the cost is per backdrop read, not per
+  pixel. The shader works in the glass's local space through two 3x3 matrices,
+  so rotation, skew and perspective work. The shape is the clip `RRect` (`_GlassShape`: `clipper`, else
+  `clipBorderRadius`, with `scaleRadii()`), sent as its local rect plus per-corner x and y radii; the
+  shader's `shapeSdf` is a rounded-rect SDF with elliptical corners. `_RenderLiquidGlassLayers` paints the optional `shadow`
   outside the shape.
 - Native model the shader follows: it samples **inward** only, along the inward normal,
   `source = p + d(t)*n_in` with `W = min(20 pt, 0.69*min(w,h)/2)`, `A = 3W` and
@@ -130,7 +140,7 @@ global FVM version, so `fvm flutter` fails in non-interactive shells. Call the c
 directly:
 
 ```bash
-F=~/fvm/versions/stable/bin/flutter   # Flutter 3.47.x / Dart 3.13.x as of 2026-10-29
+F=~/fvm/versions/stable/bin/flutter   # Flutter 3.50.0 as of 2026-11-13 (`flutter upgrade` updates it)
 
 $F pub get                      # root package
 $F analyze                      # root package (must be clean before committing)
@@ -174,6 +184,12 @@ those incidental changes as part of unrelated work. Either revert them
   page width).
 - Lint with `flutter_lints` (or the stricter `lints/recommended`). Fix analyzer warnings instead
   of suppressing them. If an `// ignore:` is truly necessary, add a reason next to it.
+- Flutter 3.50 deprecates `package:flutter/material.dart` (and `cupertino.dart`); `flutter analyze`
+  on stable then fails with `deprecated_member_use`. The library imports only `widgets.dart` and
+  uses private `Color` constants instead of `Colors` (`Color(0xFFFFFFFF)` is `Colors.white`). Tests
+  and `example/` still use Material, and `material_ui` doesn't exist on the minimum Flutter 3.29, so
+  each such file has `// ignore_for_file: deprecated_member_use` with the reason. Drop those when the
+  minimum SDK moves past 3.50.
 - Use sound null safety. Avoid `!` unless an invariant guarantees the value.
 - Don't use the `new` keyword. Prefer `final` for locals that aren't reassigned and `const`
   constructors and literals wherever possible.
@@ -300,6 +316,9 @@ version in `.release-please-manifest.json`):
      subject (for example `feat: require Flutter 3.29 or newer`) or add a `BREAKING CHANGE:`
      footer, which release-please prints. Hand-edits to the release PR's changelog are overwritten
      the next time it regenerates.
+   - Keep the `# Changelog` title on the first line of `CHANGELOG.md`; release-please inserts new
+     entries right after it. PRs are squash-merged with the PR title as the commit subject, so the
+     PR title is the changelog entry: give PRs user-facing Conventional Commit titles.
    - Raising the minimum SDK is **not** a breaking change (pub resolves users on older SDKs to the
      older release), so it is a `feat`/`fix`, not a major bump.
 - The release PR needs the repo secret `RELEASE_PLEASE_TOKEN` (a PAT or GitHub App token).
@@ -346,8 +365,15 @@ version in `.release-please-manifest.json`):
 secrets) when a tag matching `v[0-9]+.[0-9]+.[0-9]+` is pushed (normally by release-please).
 pub.dev is configured for repo `Zachariah-Abraham/glass` with tag pattern `v{{version}}`. The tag
 must equal `v` + `version:` in `pubspec.yaml`, so use plain `x.y.z` (no `+N` build suffix).
-Optional hardening: GitHub tag protection rules, and a required `pub.dev` environment (enable on
-pub.dev, create the same environment on GitHub, uncomment the `with: environment` lines).
+Hardening (set up 2026-11-09):
+- GitHub ruleset "Protect release tags" (repo Settings → Rules): only repo admins may create, move or
+  delete `v*` tags. release-please creates tags with `RELEASE_PLEASE_TOKEN`, a PAT of the repo owner
+  (an admin), so it is allowed. If that token ever becomes a GitHub App or a non-admin's PAT, add it
+  as a bypass actor or releases will fail to tag.
+- `publish.yml` runs in the GitHub environment `pub.dev`, which only `v*` tags may deploy to. On
+  pub.dev (package Admin tab), "Require GitHub Actions environment" is set to `pub.dev`, so a
+  workflow outside that environment can't publish. (Only the human can change pub.dev settings;
+  `tasks.md` says whether this one is on yet.)
 
 ### Links
 - Publishing: https://dart.dev/tools/pub/publishing

@@ -21,40 +21,64 @@
 // 3x3 projective matrices given as rows, applied to (x, y, 1).
 
 uniform vec2 uSize;         // floats 0-1: input texture size (set by the engine)
-uniform vec2 uLocalSize;    // floats 2-3: glass size in local logical px
-uniform float uRadius;      // float 4: corner radius in local logical px
-uniform float uWidth;       // float 5: W, width of the refracting edge band (local px)
-uniform float uAmount;      // float 6: A, displacement scale (local px)
-uniform vec3 uInv0;         // floats 7-15: screen physical px -> local, rows
+uniform vec4 uRect;         // floats 2-5: the glass shape's rect in local logical px (left, top, right, bottom)
+uniform vec4 uRadiiX;       // floats 6-9: corner radii along x (top-left, top-right, bottom-right, bottom-left)
+uniform vec4 uRadiiY;       // floats 10-13: corner radii along y, same order
+uniform float uWidth;       // float 14: W, width of the refracting edge band (local px)
+uniform float uAmount;      // float 15: A, displacement scale (local px)
+uniform vec3 uInv0;         // floats 16-24: screen physical px -> local, rows
 uniform vec3 uInv1;
 uniform vec3 uInv2;
-uniform vec3 uFwd0;         // floats 16-24: local -> screen physical px, rows
+uniform vec3 uFwd0;         // floats 25-33: local -> screen physical px, rows
 uniform vec3 uFwd1;
 uniform vec3 uFwd2;
-uniform float uLift;        // float 25: brightness added to the blurred backdrop (0..1)
-uniform float uMid;         // float 26: mid-tone lift of the blurred backdrop (x += uMid * x * (1 - x))
-uniform vec3 uTint;         // floats 27-29: tint color (0..1, not premultiplied)
-uniform float uTintMix;     // float 30: tint strength (0..1)
-uniform float uSat;         // float 31: saturation of the blurred backdrop (1 = unchanged)
-uniform float uHighlight;   // float 32: rim intensity (1 = native)
+uniform float uLift;        // float 34: brightness added to the blurred backdrop (0..1)
+uniform float uMid;         // float 35: mid-tone lift of the blurred backdrop (x += uMid * x * (1 - x))
+uniform vec3 uTint;         // floats 36-38: tint color (0..1, not premultiplied)
+uniform float uTintMix;     // float 39: tint strength (0..1)
+uniform float uSat;         // float 40: saturation of the blurred backdrop (1 = unchanged)
+uniform float uHighlight;   // float 41: rim intensity (1 = native)
 uniform sampler2D uTexture; // the (blurred) backdrop
 
 out vec4 fragColor;
 
-// Signed distance to a rounded rect (negative inside). Also returns the outward
-// gradient in `grad`. A future version can replace this with a smooth-min union
-// of several rects as long as it keeps returning (distance, gradient).
+// Signed distance to the glass's rounded rect (negative inside), whose corners
+// can each have their own elliptical radius. Also returns the outward gradient
+// in `grad`. A future version can replace this with a smooth-min union of
+// several shapes as long as it keeps returning (distance, gradient).
 float shapeSdf(vec2 p, out vec2 grad) {
-  vec2 half_ = uLocalSize * 0.5;
-  float r = clamp(uRadius, 0.0, min(half_.x, half_.y));
-  vec2 c = p - half_;
-  vec2 q = abs(c) - (half_ - vec2(r));
-  vec2 qm = max(q, 0.0);
-  float d = length(qm) + min(max(q.x, q.y), 0.0) - r;
-  // Analytic gradient (pointing outward).
-  vec2 g = (qm.x > 0.0 || qm.y > 0.0)
-      ? qm / max(length(qm), 1e-5)
-      : (q.x > q.y ? vec2(1.0, 0.0) : vec2(0.0, 1.0));
+  vec2 half_ = (uRect.zw - uRect.xy) * 0.5;
+  vec2 c = p - (uRect.xy + half_);
+  // The radii of the corner in this point's quadrant.
+  vec2 r = c.y < 0.0
+      ? (c.x < 0.0 ? vec2(uRadiiX.x, uRadiiY.x) : vec2(uRadiiX.y, uRadiiY.y))
+      : (c.x < 0.0 ? vec2(uRadiiX.w, uRadiiY.w) : vec2(uRadiiX.z, uRadiiY.z));
+  r = clamp(r, vec2(0.0), half_);
+  // q: position relative to the corner's centre, mirrored into the quadrant.
+  vec2 q = abs(c) - (half_ - r);
+  vec2 g;
+  float d;
+  if (q.x > 0.0 && q.y > 0.0) {
+    if (min(r.x, r.y) < 1e-3) {
+      // Sharp corner.
+      d = length(q);
+      g = q / max(d, 1e-5);
+    } else {
+      // Elliptical arc. Approximate distance (exact for circles): the
+      // ellipse's implicit function divided by its gradient's length.
+      vec2 qr = q / r;
+      vec2 qrr = q / (r * r);
+      float k0 = length(qr);
+      float k1 = max(length(qrr), 1e-5);
+      d = k0 * (k0 - 1.0) / k1;
+      g = qrr / k1;
+    }
+  } else {
+    // Along a straight edge: the nearer of the two sides.
+    vec2 e = q - r;
+    d = max(e.x, e.y);
+    g = e.x > e.y ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  }
   grad = g * sign(c + vec2(1e-5));
   return d;
 }

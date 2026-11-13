@@ -57,6 +57,7 @@ Glass blurs what is *behind* the widget, so it only shows up when there is conte
 | `tileMode` | `TileMode.clamp` | How the blur samples at the edges. |
 | `clipper` | `null` | Custom `CustomClipper<RRect>`. |
 | `liquid` | `null` | Experimental liquid glass settings, see below. |
+| `grouped` | `false` | Share the backdrop of the nearest `BackdropGroup`, see [many glass widgets](#many-glass-widgets-on-screen). |
 
 A full example can be found in the example directory.
 
@@ -85,11 +86,12 @@ Things to know:
 - The refraction and rim need a fragment shader backdrop filter, which Flutter supports only on
   **Impeller** (the default on iOS, Android and macOS). On web and on the Skia renderer, `liquid:`
   falls back to plain blur and tint, so it is safe to use everywhere.
-- The shape follows `clipBorderRadius` with a uniform (circular) radius. A custom `clipper` or
-  different radii per corner are clipped correctly, but the refraction ignores them.
-- Corners are circular, not Apple's continuous "squircle" corners. Overlapping glass shapes don't
-  merge.
-- Like plain glass, each liquid glass is a backdrop filter, so keep the number on screen small.
+- The refraction and rim follow the clip shape: `clipBorderRadius` (each corner can have its own,
+  also elliptical, radius) or a custom `clipper`.
+- Corners are circular or elliptical arcs, not Apple's continuous "squircle" corners. Overlapping
+  glass shapes don't merge.
+- Like plain glass, each liquid glass is a backdrop filter. For many on screen at once, see
+  [many glass widgets](#many-glass-widgets-on-screen).
 - The shader loads the first time a liquid glass is built, and until then that glass shows the plain
   blur for a frame or two. To show liquid glass from the very first frame, load it ahead of time:
 
@@ -123,6 +125,29 @@ ScrollConfiguration(
   child: ListView(children: [...]),
 )
 ```
+
+## Many glass widgets on screen
+
+Each glass reads and blurs the screen behind it, so many of them (for example glass cards in a
+list) can make scrolling stutter, especially liquid glass. Put a `BackdropGroup` above them and pass
+`grouped: true`, and they share one copy of the backdrop:
+
+```Dart
+BackdropGroup(
+  child: ListView.builder(
+    itemBuilder: (context, i) => ListTile(title: Text('Item $i')).asGlass(
+      clipBorderRadius: BorderRadius.circular(16),
+      liquid: LiquidGlass.clear,
+      grouped: true,
+    ),
+  ),
+)
+```
+
+On an Android phone at 90 Hz, a list of liquid glass cards took about 14 ms per frame, which drops
+frames, and about 4.5 ms grouped. Grouped glass blurs the backdrop as it was before the group's first
+glass was drawn, so it doesn't show other glass that it overlaps. Leave `grouped` off for glass that
+sits on top of other glass, such as a tab bar over a list of grouped cards.
 
 ## About me
 

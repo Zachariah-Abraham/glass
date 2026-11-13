@@ -1,6 +1,9 @@
+// Flutter 3.50 deprecates material.dart; material_ui does not exist on the minimum Flutter 3.29.
+// ignore_for_file: deprecated_member_use
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:glass/glass.dart';
 
@@ -103,6 +106,42 @@ void main() {
       );
     });
 
+    testWidgets('shares the backdrop of a BackdropGroup when grouped', (
+      tester,
+    ) async {
+      final group = GlobalKey();
+      await _pump(
+        tester,
+        BackdropGroup(key: group, child: _child.asGlass(grouped: true)),
+      );
+
+      expect(
+        tester
+            .renderObject<RenderBackdropFilter>(find.byType(BackdropFilter))
+            .backdropKey,
+        BackdropGroup.of(group.currentContext!)!.backdropKey,
+      );
+    });
+
+    testWidgets('has its own backdrop when not grouped', (tester) async {
+      await _pump(tester, BackdropGroup(child: _child.asGlass()));
+      expect(
+        tester
+            .renderObject<RenderBackdropFilter>(find.byType(BackdropFilter))
+            .backdropKey,
+        isNull,
+      );
+
+      await _pump(tester, _child.asGlass(grouped: true));
+      expect(
+        tester
+            .renderObject<RenderBackdropFilter>(find.byType(BackdropFilter))
+            .backdropKey,
+        isNull,
+        reason: 'no BackdropGroup',
+      );
+    });
+
     testWidgets('uses a tint gradient based on tintColor', (tester) async {
       await _pump(tester, _child.asGlass(tintColor: Colors.red));
 
@@ -171,6 +210,24 @@ void main() {
             ),
           );
         }
+      });
+
+      testWidgets('shares the backdrop when grouped', (tester) async {
+        final group = GlobalKey();
+        await _pump(
+          tester,
+          BackdropGroup(
+            key: group,
+            child: _child.asGlass(liquid: LiquidGlass.clear, grouped: true),
+          ),
+        );
+
+        expect(
+          tester
+              .renderObject<RenderBackdropFilter>(find.byType(BackdropFilter))
+              .backdropKey,
+          BackdropGroup.of(group.currentContext!)!.backdropKey,
+        );
       });
 
       testWidgets('takes the tint gradient from the preset', (tester) async {

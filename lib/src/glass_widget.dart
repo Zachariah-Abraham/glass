@@ -1,8 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui';
+
+const _white = Color(0xFFFFFFFF);
+const _transparent = Color(0x00000000);
 
 /// Settings for the liquid glass look: the backdrop bends near the edges of
 /// the glass, which has a thin light rim.
@@ -17,14 +20,14 @@ import 'dart:ui';
 /// The bending needs the Impeller renderer. Elsewhere (for example on web) the
 /// glass keeps its blur and tint but doesn't bend the backdrop.
 ///
-/// Only uniform corner radii are supported: the shape is a rounded rectangle
-/// with the top-left radius of `clipBorderRadius`, and `clipper` is ignored by
-/// the bending.
+/// The bending follows the glass's clip shape: the rounded rectangle given by
+/// `clipBorderRadius` (each corner can have its own, also elliptical, radius)
+/// or by `clipper`.
 class LiquidGlass {
   /// Creates liquid glass settings.
   ///
   /// * [blur]: Blur sigma along both axes, defaults to 3.0 (1.6 for [clear]).
-  /// * [tintColor]: Tint color of the glass, defaults to [Colors.white].
+  /// * [tintColor]: Tint color of the glass, defaults to white (`Color(0xFFFFFFFF)`).
   /// * [tintStrength]: Opacity of the tint from 0 to 1, defaults to 0.1.
   /// * [saturation]: Saturation of the blurred backdrop before the tint, 1.0
   ///   (the default) leaves it unchanged, 0 makes it grey and values above 1
@@ -47,7 +50,7 @@ class LiquidGlass {
   ///   glass's bounds, so an ancestor that clips can cut it off.
   const LiquidGlass({
     this.blur = 3.0,
-    this.tintColor = Colors.white,
+    this.tintColor = _white,
     this.tintStrength = 0.1,
     this.saturation = 1.0,
     this.refraction = 1.0,
@@ -190,7 +193,7 @@ extension GlassWidget<T extends Widget> on T {
   ///   (or the [liquid] preset's blur).
   /// * [blurY]: Amount of blur in the direction of the Y axis, defaults to 10.0
   ///   (or the [liquid] preset's blur).
-  /// * [tintColor]: Tint color for the glass, defaults to Colors.white (or the
+  /// * [tintColor]: Tint color for the glass, defaults to white (`Color(0xFFFFFFFF)`) (or the
   ///   [liquid] preset's tint).
   /// * [frosted]: Whether this glass should be frosted or not, defaults to true
   ///   (false with [liquid]).
@@ -202,6 +205,14 @@ extension GlassWidget<T extends Widget> on T {
   /// * [clipper]: If non-null, determines which clip to use.
   /// * [liquid]: If non-null, renders liquid glass with these settings, for
   ///   example [LiquidGlass.regular]. Defaults to null, which renders plain glass.
+  /// * [grouped]: Whether this glass shares its backdrop with the other grouped
+  ///   glass (and [BackdropFilter.grouped] widgets) under the nearest
+  ///   [BackdropGroup]. On Impeller this makes many glass widgets on screen,
+  ///   for example the cards of a list, much cheaper to draw. Each grouped
+  ///   glass blurs the backdrop as it was before the group's first one was
+  ///   drawn, so grouped glass that overlaps other glass doesn't show it
+  ///   through. Defaults to false. Has no effect without a [BackdropGroup]
+  ///   ancestor.
   Widget asGlass({
     bool enabled = true,
     double? blurX,
@@ -213,8 +224,9 @@ extension GlassWidget<T extends Widget> on T {
     TileMode tileMode = TileMode.clamp,
     CustomClipper<RRect>? clipper,
     LiquidGlass? liquid,
+    bool grouped = false,
   }) {
-    final tint = tintColor ?? liquid?.tintColor ?? Colors.white;
+    final tint = tintColor ?? liquid?.tintColor ?? _white;
     // Plain glass keeps its exact 10% → 8% gradient.
     final tintStart = liquid?.tintStrength ?? 0.1;
     final tintEnd = liquid == null ? 0.08 : liquid.tintStrength;
@@ -228,12 +240,13 @@ extension GlassWidget<T extends Widget> on T {
         : _GlassBackdrop(
           blur: blur,
           liquid: liquid,
+          grouped: grouped,
           clipper: clipper,
           clipBehavior: clipBehavior,
           borderRadius: clipBorderRadius,
           tint: tint,
           gradient:
-              (tint != Colors.transparent)
+              (tint != _transparent)
                   ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -256,8 +269,8 @@ extension GlassWidget<T extends Widget> on T {
 }
 
 /// Clips to the glass shape and blurs the backdrop. When [liquid] is set and
-/// shaders are available, the blur and the refraction are one backdrop filter
-/// (`compose(outer: refraction shader, inner: blur)`). The shader refracts
+/// shaders are available, a blur backdrop filter is followed by a refraction
+/// shader backdrop filter, which reads the blurred backdrop. The shader refracts
 /// (inward only, so the clip is the glass shape), saturates, tints and draws
 /// the rim, all after the blur so the rim stays crisp. It does the tint itself
 /// because saturation can push colors below 0 before the tint and the tint
@@ -267,6 +280,7 @@ class _GlassBackdrop extends StatefulWidget {
   const _GlassBackdrop({
     required this.blur,
     required this.liquid,
+    required this.grouped,
     required this.clipper,
     required this.clipBehavior,
     required this.borderRadius,
@@ -278,6 +292,7 @@ class _GlassBackdrop extends StatefulWidget {
 
   final ImageFilter blur;
   final LiquidGlass? liquid;
+  final bool grouped;
   final CustomClipper<RRect>? clipper;
   final Clip clipBehavior;
   final BorderRadius borderRadius;
@@ -350,6 +365,7 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
     final liquid = widget.liquid;
     final refraction = _refraction;
     final live = liquid != null && refraction != null;
+    final shape = _GlassShape(widget.clipper, widget.borderRadius);
     final content = Container(
       decoration: BoxDecoration(
         gradient: live ? null : widget.gradient,
@@ -368,32 +384,48 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
                 blur: widget.blur,
                 refraction: refraction,
                 liquid: liquid,
-                tint:
-                    widget.gradient == null ? Colors.transparent : widget.tint,
-                radius: widget.borderRadius.topLeft.x,
+                backdropKey:
+                    widget.grouped
+                        ? BackdropGroup.of(context)?.backdropKey
+                        : null,
+                tint: widget.gradient == null ? _transparent : widget.tint,
+                shape: shape,
                 devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
                 child: content,
               )
+              : widget.grouped
+              ? BackdropFilter.grouped(filter: widget.blur, child: content)
               : BackdropFilter(filter: widget.blur, child: content),
     );
     if (!live) return glass;
-    return _LiquidGlassLayers(
-      liquid: liquid,
-      radius: widget.borderRadius.topLeft.x,
-      child: glass,
-    );
+    return _LiquidGlassLayers(liquid: liquid, shape: shape, child: glass);
   }
+}
+
+/// The glass's clip shape, as [ClipRRect] computes it from the same clipper
+/// and border radius.
+class _GlassShape {
+  const _GlassShape(this.clipper, this.borderRadius);
+
+  final CustomClipper<RRect>? clipper;
+  final BorderRadius borderRadius;
+
+  /// The shape for a glass of [size], in its local coordinates. Radii that
+  /// don't fit are scaled down, as the clip does.
+  RRect rrect(Size size) =>
+      (clipper?.getClip(size) ?? borderRadius.toRRect(Offset.zero & size))
+          .scaleRadii();
 }
 
 class _LiquidGlassLayers extends SingleChildRenderObjectWidget {
   const _LiquidGlassLayers({
     required this.liquid,
-    required this.radius,
+    required this.shape,
     super.child,
   });
 
   final LiquidGlass liquid;
-  final double radius;
+  final _GlassShape shape;
 
   @override
   _RenderLiquidGlassLayers createRenderObject(BuildContext context) =>
@@ -421,10 +453,7 @@ class _RenderLiquidGlassLayers extends RenderProxyBox {
 
   /// Paints [shadow] around the glass shape, but not under it.
   void _paintShadow(Canvas canvas, Offset offset, BoxShadow shadow) {
-    final rrect = RRect.fromRectAndRadius(
-      offset & size,
-      Radius.circular(math.min(_config.radius, size.shortestSide / 2)),
-    );
+    final rrect = _config.shape.rrect(size).shift(offset);
     final reach = shadow.blurRadius * 1.5 + shadow.offset.distance;
     final outside =
         Path()
@@ -454,8 +483,9 @@ class _LiquidBackdrop extends SingleChildRenderObjectWidget {
     required this.blur,
     required this.refraction,
     required this.liquid,
+    required this.backdropKey,
     required this.tint,
-    required this.radius,
+    required this.shape,
     required this.devicePixelRatio,
     super.child,
   });
@@ -463,8 +493,11 @@ class _LiquidBackdrop extends SingleChildRenderObjectWidget {
   final ImageFilter blur;
   final FragmentShader refraction;
   final LiquidGlass liquid;
+
+  /// The shared backdrop the blur reads, or null for its own.
+  final BackdropKey? backdropKey;
   final Color tint;
-  final double radius;
+  final _GlassShape shape;
   final double devicePixelRatio;
 
   @override
@@ -512,26 +545,37 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
           m.entry(row, col) * (row == 3 ? 1 : dpr),
     ];
     final inv = _invert3(fwd);
+    final shape = c.shape.rrect(hasSize ? size : Size.zero);
     // Band width W and displacement scale A (A = 3 W), in local logical px.
-    final shortest = hasSize ? size.shortestSide : 0.0;
-    final width = c.liquid.edgeWidth ?? math.min(20.0, 0.69 * shortest / 2);
+    final width =
+        c.liquid.edgeWidth ??
+        math.min(20.0, 0.69 * shape.outerRect.shortestSide / 2);
     final amount = 3 * width * c.liquid.refraction;
     return [
-      hasSize ? size.width : 0, // 2-3: the glass size
-      hasSize ? size.height : 0,
-      c.radius, // 4
-      width, // 5
-      amount, // 6
-      ...inv, // 7-15: screen physical px to local, rows
-      ...fwd, // 16-24: local to screen physical px, rows
-      c.liquid.lift, // 25
-      c.liquid.midtoneLift, // 26
-      c.tint.r, // 27-29
+      shape.left, // 2-5: the shape's rect
+      shape.top,
+      shape.right,
+      shape.bottom,
+      shape.tlRadiusX, // 6-9: corner radii along x
+      shape.trRadiusX,
+      shape.brRadiusX,
+      shape.blRadiusX,
+      shape.tlRadiusY, // 10-13: corner radii along y
+      shape.trRadiusY,
+      shape.brRadiusY,
+      shape.blRadiusY,
+      width, // 14
+      amount, // 15
+      ...inv, // 16-24: screen physical px to local, rows
+      ...fwd, // 25-33: local to screen physical px, rows
+      c.liquid.lift, // 34
+      c.liquid.midtoneLift, // 35
+      c.tint.r, // 36-38
       c.tint.g,
       c.tint.b,
-      c.tint == Colors.transparent ? 0 : c.liquid.tintStrength, // 30
-      c.liquid.saturation, // 31
-      c.liquid.highlight, // 32
+      c.tint == _transparent ? 0 : c.liquid.tintStrength, // 39
+      c.liquid.saturation, // 40
+      c.liquid.highlight, // 41
     ];
   }
 
@@ -567,6 +611,7 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
     final backdrop = layer ??= _LiquidBackdropLayer();
     backdrop
       ..blur = _config.blur
+      ..blurBackdropKey = _config.backdropKey
       ..shader = _config.refraction
       ..uniforms = _uniforms;
     context.pushLayer(backdrop, super.paint, offset);
@@ -584,17 +629,31 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
 ///
 /// The engine copies a shader's uniforms when a filter object is first used,
 /// so changing them later has no effect on that filter. This layer therefore
-/// makes a new filter whenever the uniforms or the blur changed, and reuses
-/// the old one otherwise.
+/// makes a new filter whenever the uniforms changed, and reuses the old one
+/// otherwise.
+///
+/// The blur is its own backdrop filter, pushed just before the shader's.
+/// Composing the two into one filter makes Impeller blur far beyond the
+/// glass's clip, which is slow for a small blur (one that isn't downsampled):
+/// a list of a dozen [LiquidGlass.clear] cards took about 20 ms per frame on
+/// an Adreno phone composed, against about 7 ms separate.
+///
+/// With [blurBackdropKey], the blur reads the shared backdrop of a
+/// [BackdropGroup] and the shader still reads the blurred result. The shader
+/// can't share it, since the shared backdrop isn't blurred.
 class _LiquidBackdropLayer extends BackdropFilterLayer {
   ImageFilter? blur;
+  BackdropKey? blurBackdropKey;
   FragmentShader? shader;
   List<double> Function()? uniforms;
 
   ImageFilter? _filter;
-  ImageFilter? _filterBlur;
   FragmentShader? _filterShader;
   List<double>? _filterUniforms;
+
+  /// Pushes the blur. It is not in the layer tree: [addToScene] adds it, so
+  /// it has no children and ends before the shader's filter starts.
+  final _blurLayer = BackdropFilterLayer();
 
   @override
   bool get alwaysNeedsAddToScene => true;
@@ -604,22 +663,27 @@ class _LiquidBackdropLayer extends BackdropFilterLayer {
 
   @override
   void addToScene(SceneBuilder builder) {
-    final blur = this.blur!, shader = this.shader!, values = uniforms!();
+    final shader = this.shader!, values = uniforms!();
     if (_filter == null ||
-        !identical(blur, _filterBlur) && blur != _filterBlur ||
         !identical(shader, _filterShader) ||
         !listEquals(values, _filterUniforms)) {
       for (var i = 0; i < values.length; i++) {
         shader.setFloat(i + 2, values[i]);
       }
-      _filter = ImageFilter.compose(
-        outer: ImageFilter.shader(shader),
-        inner: blur,
-      );
-      _filterBlur = blur;
+      _filter = ImageFilter.shader(shader);
       _filterShader = shader;
       _filterUniforms = values;
     }
+    _blurLayer
+      ..filter = blur
+      ..backdropKey = blurBackdropKey
+      ..addToScene(builder);
     super.addToScene(builder);
+  }
+
+  @override
+  void dispose() {
+    _blurLayer.dispose();
+    super.dispose();
   }
 }
