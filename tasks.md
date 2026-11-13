@@ -7,17 +7,15 @@ dates. See AGENTS.md §1.
 _Last updated: 2026-11-10_
 
 ## Current state
-- **glass 2.5.0** (2026-11-13, release PR #33, tag `v2.5.0`, `publish.yml` succeeded) is the latest
-  release. It adds `asGlass(grouped:)`, faster liquid glass on Android and liquid bending along
-  `clipper` / per-corner radii. Releases are automated (AGENTS.md §6).
+- **glass 3.0.0** (2026-11-13, tag `v3.0.0`, `publish.yml` succeeded) is the latest release. It
+  removes the deprecated `clipBehaviour`. 2.5.0 (same day) added `asGlass(grouped:)`, faster liquid
+  glass on Android and liquid bending along `clipper` / per-corner radii. Releases are automated
+  (AGENTS.md §6). Publishing hardening is complete: `publish.yml` runs in the `pub.dev` environment
+  and pub.dev requires it.
 - Root and `example/` analyze clean and tests pass on Flutter 3.50.0 (FVM `stable`) and 3.29.0, with and without
   `--enable-impeller` (`--exclude-tags golden`).
 
 ## Pending (not started)
-- Release PR for 3.0.0 (opened by release-please after #28 merges): removes the deprecated
-  `clipBehaviour`. Merging it publishes; that is the human's decision. No other 3.0.0 changes are decided.
-- PR #29 is merged: `publish.yml` runs in the GitHub environment `pub.dev`. The human still has to
-  enable "Require GitHub Actions environment" = `pub.dev` on pub.dev (package Admin tab).
 - Measured on one Android phone (Adreno, Vulkan, 90 Hz), raster per frame for a list of cards,
   ungrouped vs `grouped: true`: liquid regular 14.0 vs 4.5 ms, liquid clear 11.8 vs 4.3 ms, plain
   4.9 vs 2.5 ms. The probe app used is not in the repo.
