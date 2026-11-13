@@ -99,6 +99,7 @@ Widget _scene({
   Key? boundary,
   BorderRadius? borderRadius,
   CustomClipper<RRect>? clipper,
+  bool grouped = false,
 }) {
   return RepaintBoundary(
     key: boundary,
@@ -111,6 +112,7 @@ Widget _scene({
             clipBorderRadius: borderRadius ?? BorderRadius.circular(16),
             clipper: clipper,
             liquid: LiquidGlass.clear,
+            grouped: grouped,
           ),
         ),
       ),
@@ -173,6 +175,33 @@ void main() {
     expect(_red(image, 40.5, 100), greaterThan(inside + 50));
     expect(_red(image, 100, 58.5), lessThan(10)); // outside
   });
+
+  testWidgets(
+    'draws the same when it shares the backdrop of a BackdropGroup',
+    skip: _skip,
+    (tester) async {
+      const key = Key('boundary');
+      await _pumpLive(tester, _scene(boundary: key));
+      final ungrouped = await _capture(tester, key);
+      await _pumpLive(
+        tester,
+        BackdropGroup(child: _scene(boundary: key, grouped: true)),
+      );
+      final grouped = await _capture(tester, key);
+
+      for (final (x, y) in [(100.0, 100.0), (100.0, 60.5), (40.5, 100.0)]) {
+        expect(
+          _red(grouped, x, y),
+          closeTo(_red(ungrouped, x, y), 2),
+          reason: 'at ($x, $y)',
+        );
+      }
+      expect(
+        _red(grouped, 100, 60.5),
+        greaterThan(_red(grouped, 100, 100) + 50),
+      );
+    },
+  );
 
   testWidgets('follows per-corner radii', skip: _skip, (tester) async {
     const key = Key('boundary');
