@@ -1,3 +1,5 @@
+// Flutter 3.50 deprecates material.dart; material_ui does not exist on the minimum Flutter 3.29.
+// ignore_for_file: deprecated_member_use
 // LiquidGlass.precache. In its own file because the loaded shader is cached
 // for the whole test isolate, and the first test needs it not loaded yet.
 // (Without precache, the first frame is plain blur: see `_pumpLive` in

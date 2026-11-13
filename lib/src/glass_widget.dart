@@ -1,8 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui';
+
+const _white = Color(0xFFFFFFFF);
+const _transparent = Color(0x00000000);
 
 /// Settings for the liquid glass look: the backdrop bends near the edges of
 /// the glass, which has a thin light rim.
@@ -24,7 +27,7 @@ class LiquidGlass {
   /// Creates liquid glass settings.
   ///
   /// * [blur]: Blur sigma along both axes, defaults to 3.0 (1.6 for [clear]).
-  /// * [tintColor]: Tint color of the glass, defaults to [Colors.white].
+  /// * [tintColor]: Tint color of the glass, defaults to white (`Color(0xFFFFFFFF)`).
   /// * [tintStrength]: Opacity of the tint from 0 to 1, defaults to 0.1.
   /// * [saturation]: Saturation of the blurred backdrop before the tint, 1.0
   ///   (the default) leaves it unchanged, 0 makes it grey and values above 1
@@ -47,7 +50,7 @@ class LiquidGlass {
   ///   glass's bounds, so an ancestor that clips can cut it off.
   const LiquidGlass({
     this.blur = 3.0,
-    this.tintColor = Colors.white,
+    this.tintColor = _white,
     this.tintStrength = 0.1,
     this.saturation = 1.0,
     this.refraction = 1.0,
@@ -190,7 +193,7 @@ extension GlassWidget<T extends Widget> on T {
   ///   (or the [liquid] preset's blur).
   /// * [blurY]: Amount of blur in the direction of the Y axis, defaults to 10.0
   ///   (or the [liquid] preset's blur).
-  /// * [tintColor]: Tint color for the glass, defaults to Colors.white (or the
+  /// * [tintColor]: Tint color for the glass, defaults to white (`Color(0xFFFFFFFF)`) (or the
   ///   [liquid] preset's tint).
   /// * [frosted]: Whether this glass should be frosted or not, defaults to true
   ///   (false with [liquid]).
@@ -226,7 +229,7 @@ extension GlassWidget<T extends Widget> on T {
     LiquidGlass? liquid,
     bool grouped = false,
   }) {
-    final tint = tintColor ?? liquid?.tintColor ?? Colors.white;
+    final tint = tintColor ?? liquid?.tintColor ?? _white;
     // Plain glass keeps its exact 10% → 8% gradient.
     final tintStart = liquid?.tintStrength ?? 0.1;
     final tintEnd = liquid == null ? 0.08 : liquid.tintStrength;
@@ -246,7 +249,7 @@ extension GlassWidget<T extends Widget> on T {
           borderRadius: clipBorderRadius,
           tint: tint,
           gradient:
-              (tint != Colors.transparent)
+              (tint != _transparent)
                   ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -388,8 +391,7 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
                     widget.grouped
                         ? BackdropGroup.of(context)?.backdropKey
                         : null,
-                tint:
-                    widget.gradient == null ? Colors.transparent : widget.tint,
+                tint: widget.gradient == null ? _transparent : widget.tint,
                 shape: shape,
                 devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
                 child: content,
@@ -574,7 +576,7 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
       c.tint.r, // 36-38
       c.tint.g,
       c.tint.b,
-      c.tint == Colors.transparent ? 0 : c.liquid.tintStrength, // 39
+      c.tint == _transparent ? 0 : c.liquid.tintStrength, // 39
       c.liquid.saturation, // 40
       c.liquid.highlight, // 41
     ];

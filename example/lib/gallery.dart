@@ -1,3 +1,5 @@
+// Flutter 3.50 deprecates material.dart; material_ui does not exist on the minimum Flutter 3.29.
+// ignore_for_file: deprecated_member_use
 // A gallery of glass widgets over an animated background, for checking how
 // they look on each platform. Run it with `flutter run -t lib/gallery.dart`.
 //
