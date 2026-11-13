@@ -140,7 +140,7 @@ global FVM version, so `fvm flutter` fails in non-interactive shells. Call the c
 directly:
 
 ```bash
-F=~/fvm/versions/stable/bin/flutter   # Flutter 3.47.x / Dart 3.13.x as of 2026-10-29
+F=~/fvm/versions/stable/bin/flutter   # Flutter 3.50.0 as of 2026-11-13 (`flutter upgrade` updates it)
 
 $F pub get                      # root package
 $F analyze                      # root package (must be clean before committing)
@@ -184,6 +184,12 @@ those incidental changes as part of unrelated work. Either revert them
   page width).
 - Lint with `flutter_lints` (or the stricter `lints/recommended`). Fix analyzer warnings instead
   of suppressing them. If an `// ignore:` is truly necessary, add a reason next to it.
+- Flutter 3.50 deprecates `package:flutter/material.dart` (and `cupertino.dart`); `flutter analyze`
+  on stable then fails with `deprecated_member_use`. The library imports only `widgets.dart` and
+  uses private `Color` constants instead of `Colors` (`Color(0xFFFFFFFF)` is `Colors.white`). Tests
+  and `example/` still use Material, and `material_ui` doesn't exist on the minimum Flutter 3.29, so
+  each such file has `// ignore_for_file: deprecated_member_use` with the reason. Drop those when the
+  minimum SDK moves past 3.50.
 - Use sound null safety. Avoid `!` unless an invariant guarantees the value.
 - Don't use the `new` keyword. Prefer `final` for locals that aren't reassigned and `const`
   constructors and literals wherever possible.
