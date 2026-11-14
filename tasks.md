@@ -4,7 +4,7 @@ Current state and pending work only. **Keep it short:** when something is done, 
 commit history and `CHANGELOG.md` are the record); move lasting facts to `AGENTS.md`. Use absolute
 dates. See AGENTS.md §1.
 
-_Last updated: 2026-11-13_
+_Last updated: 2026-11-14_
 
 ## Current state
 - **glass 3.0.0** (2026-11-13, tag `v3.0.0`, `publish.yml` succeeded) is the latest release. It
@@ -22,4 +22,8 @@ _Last updated: 2026-11-13_
 - Liquid glass gaps:
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
-  - not yet checked on Skia or on iOS devices (checked on one Android phone).
+  - checked on one Android phone (Impeller/Vulkan) and the iOS simulator (iPhone 17 Pro, Impeller/Metal,
+    2026-11-14: plain, clear and regular all render correctly). Not yet checked on a real iPhone, on
+    Android with Skia (`--no-enable-impeller`), or on real web hardware;
+  - the web/Skia fallback of `LiquidGlass.clear` is near-invisible (no tint, rim or edge bending):
+    consider documenting it or drawing a faint tint/border there.
