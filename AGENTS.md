@@ -68,13 +68,8 @@ documentation, and the changelog matter more than they would in an app.
 | `shaders/liquid_glass.frag` | Fragment shader for liquid glass (refraction, saturation, tint, lift, rim). Declared under `flutter: shaders:` in `pubspec.yaml`. |
 | `images/noise.png` | Noise texture for the "frosted" look. Declared as a package asset in `pubspec.yaml` and loaded with `AssetImage('images/noise.png', package: 'glass')`. |
 | `example/` | Demo app (`example/lib/main.dart`) that depends on the package through `path: ../`. Shown on pub.dev. |
-| `example/lib/gallery.dart` | Storybook-style gallery of plain and liquid glass over an animated background, for checking the look per platform: `cd example && flutter create --platforms=<p> . && flutter run -t lib/gallery.dart -d <device>` (then revert `.metadata`, `analysis_options.yaml`, `pubspec.lock`). Not covered by tests. |
-| `example/lib/showcase.dart` | Hands-free 12 s looping liquid glass scene for screen recordings (`flutter run -t lib/showcase.dart`). Not covered by tests. |
-| `example/lib/screens.dart` | Realistic app screens (travel, photos, music, weather) used for the pub.dev screenshots: `flutter run -t lib/screens.dart --dart-define=SCREEN=<name>` on an iPhone simulator. Photos load from picsum.photos (Unsplash License); `photoCredits` lists the authors. Not covered by tests. |
-| `example/screenshots/` | Old screenshots. The READMEs of releases up to 2.3.0 still load them by URL from `main`, so don't rename or delete them. |
-| `doc/screenshots/` | Current screenshots (made with `example/lib/screens.dart`). They're published with the package and used by the `screenshots:` gallery in `pubspec.yaml`, and `README.md` loads them by URL from `main`. Don't rename them. Keep each one under 4 MB (pub.dev's limit). |
-| `doc/readme/` | README-only media, excluded from the package by `.pubignore`. `showcase.webp` is an animated WebP (GIF was 18-25 MB) cut from a macOS `--release` recording of `example/lib/showcase.dart`: frames with `ffmpeg`, then `img2webp -lossy -q 70 -m 6 -d 40` (Homebrew `webp`). `README.md` loads it by URL from `main`, so don't rename it. |
-| `doc/api/` | Not tracked. Generated dartdoc output (`dart doc`) is gitignored and in `.pubignore`. Don't commit it. |
+| `example/lib/gallery.dart`, `showcase.dart`, `screens.dart` | Manual-check apps (platform gallery, looping recording scene, pub.dev screenshots). Not tested. Run commands: [`doc/agents/example-media.md`](doc/agents/example-media.md). |
+| `example/screenshots/`, `doc/screenshots/`, `doc/readme/` | Screenshots and README media loaded by URL from `main`: **don't rename or delete them**. `doc/screenshots/*` are published (each < 4 MB). Details in `doc/agents/example-media.md`. |
 | `CHANGELOG.md` | Displayed on pub.dev. Update it for every user-visible change. |
 
 ### How `asGlass` works
@@ -98,37 +93,13 @@ Things to keep in mind:
   public signature or defaults requires a **major** version bump.
 
 ### Liquid glass (`asGlass(liquid: LiquidGlass...)`, experimental)
-- `LiquidGlass` holds the settings; `LiquidGlass.clear` and `LiquidGlass.regular` are presets fitted
-  to native iOS 26 `Glass.clear` / `Glass.regular` screenshots. Explicit `blurX`, `blurY`, `tintColor`
-  and `frosted` override the preset. `liquid: null` (default) renders exactly as plain glass.
-- The live path needs `ImageFilter.isShaderFilterSupported` (Impeller: iOS, Android, macOS). Web
-  and Skia fall back to a plain `BackdropFilter` with the preset's blur and tint.
-- `_GlassBackdropState._loadProgram()` loads the shader once (shared static future `_program`) and
-  caches it in `_loadedProgram`; glass built after that uses the shader from its first frame. Until then
-  liquid glass shows the plain blur. The public `LiquidGlass.precache()` starts the same load early.
-  `_RenderLiquidBackdrop` pushes a `_LiquidBackdropLayer` (a `BackdropFilterLayer` with
-  `alwaysNeedsAddToScene`). It pushes the blur as its own backdrop filter (pushed and popped with no
-  children), then the shader filter, which reads the blurred backdrop. Don't compose them
-  (`ImageFilter.compose` makes Impeller blur far beyond the clip: a small blur got about 3x slower) and
-  don't nest them (inside the blur's save layer the shader's coordinates are no longer global). It computes
-  the uniforms right before every push from `getTransformTo(null)`, and builds a new filter only when
-  they change. This is required because ancestors (scroll views) move the glass without repainting it,
-  and the engine copies a shader filter's uniforms the first time it is pushed, so `setFloat` on an
-  existing filter does nothing. `asGlass(grouped: true)` passes the nearest `BackdropGroup`'s
-  `backdropKey` to the blur only (plain glass uses `BackdropFilter.grouped`): the shader must read the
-  blurred result, not the shared unblurred backdrop. The blur is a child `BackdropFilterLayer`, added
-  in `addToScene`, because `BackdropKey`'s id is private. Grouping took a list of liquid cards on an
-  Adreno phone at 90 Hz from 14 ms to 4.5 ms raster per frame: the cost is per backdrop read, not per
-  pixel. The shader works in the glass's local space through two 3x3 matrices,
-  so rotation, skew and perspective work. The shape is the clip `RRect` (`_GlassShape`: `clipper`, else
-  `clipBorderRadius`, with `scaleRadii()`), sent as its local rect plus per-corner x and y radii; the
-  shader's `shapeSdf` is a rounded-rect SDF with elliptical corners. `_RenderLiquidGlassLayers` paints the optional `shadow`
-  outside the shape.
-- Native model the shader follows: it samples **inward** only, along the inward normal,
-  `source = p + d(t)*n_in` with `W = min(20 pt, 0.69*min(w,h)/2)`, `A = 3W` and
-  `d(t) = A*(1 - sqrt(1 - (1 - t/W)^2))` for depth `t < W`. Blur comes before refraction. The rim is a
-  3 physical px white mix that takes on the backdrop's colour. `FlutterFragCoord()` in a backdrop
-  shader is global physical px, y down, on Metal, Vulkan and GLES.
+- `LiquidGlass.clear` / `.regular` are presets fitted to native iOS 26 glass. Explicit `blurX`, `blurY`,
+  `tintColor`, `frosted` override the preset. `liquid: null` (default) renders exactly as plain glass.
+- The shader path needs `ImageFilter.isShaderFilterSupported` (Impeller: iOS, Android, macOS). Web and
+  Skia fall back to a plain blur.
+- The blur and the shader are separate backdrop filters. **Never compose or nest them** (3x slower, and
+  the shader's coordinates break). Uniforms are recomputed before every push. Details, the native
+  refraction model and `grouped:` internals: [`doc/agents/liquid-glass.md`](doc/agents/liquid-glass.md).
 
 ---
 
@@ -144,7 +115,7 @@ F=~/fvm/versions/stable/bin/flutter   # Flutter 3.50.0 as of 2026-11-13 (`flutte
 
 $F pub get                      # root package
 $F analyze                      # root package (must be clean before committing)
-$F test --exclude-tags golden   # root package tests, without pixel goldens (see "Golden tests")
+$F test --exclude-tags golden   # root package tests, without pixel goldens (see doc/agents/testing.md)
 (cd example && $F analyze && $F test)
 dart format .                   # or: ~/fvm/versions/stable/bin/dart format .
 $F pub publish --dry-run        # validates the package; NEVER run without --dry-run unless the human asks
@@ -211,59 +182,15 @@ those incidental changes as part of unrelated work. Either revert them
 - Example UIs should have enough contrast for text on glass and work with large text scales.
 
 ### Testing
-- Every behavior change to `asGlass` needs **widget tests** in a root `test/` directory using
-  `flutter_test`. Useful assertions:
-  - `enabled: false` returns the original widget, with no `ClipRRect` or `BackdropFilter`.
-  - Blur sigma, tile mode, clip behavior, border radius, and clipper reach the right widgets.
-  - `tintColor: Colors.transparent` produces no gradient. `frosted: false` produces no image.
-  - The noise asset resolves (`package: 'glass'`).
-- Use `find.byType` and `tester.widget<T>()` to inspect properties.
-- The minimum is Flutter 3.29 / Dart 3.7 because the liquid path uses `ImageFilter.shader`
-  (not in 3.27's `dart:ui`; 3.28 was never a stable release). Dart 3.7 language versions use the
-  "tall" `dart format` style.
-- To run tests on another Flutter version, install it (`fvm install 3.29.0`, then
-  `~/fvm/versions/3.29.0/bin/flutter`). When switching versions, `rm -rf build/unit_test_assets`
-  first: the compiled shader there is version-specific and isn't always rebuilt ("Runtime stages
-  buffer failed verification"). Afterwards revert the lockfile and `example/` changes `pub get` makes.
-- **Liquid shader tests** (`test/liquid_shader_test.dart`, `test/liquid_precache_test.dart`) only run
-  with `$F test --enable-impeller` (shader image filters need Impeller) and are skipped otherwise.
-  `test/liquid_precache_test.dart` is a separate file because the loaded shader is cached per test
-  isolate. `test/typical_widgets_test.dart` wraps 25 everyday widgets (plain and liquid) and checks
-  that size, semantics, taps, typing and scrolling don't change; it runs both ways. The
-  liquid group in `test/glass_widget_test.dart` tests the plain blur fallback and is skipped under
-  Impeller. Run the suite both ways when you touch the liquid path.
-- **Golden tests** (`test/glass_golden_test.dart`, tag `golden`, images in `test/goldens/`) render
-  `asGlass` variants over a striped background and compare pixels with Flutter's built-in
-  `matchesGoldenFile`. Rules:
-  - Pixel output depends on the Flutter version, so CI runs them only in the `golden` job, pinned
-    to `GOLDEN_FLUTTER_VERSION` in `.github/workflows/ci.yml`. The version matrix runs
-    `flutter test --exclude-tags golden`. Use the same locally unless you're on the pinned version.
-  - Scenes contain no text, so results don't depend on fonts. Keep it that way, and keep them
-    deterministic (fixed size, device pixel ratio 1, no animation).
-  - Regenerate with `$F test --update-goldens --tags golden` using the pinned version, whenever
-    the look changes on purpose or the pinned version is bumped.
-  - **Generate references on Linux, not macOS.** macOS output differs by a few pixels, so CI fails
-    on macOS-made references. Push the change, let the `golden` job fail, download its
-    `golden-failures` artifact (`gh run download <id> -n golden-failures`) and copy each
-    `<name>_testImage.png` to `test/goldens/<name>.png`.
-  - Some differences are subtle by design (noise is at most ~9/255, a 10% tint ~26/255). The tests
-    are pixel-exact, so they still catch regressions even when you can't see the difference.
-  - **Always open the changed PNGs and look at them before committing.** An empty or wrong scene
-    still "passes" once its blank image is the reference.
-  - Goldens are excluded from the published package (`.pubignore`).
-- CI also builds the example app for web against the package (`example-build` job).
-- `example/integration_test/app_test.dart` is a smoke test on a real engine (not the widget-test
-  binding). CI runs it on Linux desktop under xvfb (`integration` job); locally run
-  `flutter create --platforms=macos . && flutter test integration_test -d macos` in `example/`, then
-  revert the incidental changes to tracked files (`example/macos/`, `pubspec.lock`, etc.).
+- Every behavior change to `asGlass` needs **widget tests** in `test/` (`flutter_test`).
+- Minimum is Flutter 3.29 / Dart 3.7 (`ImageFilter.shader`); CI tests 3.29.0 and stable.
+- Liquid shader tests only run with `$F test --enable-impeller`; run the suite both ways when you touch
+  the liquid path.
+- Golden tests (tag `golden`) are pinned to one Flutter version in CI. **Generate references on Linux
+  (from the CI `golden-failures` artifact), not macOS, and open the changed PNGs before committing.**
 - Run `analyze` and `test` for **both** the root package and `example/` before committing.
-- **Android emulator speed:** the local AVD `Medium_Phone_API_37.0` with `hw.gpu.mode=auto` resolves to
-  `lavapipe` (software rendering on the host CPU, 1 core) and runs the gallery at ~1-4 fps. Start it with
-  `~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0 -gpu host -cores 4` for GPU rendering.
-  Emulator frame rates are still only a rough guide; check performance on a real device.
-- **Recording demos:** the iOS simulator only runs debug builds, and its screen recordings stutter
-  (many frames > 50 ms apart). For smooth videos, record a `--release` build on a real device or on
-  macOS desktop.
+- Procedures (other SDK versions, goldens, integration test, Android emulator, recording demos):
+  [`doc/agents/testing.md`](doc/agents/testing.md).
 
 ### Example app
 - `example/` is the package's showcase on pub.dev. Keep it minimal, idiomatic, warning-free, and
@@ -291,98 +218,12 @@ is why `flutter_lints` is `^5` (v6 needs Dart 3.8).
 
 ## 6. Publishing to pub.dev
 
-**Agents never publish.** Publishing is permanent: pub.dev generally doesn't allow unpublishing,
-so only the human runs the real `pub publish` (or pushes the release tag). Agents prepare the
-release and run `--dry-run`.
-
-### Release checklist
-Releases are automated with [release-please](https://github.com/googleapis/release-please-action)
-(`.github/workflows/release-please.yml`, config in `release-please-config.json`, last released
-version in `.release-please-manifest.json`):
-1. Merge changes to `main` using Conventional Commits (§1). `feat` → minor, `fix` → patch,
-   `!`/`BREAKING CHANGE` → major.
-2. release-please keeps a "release PR" open that bumps `version:` in `pubspec.yaml` and prepends
-   to `CHANGELOG.md`. **Don't hand-edit `version:` or add changelog entries for releases**, and
-   don't edit the manifest. Merging the release PR is the human's decision.
-3. Merging the release PR creates the `vX.Y.Z` tag, which triggers `publish.yml`, which publishes
-   to pub.dev.
-4. Before the human merges the release PR, make sure of the following (agents can check these
-   and report in `tasks.md`):
-   - §5 passes on `main`. `$F pub publish --dry-run` shows no warnings. Read its file list.
-   - `LICENSE`, `README.md` (main pub.dev page) and `pubspec.yaml` (`description` 60-180 chars,
-     `homepage`/`repository`, optionally `issue_tracker` and `topics`) are accurate.
-   - Anything users must know (for example a raised minimum SDK) appears in the changelog. Only
-     commit **subjects** reach `CHANGELOG.md`; bodies do not. Put the note in a `feat:`/`fix:`
-     subject (for example `feat: require Flutter 3.29 or newer`) or add a `BREAKING CHANGE:`
-     footer, which release-please prints. Hand-edits to the release PR's changelog are overwritten
-     the next time it regenerates.
-   - Keep the `# Changelog` title on the first line of `CHANGELOG.md`; release-please inserts new
-     entries right after it. PRs are squash-merged with the PR title as the commit subject, so the
-     PR title is the changelog entry: give PRs user-facing Conventional Commit titles.
-   - Raising the minimum SDK is **not** a breaking change (pub resolves users on older SDKs to the
-     older release), so it is a `feat`/`fix`, not a major bump.
-- The release PR needs the repo secret `RELEASE_PLEASE_TOKEN` (a PAT or GitHub App token).
-  `GITHUB_TOKEN` can't be used because tags it creates don't trigger `publish.yml`.
-- Fallback (manual): bump `version:`, edit `CHANGELOG.md`, then `git tag vX.Y.Z && git push
-  origin vX.Y.Z`. Agents don't push release tags.
-
-### What gets uploaded
-- Everything under the package root except hidden files/dirs (names starting with `.`) and
-  anything matched by `.gitignore` or `.pubignore`. A `.pubignore` in a directory overrides that
-  directory's `.gitignore` for publishing only.
-- Keep the package small (limit is ~100 MB gzipped / 256 MB uncompressed). Large demo assets and
-  generated output should be excluded. A root `.pubignore` exists, and pub then **ignores
-  `.gitignore`** for publishing, so `.pubignore` is a copy of `.gitignore` plus
-  `example/screenshots/` and `doc/readme/`. The archive is ~3 MB, almost all of it the
-  `doc/screenshots/` pub.dev gallery, which must be published. **Keep the two files in sync** when adding
-  ignore rules.
-- Only hosted pub.dev dependencies and SDK dependencies (`sdk: flutter`) are allowed. `path:`
-  and `git:` dependencies are not (the `example/` app is fine because it isn't published).
-
-### Docs
-- pub.dev **generates and hosts API docs itself** from `///` comments, and IDEs read the `///`
-  comments directly from source. Local `dart doc` output (`doc/api/`) is gitignored and not
-  published, so there's nothing to regenerate or commit.
-- The package page is built from `README.md`, `CHANGELOG.md`, `pubspec.yaml`, and `example/`.
-  README images need absolute URLs (as now).
-
-### SDK constraints and old versions
-- pub's solver picks, for each user, the newest version whose SDK constraint admits the user's
-  SDK. So raising the minimum Flutter/Dart version in a new release doesn't break users on older
-  SDKs: they simply keep resolving to the older release. Users can also pin an exact old version
-  (`glass: 2.0.0+2`). Published versions stay on pub.dev.
-- Still mention the new minimum SDK in the changelog.
-
-### Mistakes after publishing
-- Versions can't be deleted. Prefer publishing a fixed patch version with a changelog note.
-- **Retract** (pub.dev package Admin tab) only within 7 days of publishing, and when a version is
-  truly broken (for example wrong dependency constraints). Retraction is reversible within
-  7 days.
-- Use **discontinued** for packages that are no longer maintained.
-
-### Automated publishing (enabled on pub.dev)
-`.github/workflows/publish.yml` publishes to pub.dev from GitHub Actions using OIDC (no stored
-secrets) when a tag matching `v[0-9]+.[0-9]+.[0-9]+` is pushed (normally by release-please).
-pub.dev is configured for repo `Zachariah-Abraham/glass` with tag pattern `v{{version}}`. The tag
-must equal `v` + `version:` in `pubspec.yaml`, so use plain `x.y.z` (no `+N` build suffix).
-Hardening (set up 2026-11-09):
-- GitHub ruleset "Protect release tags" (repo Settings → Rules): only repo admins may create, move or
-  delete `v*` tags. release-please creates tags with `RELEASE_PLEASE_TOKEN`, a PAT of the repo owner
-  (an admin), so it is allowed. If that token ever becomes a GitHub App or a non-admin's PAT, add it
-  as a bypass actor or releases will fail to tag.
-- `publish.yml` runs in the GitHub environment `pub.dev`, which only `v*` tags may deploy to. On
-  pub.dev (package Admin tab), "Require GitHub Actions environment" is set to `pub.dev`, so a
-  workflow outside that environment can't publish. (Only the human can change pub.dev settings;
-  `tasks.md` says whether this one is on yet.)
-
-### Links
-- Publishing: https://dart.dev/tools/pub/publishing
-- Versioning: https://dart.dev/tools/pub/versioning
-- Pubspec reference: https://dart.dev/tools/pub/pubspec
-- Package layout: https://dart.dev/tools/pub/package-layout
-- Automated publishing: https://dart.dev/tools/pub/automated-publishing
-- Writing package pages: https://dart.dev/tools/pub/writing-package-pages
-- Verified publishers: https://dart.dev/tools/pub/verified-publishers
-- Package scoring (pub points): https://pub.dev/help/scoring
-- Effective Dart: https://dart.dev/effective-dart
-- Developing packages (Flutter): https://docs.flutter.dev/packages-and-plugins/developing-packages
+**Agents never publish.** Publishing is permanent. Releases are automated with release-please: merge
+Conventional Commit PRs to `main`; it keeps a release PR open (bumps `version:`, prepends
+`CHANGELOG.md`); the human merges it, which tags `vX.Y.Z` and triggers `publish.yml` (OIDC, in the
+`pub.dev` environment). Agents don't hand-edit `version:`, the changelog entries or the manifest, and
+don't push tags. PR titles become changelog entries, so make them user-facing. Only `feat`/`fix`
+subjects and `BREAKING CHANGE:` footers reach the changelog; raising the minimum SDK is not breaking.
+Keep `.pubignore` in sync with `.gitignore` (pub ignores `.gitignore` when `.pubignore` exists).
+Run `$F pub publish --dry-run` to check. Full checklist, upload rules, hardening and post-publish
+mistakes: [`doc/agents/publishing.md`](doc/agents/publishing.md).
