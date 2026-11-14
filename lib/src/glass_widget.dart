@@ -18,7 +18,9 @@ const _transparent = Color(0x00000000);
 /// directly (`blurX`, `blurY`, `tintColor`, `frosted`) take precedence.
 ///
 /// The bending needs the Impeller renderer. Elsewhere (for example on web) the
-/// glass keeps its blur and tint but doesn't bend the backdrop.
+/// glass keeps its blur and tint but doesn't bend the backdrop. It then also
+/// draws a faint tint and a thin light border so nearly clear presets such as
+/// [clear] stay visible.
 ///
 /// The bending follows the glass's clip shape: the rounded rectangle given by
 /// `clipBorderRadius` (each corner can have its own, also elliptical, radius)
@@ -366,13 +368,38 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
     final refraction = _refraction;
     final live = liquid != null && refraction != null;
     final shape = _GlassShape(widget.clipper, widget.borderRadius);
-    final content = Container(
+    // Where shaders can't run at all (web, Skia), liquid glass can't bend the
+    // backdrop or draw its rim, so a faint tint and border keep the shape
+    // visible, which matters for the nearly clear presets.
+    final fallback =
+        liquid != null && !live && !ImageFilter.isShaderFilterSupported;
+    final gradient =
+        fallback &&
+                widget.gradient != null &&
+                liquid.tintStrength < _fallbackTint
+            ? LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                widget.tint.withValues(alpha: _fallbackTint),
+                widget.tint.withValues(alpha: _fallbackTint / 2),
+              ],
+            )
+            : widget.gradient;
+    final decorated = Container(
       decoration: BoxDecoration(
-        gradient: live ? null : widget.gradient,
+        gradient: live ? null : gradient,
         image: widget.image,
       ),
       child: widget.child,
     );
+    final content =
+        fallback
+            ? CustomPaint(
+              foregroundPainter: _FallbackRimPainter(shape),
+              child: decorated,
+            )
+            : decorated;
     // Clip to the shape, blur (and refract) what is behind, then the tint.
     final glass = ClipRRect(
       clipper: widget.clipper,
@@ -400,6 +427,33 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
     if (!live) return glass;
     return _LiquidGlassLayers(liquid: liquid, shape: shape, child: glass);
   }
+}
+
+/// Opacity of the tint that liquid glass keeps where shaders aren't supported.
+const _fallbackTint = 0.08;
+
+/// Draws a thin light border along the glass shape, standing in for the rim
+/// the shader draws.
+class _FallbackRimPainter extends CustomPainter {
+  const _FallbackRimPainter(this.shape);
+
+  final _GlassShape shape;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRRect(
+      shape.rrect(size).deflate(0.5),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = _white.withValues(alpha: 0.4),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_FallbackRimPainter oldDelegate) =>
+      oldDelegate.shape.clipper != shape.clipper ||
+      oldDelegate.shape.borderRadius != shape.borderRadius;
 }
 
 /// The glass's clip shape, as [ClipRRect] computes it from the same clipper

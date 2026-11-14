@@ -231,20 +231,49 @@ void main() {
       });
 
       testWidgets('takes the tint gradient from the preset', (tester) async {
-        for (final preset in [LiquidGlass.regular, LiquidGlass.clear]) {
-          await _pump(tester, _child.asGlass(liquid: preset));
+        await _pump(tester, _child.asGlass(liquid: LiquidGlass.regular));
 
-          final gradient = _decoration(tester).gradient! as LinearGradient;
-          expect(gradient.colors, hasLength(2));
+        final gradient = _decoration(tester).gradient! as LinearGradient;
+        expect(gradient.colors, hasLength(2));
+        for (final color in gradient.colors) {
           expectColorClose(
-            gradient.colors[0],
-            preset.tintColor.withValues(alpha: preset.tintStrength),
-          );
-          expectColorClose(
-            gradient.colors[1],
-            preset.tintColor.withValues(alpha: preset.tintStrength),
+            color,
+            LiquidGlass.regular.tintColor.withValues(
+              alpha: LiquidGlass.regular.tintStrength,
+            ),
           );
         }
+      });
+
+      testWidgets('clear glass keeps a faint tint and a rim', (tester) async {
+        await _pump(tester, _child.asGlass(liquid: LiquidGlass.clear));
+
+        final gradient = _decoration(tester).gradient! as LinearGradient;
+        expect(gradient.colors[0].a, greaterThan(0));
+        expect(gradient.colors[0].a, lessThan(0.2));
+        expect(
+          find.descendant(
+            of: find.byType(BackdropFilter),
+            matching: find.byWidgetPredicate(
+              (w) => w is CustomPaint && w.foregroundPainter != null,
+            ),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('plain glass draws no rim', (tester) async {
+        await _pump(tester, _child.asGlass());
+
+        expect(
+          find.descendant(
+            of: find.byType(BackdropFilter),
+            matching: find.byWidgetPredicate(
+              (w) => w is CustomPaint && w.foregroundPainter != null,
+            ),
+          ),
+          findsNothing,
+        );
       });
 
       testWidgets('explicit blur and tint override the preset', (tester) async {
