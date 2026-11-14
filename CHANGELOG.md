@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/Zachariah-Abraham/glass/compare/v3.0.0...v3.0.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* keep liquid glass visible without shader support ([#41](https://github.com/Zachariah-Abraham/glass/issues/41)) ([d32aefb](https://github.com/Zachariah-Abraham/glass/commit/d32aefb92b57cc3b7be1623763e8ca680f3d7dc4))
+
 ## [3.0.0](https://github.com/Zachariah-Abraham/glass/compare/v2.5.0...v3.0.0) (2026-11-13)
 
 
