@@ -4,11 +4,11 @@ Current state and pending work only. **Keep it short:** when something is done, 
 commit history and `CHANGELOG.md` are the record); move lasting facts to `AGENTS.md`. Use absolute
 dates. See AGENTS.md §1.
 
-_Last updated: 2026-11-14_
+_Last updated: 2026-11-15_
 
 ## Current state
-- **glass 3.0.0** (2026-11-13, tag `v3.0.0`, `publish.yml` succeeded) is the latest release. It
-  removes the deprecated `clipBehaviour`. 2.5.0 (same day) added `asGlass(grouped:)`, faster liquid
+- **glass 3.0.1** (2026-11-14, tag `v3.0.1`, `publish.yml` succeeded) is the latest release; it
+  keeps `LiquidGlass.clear` visible without shader support. 3.0.0 (2026-11-13) removed the deprecated `clipBehaviour`. 2.5.0 (same day) added `asGlass(grouped:)`, faster liquid
   glass on Android and liquid bending along `clipper` / per-corner radii. Releases are automated
   (AGENTS.md §6). Publishing hardening is complete: `publish.yml` runs in the `pub.dev` environment
   and pub.dev requires it.
