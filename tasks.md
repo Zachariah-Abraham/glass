@@ -25,5 +25,5 @@ _Last updated: 2026-11-14_
   - checked on one Android phone (Impeller/Vulkan) and the iOS simulator (iPhone 17 Pro, Impeller/Metal,
     2026-11-14: plain, clear and regular all render correctly). Not yet checked on a real iPhone, on
     Android with Skia (`--no-enable-impeller`), or on real web hardware;
-  - the web/Skia fallback of `LiquidGlass.clear` is near-invisible (no tint, rim or edge bending):
-    consider documenting it or drawing a faint tint/border there.
+  - the web/Skia fallback (no shader support) draws a faint 8% tint and a 1 px light border so
+    `LiquidGlass.clear` stays visible; still no edge bending. Not yet seen on a real Skia device.
