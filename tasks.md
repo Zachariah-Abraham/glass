@@ -23,7 +23,8 @@ _Last updated: 2026-11-15_
   - continuous ("squircle") corners: opt-in only, deprioritized;
   - shape merging (like SwiftUI's `GlassEffectContainer`): deferred until users ask;
   - checked on one Android phone (Impeller/Vulkan) and the iOS simulator (iPhone 17 Pro, Impeller/Metal,
-    2026-11-14: plain, clear and regular all render correctly). Not yet checked on a real iPhone, on
-    Android with Skia (`--no-enable-impeller`), or on real web hardware;
+    2026-11-14: plain, clear and regular all render correctly). Android emulator with Skia (`--no-enable-impeller`,
+    2026-11-15): fallback renders correctly, `clear` visible with tint and rim. Not yet checked on a
+    real iPhone or on real web hardware;
   - the web/Skia fallback (no shader support) draws a faint 8% tint and a 1 px light border so
-    `LiquidGlass.clear` stays visible; still no edge bending. Not yet seen on a real Skia device.
+    `LiquidGlass.clear` stays visible; still no edge bending.
