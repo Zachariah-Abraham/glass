@@ -4,7 +4,7 @@ Current state and pending work only. **Keep it short:** when something is done, 
 commit history and `CHANGELOG.md` are the record); move lasting facts to `AGENTS.md`. Use absolute
 dates. See AGENTS.md §1.
 
-_Last updated: 2026-11-15_
+_Last updated: 2026-11-21_
 
 ## Current state
 - **glass 3.0.1** (2026-11-14, tag `v3.0.1`, `publish.yml` succeeded) is the latest release; it
@@ -14,6 +14,12 @@ _Last updated: 2026-11-15_
   and pub.dev requires it.
 - Root and `example/` analyze clean and tests pass on Flutter 3.50.0 (FVM `stable`) and 3.29.0, with and without
   `--enable-impeller` (`--exclude-tags golden`).
+
+## In progress: in-shader blur (branch `perf/in-shader-blur`)
+- Liquid glass now blurs inside the shader for round blurs up to 40 physical px (details in
+  `doc/agents/liquid-glass.md`). Productionised from the unmerged `spike/shader-blur` branch. Stable
+  analyze and tests pass (root and `example/`, with and without `--enable-impeller`). Next: run on Flutter
+  3.29.0, check the iOS simulator and the Android phone, open the PR.
 
 ## Pending (not started)
 - Measured on one Android phone (Adreno, Vulkan, 90 Hz), raster per frame for a list of cards,
