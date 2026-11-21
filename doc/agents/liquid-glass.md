@@ -23,7 +23,17 @@ Moved out of AGENTS.md (read it when you touch the liquid path).
   blurred result, not the shared unblurred backdrop. The blur is a child `BackdropFilterLayer`, added
   in `addToScene`, because `BackdropKey`'s id is private. Grouping took a list of liquid cards on an
   Adreno phone at 90 Hz from 14 ms to 4.5 ms raster per frame: the cost is per backdrop read, not per
-  pixel. The shader works in the glass's local space through two 3x3 matrices,
+  pixel. **In-shader blur:** when `blurX == blurY`, `sigma > 0` and `sigma * devicePixelRatio <= 40`
+  (`_maxShaderBlurPx`), the shader blurs itself (`sampleBlur` in `liquid_glass.frag`: `uBlur` = sigma in
+  physical px, `uTaps` = `LiquidGlass.blurSamples`, 1 to 64, default 64) and `_LiquidBackdropLayer` skips
+  the blur layer (`blur == null`; `backdropKey` goes to the shader's own layer, and the layer overrides
+  `markNeedsAddToScene` because setting the key would otherwise assert). Taps are importance-sampled
+  (radius from the 2D Gaussian radial CDF, equal weights, golden-angle directions, per-pixel rotation):
+  uniform-density taps with Gaussian weights were visibly grainy at sigma 7. Measured on an Adreno phone
+  (Impeller/Vulkan): ungrouped liquid cards about 40% cheaper (6.1 to 3.8 ms raster), grouped about equal;
+  cost is flat from 16 to 64 taps, but 128 taps is 4.5x slower and sigma 24 px or more is 4 to 7x slower
+  than the two-filter path (texture reads far from the pixel), hence both caps. Otherwise the two-filter
+  path above runs. The shader works in the glass's local space through two 3x3 matrices,
   so rotation, skew and perspective work. The shape is the clip `RRect` (`_GlassShape`: `clipper`, else
   `clipBorderRadius`, with `scaleRadii()`), sent as its local rect plus per-corner x and y radii; the
   shader's `shapeSdf` is a rounded-rect SDF with elliptical corners. `_RenderLiquidGlassLayers` paints the optional `shadow`

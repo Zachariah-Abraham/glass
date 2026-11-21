@@ -50,6 +50,12 @@ class LiquidGlass {
   ///   default) for none. Only its color, `offset` and `blurRadius` are used.
   ///   It doesn't affect layout or hit testing and is painted outside the
   ///   glass's bounds, so an ancestor that clips can cut it off.
+  /// * [blurSamples]: How many backdrop samples the shader takes per pixel
+  ///   when it does the blur itself, from 1 to 64, defaults to 64. Fewer is
+  ///   cheaper but grainier. Lower it on weak GPUs. The shader blurs for
+  ///   sigmas up to 40 physical pixels (about 14 logical pixels at 3x) and
+  ///   when `blurX` and `blurY` match; otherwise a separate blur filter runs
+  ///   and this is ignored.
   const LiquidGlass({
     this.blur = 3.0,
     this.tintColor = _white,
@@ -61,7 +67,8 @@ class LiquidGlass {
     this.midtoneLift = 0.0,
     this.highlight = 1.0,
     this.shadow,
-  });
+    this.blurSamples = 64,
+  }) : assert(blurSamples >= 1 && blurSamples <= 64);
 
   /// Loads the liquid glass shader ahead of time.
   ///
@@ -156,6 +163,9 @@ class LiquidGlass {
   /// cut off by an ancestor that clips.
   final BoxShadow? shadow;
 
+  /// Number of samples the shader takes to blur the backdrop, 1 to 64.
+  final int blurSamples;
+
   /// Returns a copy with the given fields replaced.
   LiquidGlass copyWith({
     double? blur,
@@ -168,6 +178,7 @@ class LiquidGlass {
     double? midtoneLift,
     double? highlight,
     BoxShadow? shadow,
+    int? blurSamples,
   }) {
     return LiquidGlass(
       blur: blur ?? this.blur,
@@ -180,6 +191,7 @@ class LiquidGlass {
       midtoneLift: midtoneLift ?? this.midtoneLift,
       highlight: highlight ?? this.highlight,
       shadow: shadow ?? this.shadow,
+      blurSamples: blurSamples ?? this.blurSamples,
     );
   }
 }
@@ -241,6 +253,8 @@ extension GlassWidget<T extends Widget> on T {
         ? this
         : _GlassBackdrop(
           blur: blur,
+          sigmaX: blurX ?? liquid?.blur ?? 10.0,
+          sigmaY: blurY ?? liquid?.blur ?? 10.0,
           liquid: liquid,
           grouped: grouped,
           clipper: clipper,
@@ -281,6 +295,8 @@ extension GlassWidget<T extends Widget> on T {
 class _GlassBackdrop extends StatefulWidget {
   const _GlassBackdrop({
     required this.blur,
+    required this.sigmaX,
+    required this.sigmaY,
     required this.liquid,
     required this.grouped,
     required this.clipper,
@@ -293,6 +309,7 @@ class _GlassBackdrop extends StatefulWidget {
   });
 
   final ImageFilter blur;
+  final double sigmaX, sigmaY;
   final LiquidGlass? liquid;
   final bool grouped;
   final CustomClipper<RRect>? clipper;
@@ -400,6 +417,15 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
               child: decorated,
             )
             : decorated;
+    // The shader blurs by itself (one pass, no separate blur layer) while that
+    // is cheap: a round blur up to _maxShaderBlurPx physical pixels. Beyond
+    // that its texture reads get slow, so a blur filter runs first.
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final inShader =
+        live &&
+        widget.sigmaX == widget.sigmaY &&
+        widget.sigmaX > 0 &&
+        widget.sigmaX * dpr <= _maxShaderBlurPx;
     // Clip to the shape, blur (and refract) what is behind, then the tint.
     final glass = ClipRRect(
       clipper: widget.clipper,
@@ -417,7 +443,8 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
                         : null,
                 tint: widget.gradient == null ? _transparent : widget.tint,
                 shape: shape,
-                devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                devicePixelRatio: dpr,
+                blurSigma: inShader ? widget.sigmaX : null,
                 child: content,
               )
               : widget.grouped
@@ -428,6 +455,11 @@ class _GlassBackdropState extends State<_GlassBackdrop> {
     return _LiquidGlassLayers(liquid: liquid, shape: shape, child: glass);
   }
 }
+
+/// Largest blur sigma, in physical pixels, that the liquid shader blurs
+/// itself. Measured on an Adreno phone: sigma 14 px is about 2x cheaper than
+/// a separate blur filter, 24 px is 4x dearer.
+const _maxShaderBlurPx = 40.0;
 
 /// Opacity of the tint that liquid glass keeps where shaders aren't supported.
 const _fallbackTint = 0.08;
@@ -541,8 +573,12 @@ class _LiquidBackdrop extends SingleChildRenderObjectWidget {
     required this.tint,
     required this.shape,
     required this.devicePixelRatio,
+    required this.blurSigma,
     super.child,
   });
+
+  /// The blur sigma when the shader blurs, or null when [blur] already did.
+  final double? blurSigma;
 
   final ImageFilter blur;
   final FragmentShader refraction;
@@ -630,6 +666,8 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
       c.tint == _transparent ? 0 : c.liquid.tintStrength, // 39
       c.liquid.saturation, // 40
       c.liquid.highlight, // 41
+      (c.blurSigma ?? 0) * dpr, // 42: blur sigma in physical px, 0 = none
+      c.liquid.blurSamples.toDouble(), // 43: blur samples
     ];
   }
 
@@ -664,8 +702,10 @@ class _RenderLiquidBackdrop extends RenderProxyBox {
     }
     final backdrop = layer ??= _LiquidBackdropLayer();
     backdrop
-      ..blur = _config.blur
+      ..blur = _config.blurSigma == null ? _config.blur : null
       ..blurBackdropKey = _config.backdropKey
+      // When the shader blurs, it reads the (grouped) backdrop itself.
+      ..backdropKey = _config.blurSigma == null ? null : _config.backdropKey
       ..shader = _config.refraction
       ..uniforms = _uniforms;
     context.pushLayer(backdrop, super.paint, offset);
@@ -712,6 +752,11 @@ class _LiquidBackdropLayer extends BackdropFilterLayer {
   @override
   bool get alwaysNeedsAddToScene => true;
 
+  // Setting [backdropKey] marks the layer, which asserts for a layer that is
+  // always added anyway.
+  @override
+  void markNeedsAddToScene() {}
+
   @override
   ImageFilter? get filter => _filter;
 
@@ -728,10 +773,12 @@ class _LiquidBackdropLayer extends BackdropFilterLayer {
       _filterShader = shader;
       _filterUniforms = values;
     }
-    _blurLayer
-      ..filter = blur
-      ..backdropKey = blurBackdropKey
-      ..addToScene(builder);
+    if (blur != null) {
+      _blurLayer
+        ..filter = blur
+        ..backdropKey = blurBackdropKey
+        ..addToScene(builder);
+    }
     super.addToScene(builder);
   }
 

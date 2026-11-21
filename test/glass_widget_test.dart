@@ -363,6 +363,17 @@ void main() {
         expect(LiquidGlass.clear.copyWith(saturation: 2).saturation, 2);
       });
 
+      test(
+        'blurSamples defaults to 64, copyWith sets it, range is checked',
+        () {
+          expect(LiquidGlass.regular.blurSamples, 64);
+          expect(LiquidGlass.clear.copyWith(blurSamples: 16).blurSamples, 16);
+          expect(LiquidGlass.clear.copyWith().blurSamples, 64);
+          expect(() => LiquidGlass(blurSamples: 0), throwsAssertionError);
+          expect(() => LiquidGlass(blurSamples: 65), throwsAssertionError);
+        },
+      );
+
       test('copyWith with no arguments keeps every field', () {
         const base = LiquidGlass.clear;
         final copy = base.copyWith();
