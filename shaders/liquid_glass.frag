@@ -38,7 +38,9 @@ uniform vec3 uTint;         // floats 36-38: tint color (0..1, not premultiplied
 uniform float uTintMix;     // float 39: tint strength (0..1)
 uniform float uSat;         // float 40: saturation of the blurred backdrop (1 = unchanged)
 uniform float uHighlight;   // float 41: rim intensity (1 = native)
-uniform sampler2D uTexture; // the (blurred) backdrop
+uniform float uBlur;        // float 42: blur sigma in physical px, 0 = texture is already blurred
+uniform float uTaps;        // float 43: number of blur samples, 1..64
+uniform sampler2D uTexture; // the backdrop (blurred unless uBlur > 0)
 
 out vec4 fragColor;
 
@@ -93,6 +95,30 @@ vec2 toScreen(vec2 l) {
   return vec2(dot(uFwd0, h), dot(uFwd1, h)) / dot(uFwd2, h);
 }
 
+const int MAX_TAPS = 64;
+
+// Gaussian blur of the backdrop in one pass. Importance sampling: tap radii
+// follow the 2D Gaussian's radial CDF, so every tap has equal weight and none
+// is wasted in the tails; golden-angle directions, rotated per pixel to turn
+// banding into fine noise. Cost is flat from 16 to 64 taps but jumps at 128
+// and for sigmas above ~40 px, hence the caps in Dart.
+vec4 sampleBlur(vec2 s) {
+  if (uBlur < 0.25) {
+    return texture(uTexture, clamp(s / uSize, vec2(0.0), vec2(1.0)));
+  }
+  float rot = 6.2831853 * fract(52.9829189 * fract(dot(FlutterFragCoord().xy, vec2(0.06711056, 0.00583715))));
+  vec4 acc = vec4(0.0);
+  for (int i = 0; i < MAX_TAPS; i++) {
+    if (float(i) >= uTaps) break;
+    float u = (float(i) + 0.5) / uTaps * 0.985;
+    float r = uBlur * sqrt(-2.0 * log(1.0 - u));
+    float a = float(i) * 2.39996323 + rot;
+    vec2 q = s + r * vec2(cos(a), sin(a));
+    acc += texture(uTexture, clamp(q / uSize, vec2(0.0), vec2(1.0)));
+  }
+  return acc / uTaps;
+}
+
 void main() {
   vec2 fragCoord = FlutterFragCoord().xy;
   vec2 p = toLocal(fragCoord);
@@ -114,7 +140,7 @@ void main() {
   vec2 dy = toLocal(fragCoord + vec2(0.0, 1.0)) - p;
   float perPx = length(vec2(dot(dx, grad), dot(dy, grad)));
   float tPx = t / max(perPx, 1e-5);
-  vec4 c = texture(uTexture, clamp(src / uSize, vec2(0.0), vec2(1.0)));
+  vec4 c = sampleBlur(src);
   vec3 rgb = c.a > 0.0 ? c.rgb / c.a : c.rgb;
   // Measured on Apple's glass (sRGB values): saturate around the Rec. 709
   // luma, then the mid-tone lift and lift, then the tint. Saturation can go
